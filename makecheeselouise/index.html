@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='UTF-8'>
+	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="./css/style.css">
+	<title>Cheese Time</title>
+</head>
+<body>
+    <header>
+        <button type='button' id='signOutButton' style='display:none'>Sign Out</button>
+        <div class="navbar">
+  
+            <div class="dropdown">
+                <button class="dropbtn">Menu 
+                <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <p id='add-sandwich-nav' class='no-select'> Add sandwich</p>
+                    <p id='add-ingredient-nav' class='no-select'> Add ingredient</p>
+                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
+                    <p id='home-nav' class='no-select'> Home</p>
+                </div>
+            </div> 
+        </div>
+    </header>
+    <div id='page-wrapper' class='flex-container'>
+        <div id='signInForm'>
+            <h2>Sign In</h2>
+            <div>
+                <label for='userSIEmail'>Email</label>
+                <input type="email" id="userSIEmail" placeholder="mail@mail.com">
+                <small id="userSIEmailError">Please check your login information.</small>
+            </div>
+            <div>
+                <label for="userSIPassword">Password</label>
+                <input type="password" id="userSIPassword" placeholder="password">
+                <small id="userSIPasswordError">Please check your password.</small>
+            </div>
+            <button type='button' id='signInButton'>Sign In</button>
+            <p>Not a member yet? Become a member: <strong class='no-select' id='userSignUp'>Sign Up</strong></p>
+        </div>
+
+        <div id="signUpForm" style="display: none" class='special-form'>
+            <h2>Sign Up</h2>
+            <div class="form-group">
+                <label for="userFirstName">First Name</label>
+                <input type="text" id="userFirstName" placeholder="first name">
+                <small id="userFirstNameError">This Field must be filled.</small>
+            </div>
+            <div class="form-group">
+                <label for="userLastName">Last Name</label>
+                <input type="text" id="userLastName" placeholder="Last Name">
+                <small id="userLastNameError">This Field must be filled.</small>
+            </div>
+            <div class="form-group">
+                <label for="userEmail">Email address</label>
+                <input type="email"id="userEmail" placeholder="mail@mail.com">
+                <small id="userEmailError">Please check your email address.</small>
+            </div>
+            <div class="form-group">
+                <label for="userPassword">Password</label>
+                <input type="password" id="userPassword" placeholder="**********">
+                <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
+            </div>
+            <button type="button" id="signUpButton">Sign Up</button>
+            <p>Already a member? Sign in: <strong class='no-select' id='userSignIn'>Sign In</strong></p>
+        </div>
+
+        <div id='role-loc-dialogue' class='flex-container special-form'> 
+            <!-- Populated from js -->
+            <h2 id='welcome-message'>Welcome!</h2>
+            <!-- Populated from js -->
+            <p id='schedule-message'>Hmmm... I'm not sure what you're up to today. Let Ian know that something's wrong!</p>
+            <button type='button' id='change-role-loc-button'>Change role or location</button>
+            <div id='role-loc-form' style='display:none'>
+                <!-- Populated from js -->
+                <select name='role-selector' id='role-selector'></select>
+                <select name='loc-selector' id='loc-selector'></select>
+                <button id='role-loc-submit' type='select'>Submit</button>
+            </div>
+        </div>
+
+        <div id='widget-container' class='special-form'>
+
+        </div>
+        <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
+            <table id='sandwich-checklist-table'>
+                <tbody id='sandwich-checklist-tbody'>
+                    <tr>
+                        <th colspan="2">What you're bringing</th>
+                        <th>Inventory</th>
+                        <th>Max need</th>
+                    </tr>
+                </tbody>
+            </table>
+            <button id='sandwich-checklist-submit' name='sandwich-checklist-submit' type='button'>Submit</button>
+        </div>
+        <div id='item-checklist' class='flex-container special-form table-card' style='display:none'>
+            <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
+            <table id='item-checklist-table'>
+                <tbody id='item-checklist-tbody'>
+                    <tr>
+                        <th></th><!-- checkbox column -->
+                        <th>What to bring</th>
+                        <th></th>
+                        <th></th>
+                        <th>Inventory</th>
+                        <!-- <th>Where to find</th> -->
+                    </tr>
+                        <!-- Add other rows with JS -->
+                    <!--tr>
+                        <td><input type='checkbox'></td>
+                    </tr-->
+                </tbody>
+            </table>
+            <button id='item-checklist-submit' name='item-checklist-submit' type='button'>Submit</button>
+        </div>
+        <div id='inventory-form' class='flex-container' style='display:none'>
+            <table id='inventory-form-table'>
+                <tbody id='inventory-form-tbody'>
+                    <tr>
+                        <th>Number</th>
+                        <th>Unit</th>
+                        <th>Item Name</th>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='button' id='inventory-form-submit'>Submit</button>
+        </div>
+        <div id='item-list-container' class='flex-container special-form' style='display:none'>
+            <table id='item-list-table'>
+                <tbody id='item-list-tbody'>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Item Name</th>
+                        <th>Storage Location</th>
+                        <th>Units per dollar</th>
+                        <th>In use?</th>
+                    </tr>
+                        <!-- Add other rows with JS -->
+                
+                </tbody>
+            </table>
+            <div id='item-add-form' class='flex-container'>
+                <label for='unit-input'>Unit</label>
+                <input type='text' id='unit-input' name='unit-input'>
+                <label for='name-input'>Name</label>
+                <input type='text' id='name-input' name='name-input'>
+                <label for='ratio-input'>Units per dollar ratio</label>
+                <input type='text' id='ratio-input' name='ratio-input'>
+                <label for='storage-input'>Storage Input</label>
+                <input type='text' id='storage-input' name='storage-input'>
+                <label for='use-input'>Check if in use</label>
+                <input type='checkbox' id='use-input' name='use-input'>
+                <button type='button' id='add-item-button' name='add-item-button'>Add</button>
+            </div>
+        </div>
+
+        <div id='sandwich-list-container' class='flex-container special-form' style='display:none'>
+            <table id='sandwich-list-table' style='display:none'>
+                <tbody id='sandwich-list-tbody'>
+                    <tr>
+                        <th>Sandwich</th>
+                        <th>Ingredient</th>
+                    </tr>
+                </tbody>
+            </table>
+            <div id='sandwich-add-form' class='flex-container'>
+                <div class='input-pair-wrapper'>
+                    <div class='single-input-wrapper'>
+                        <label for='sandwich-input'>Sandwich Name</label>
+                        <input type='text' id='sandwich-input' name='sandwich-input'>
+                    </div>
+                    <div class='single-input-wrapper'>
+                        <label for='dollarToQuant-input'>Sandwiches per dollar</label>
+                        <input type='text' id='dollarToQuant-input' name='dollarToQuant-input'>
+                    </div>
+                </div>
+                <div class='input-pair-wrapper'>
+                    <div class='single-input-wrapper'>
+                        <label for='ingredient-input'>Ingredient</label>
+                        <input type='text' id='ingredient-input' name='ingredient-input'>
+                    </div>
+                    <div class='single-input-wrapper'>
+                        <label for='ratio-input'>Ingr. per sandwich</label>
+                        <input type='text' id='ratio-input' name='ratio-input'>
+                    </div>
+                </div>
+            </div>
+            <button type='button' id='add-ingedient-button'>Add ingredient</button>
+            <button type='button' id='add-sandwich-button'>Submit sandwich</button>
+        </div>
+
+        <div id='revenue-input-container' class='flex-container special-form' style='display:none'>
+            <label for='week-input'>Input the date of this week's Monday</label>
+            <input type='text' name='week-input' id='week-input'>
+            <table id='revenue-input-table'>
+                <tbody id='revenue-input-tbody'>
+                    <tr>
+                        <th></th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='button' id='revenue-input-submit'>Submit</button> 
+        </div>
+
+    </div>
+
+
+
+
+    
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+    https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        var firebaseConfig = {
+        apiKey: "AIzaSyA7mqns9w_xdLF456EMtXyr-Kq0xe_6EAU",
+        authDomain: "makecheeselouise.firebaseapp.com",
+        projectId: "makecheeselouise",
+        storageBucket: "makecheeselouise.appspot.com",
+        messagingSenderId: "452821965281",
+        appId: "1:452821965281:web:171694237f36f5e0861aa0",
+        measurementId: "G-1MR2F55WB1"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
+    </script>
+
+    <script src='./js/app.js'></script>
+
+</body>
