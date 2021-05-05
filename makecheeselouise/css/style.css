@@ -23,6 +23,10 @@ table * {
     font-size: 14px;
 }
 
+tbody#item-list-tbody td:nth-child(5):hover {
+    box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
+}
+
 button {
     background-color: var(--primary-color);
     border: none;
