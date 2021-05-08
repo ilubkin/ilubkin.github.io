@@ -96,9 +96,9 @@ async function readYesterdayItemChecklistFB() {
     });
 }
 
-async function readSandwichChecklistFB() {
+async function readSandwichChecklistFB(dayOffset = 0) {
     var today = new Date();
-    today = getDateString();
+    today = getDateString(dayOffset);
     var locSelector = 'settlers-green';
     await database.ref().child('inventory-record/' + today + '/' + locSelector + '/sandwiches').once('value', (snapshot) => {
         sandwichChecklist = snapshot.val();
@@ -117,13 +117,13 @@ async function readRevenuesFB() {
     });
 }
 
-async function writeItemChecklistFB(dayOffset = 0) {
+async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if already written
     await readItemListFB().then( () => { 
         readLocationsFB();
     }).then( () => { 
         return readSandwichesFB();
     }).then( () => { 
-        return readSandwichChecklistFB();
+        return readSandwichChecklistFB(dayOffset);
     }).then( () => {
         var today = new Date();
         var weekday = today.getDay() + dayOffset;
@@ -147,6 +147,8 @@ async function writeItemChecklistFB(dayOffset = 0) {
                     //need to add current inventory into account (for cur inv. and to bring)
                 });
             }
+            
+        }).then(() => {
             if(sandwichChecklist == null) {
                 for(var sandwich in sandwiches) {
                     sandwiches[sandwich].EODinventory = 0;
@@ -639,6 +641,19 @@ function itemChecklistLoader() {
                 elt.parentElement.classList.remove('checked');
             }
         });
+        elt.parentElement.addEventListener('click', () => {
+            console.log(elt.parentElement);
+            console.log(elt);
+            console.log(elt.checked);
+            if(elt.checked) {
+                elt.parentElement.classList.remove('checked');
+                elt.checked = false;
+            }
+            else{
+                elt.parentElement.classList.add('checked');
+                elt.checked = true;
+            }
+        });
     });
 }
 
@@ -652,10 +667,12 @@ function inventoryFormLoader() {
                 skip = true;
             }
         });
-        if( !(skip===true) && !(itemChecklist['settlers-green'][i]['taken']==true) ) {
+        if( !(skip===true) && !(itemChecklist['settlers-green'][i]['taken']==true) && !(itemChecklist['settlers-green'][i]['name'] == null) ) {
             var newRow = document.createElement('tr');
             var newInput = document.createElement('input');
             newInput.type = 'number';
+            newInput.min = 0;
+            newInput.max = 999;
             newInput.id = spaceToDash(itemChecklist['settlers-green'][i]['name'] + '-input');
             newInput.step = 0.1;
             newInput.min = 0;
@@ -926,4 +943,16 @@ document.querySelector('#add-revenues-nav').addEventListener('click', () => {
 });
 document.querySelector('#home-nav').addEventListener('click', () => {
     pageInfoLoader();
+});
+document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
+    hideAllForms();
+    inventoryFormLoader();
+});
+document.querySelector('#inventory-from-checklist-button').addEventListener('click', () => {
+    hideAllForms();
+    inventoryFormLoader();
+});
+document.querySelector('#sandwich-from-inventory-button').addEventListener('click', () => {
+    hideAllForms();
+    sandwichChecklistLoader();
 });

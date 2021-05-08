@@ -8,6 +8,11 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+td {
+    user-select: none;
+    padding-bottom: 5px;
+}
+
 tr.checked {
     background-color: #c7c7c7;
     color:#686868;
@@ -20,7 +25,7 @@ table {
 }
 
 table * {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 tbody#item-list-tbody td:nth-child(5):hover {
@@ -52,6 +57,18 @@ button:hover {
 #sandwich-add-form {
     flex-direction: row;
     flex-wrap: wrap;
+}
+
+#inventory-form {
+    max-width: 400px;
+}
+
+#item-checklist {
+    max-width: 550px;
+}
+
+#sandwich-checklist {
+    max-width: 400px;
 }
 
 .single-input-wrapper label { display: block;
