@@ -633,19 +633,8 @@ function itemChecklistLoader() {
         }
     }
     document.querySelectorAll("input[type='checkbox']").forEach( (elt) => {
-        elt.addEventListener('click', () => {
-            if(elt.checked) {
-                elt.parentElement.classList.add('checked');
-            }
-            else{
-                elt.parentElement.classList.remove('checked');
-            }
-        });
         elt.parentElement.addEventListener('click', () => {
-            console.log(elt.parentElement);
-            console.log(elt);
-            console.log(elt.checked);
-            if(elt.checked) {
+            if(elt.parentElement.classList.contains('checked')) {
                 elt.parentElement.classList.remove('checked');
                 elt.checked = false;
             }
