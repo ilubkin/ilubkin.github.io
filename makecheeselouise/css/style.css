@@ -1,5 +1,6 @@
 :root {
     --primary-color: #ffa820;
+    --primary-color-light: #ffecce;
     --secondary-color: #252e3d;
     --tertiary-color: #f1e8bd;
 }
@@ -14,8 +15,8 @@ td {
 }
 
 tr.checked {
-    background-color: #c7c7c7;
-    color:#686868;
+    background-color: #c7c7c7 !important;
+    color:#686868 !important;
 }
 
 table {
@@ -31,7 +32,9 @@ table * {
 tbody#item-list-tbody td:nth-child(5):hover {
     box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
 }
-
+tbody tr:nth-child(even) {
+    background-color: var(--primary-color-light);
+}
 button {
     background-color: var(--primary-color);
     border: none;

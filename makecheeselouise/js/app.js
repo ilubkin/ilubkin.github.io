@@ -698,7 +698,11 @@ function inventoryFormSubmit() {
         database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
              EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
         });
+        row.classList.add('checked');
     }
+    table.style.display = 'none';
+    document.querySelector('#inventory-form').appendChild(document.createElement('p').innerHTML('Inventory Submitted'));
+    //show successful submit message
 }
 
 function itemListLoader() {
@@ -935,6 +939,7 @@ document.querySelector('#home-nav').addEventListener('click', () => {
 });
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();
+    document.querySelector('#inventory-form-table').style.display = 'inline';
     inventoryFormLoader();
 });
 document.querySelector('#inventory-from-checklist-button').addEventListener('click', () => {
