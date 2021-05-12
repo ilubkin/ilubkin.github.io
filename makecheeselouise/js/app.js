@@ -649,30 +649,59 @@ function itemChecklistLoader() {
 function inventoryFormLoader() {
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
-    for(var i in itemChecklist['settlers-green']) { //pass location as variable
+    var locSelector = 'settlers-green';
+    for(var i in itemChecklist[locSelector]['sandwiches']) {
         var skip = false;
         document.querySelectorAll('tr.inventory').forEach( (item) => {
-            if (dashToSpace(item.id) === itemChecklist['settlers-green'][i].name) {
+            if (dashToSpace(item.id) === itemChecklist[locSelector]['sandwiches'][i].name) {
                 skip = true;
             }
         });
-        if( !(skip===true) && !(itemChecklist['settlers-green'][i]['taken']==true) && !(itemChecklist['settlers-green'][i]['name'] == null) ) {
+        if(!(skip===true)) {
+            var newRow = document.createElement('tr');
+            var newInput = document.createElement('input');
+            newInput.type = 'number';
+            newInput.min = 0;
+            newInput.max = 99999;
+            newInput.id = spaceToDash(itemChecklist[locSelector]['sandwiches'][i]['name'] + '-sandwich-input');
+            newInput.step = 1;
+            newInput.min = 0;
+            newRow.appendChild(newInput);
+            var newUnit = document.createElement('td');
+            newUnit.innerHTML = 'sandwiches';
+            newRow.appendChild(newUnit);
+            var newName = document.createElement('td');
+            newName.innerHTML = itemChecklist[locSelector]['sandwiches'][i]['name'];
+            newRow.appendChild(newName);
+            newRow.id = spaceToDash(itemChecklist[locSelector]['sandwiches'][i]['name']);
+            newRow.classList.add('inventory');
+            tableBody.appendChild(newRow);
+        }
+    }
+    for(var i in itemChecklist[locSelector]) { //pass location as variable
+        var skip = false;
+        document.querySelectorAll('tr.inventory').forEach( (item) => {
+            if (dashToSpace(item.id) === itemChecklist[locSelector][i].name) {
+                skip = true;
+            }
+        });
+        if( !(skip===true) && !(itemChecklist[locSelector][i]['taken']==true) && !(itemChecklist['settlers-green'][i]['name'] == null) ) {
             var newRow = document.createElement('tr');
             var newInput = document.createElement('input');
             newInput.type = 'number';
             newInput.min = 0;
             newInput.max = 999;
-            newInput.id = spaceToDash(itemChecklist['settlers-green'][i]['name'] + '-input');
+            newInput.id = spaceToDash(itemChecklist[locSelector][i]['name'] + '-input');
             newInput.step = 0.1;
             newInput.min = 0;
             newRow.appendChild(newInput);
             var newUnit = document.createElement('td');
-            newUnit.innerHTML = itemChecklist['settlers-green'][i]['unit'];
+            newUnit.innerHTML = itemChecklist[locSelector][i]['unit'];
             newRow.appendChild(newUnit);
             var newName = document.createElement('td');
-            newName.innerHTML = itemChecklist['settlers-green'][i]['name'];
+            newName.innerHTML = itemChecklist[locSelector][i]['name'];
             newRow.appendChild(newName);
-            newRow.id = spaceToDash(itemChecklist['settlers-green'][i]['name']);
+            newRow.id = spaceToDash(itemChecklist[locSelector][i]['name']);
             newRow.classList.add('inventory');
             tableBody.appendChild(newRow);
         }
@@ -684,9 +713,8 @@ function inventoryFormSubmit() {
     today = getDateString();
     var table = document.querySelector('#inventory-form-table');
     var locSelector = 'settlers-green'; //eventually pass as arg or get elsewhere...
-    var updateObj = {
-
-    }
+    var updateObj = {};
+    var sandwichNode = '';
     for(var i = 1, row; row = table.rows[i]; i++) {
         updateObj[dashToSpace(row.id)] = false;
         if(row.children[0].value == '') {
@@ -695,13 +723,23 @@ function inventoryFormSubmit() {
         else {
             updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
         }
-        database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
-             EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
-        });
+        if(row.childNodes[0].id.includes('sandwich')) {
+            database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches'+'/'+dashToSpace(row.id)).update({
+                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+            });
+        }
+        else {
+            database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
+                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+            });
+        }
         row.classList.add('checked');
     }
     table.style.display = 'none';
-    document.querySelector('#inventory-form').appendChild(document.createElement('p').innerHTML('Inventory Submitted'));
+    var invForm = document.querySelector('#inventory-form');
+    var loadedMessage = document.createElement('p');
+    loadedMessage.innerHTML='Inventory Submitted';
+    invForm.appendChild(loadedMessage);
     //show successful submit message
 }
 
@@ -940,7 +978,11 @@ document.querySelector('#home-nav').addEventListener('click', () => {
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#inventory-form-table').style.display = 'inline';
-    inventoryFormLoader();
+    readItemListFB().then( () => { 
+        return readSandwichesFB(); 
+    }).then( () => { 
+        return inventoryFormLoader(); 
+    });
 });
 document.querySelector('#inventory-from-checklist-button').addEventListener('click', () => {
     hideAllForms();
