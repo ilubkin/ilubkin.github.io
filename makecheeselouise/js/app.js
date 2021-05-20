@@ -26,6 +26,7 @@ var yesterdayItemChecklist = null;
 var sandwichChecklist = null;
 var sandwiches = null;
 var revenues = null;
+var permittedEmails = null;
 var weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function daysInMonth(month, year) {
@@ -114,6 +115,12 @@ async function readSandwichesFB() {
 async function readRevenuesFB() {
     await revenueSearch.once('value', (snapshot) => {
         revenues = snapshot.val();
+    });
+}
+
+async function readPermittedEmailsFB() {
+    await database.ref().child('permitted-emails').once('value', (snapshot) => {
+        permittedEmails = snapshot.val();
     });
 }
 
@@ -226,15 +233,20 @@ userSIEmail.addEventListener('onblur', () => {
 userSIPassword.addEventListener('onblur', () => {
     checkUserSIPassword();
 });
+userSIPassword.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') {
+        signIn().then( () => {
+            document.querySelector('#signOutButton').style.display = 'flex';
+        });
+    }
+});
 userSignUp.addEventListener('click', () => {
     //add logic to hide sign in page and display sign up page
     signInForm.style.display = 'none';
     signUpForm.style.display = 'flex';
 });
 signInButton.addEventListener('click', () => {
-    signIn().then( () => {
-        document.querySelector('#signOutButton').style.display = 'flex';
-    });
+    
 });
 signOutButton.addEventListener('click', () => {
     signOut().then( () => {
@@ -280,6 +292,7 @@ function checkUserSIEmail(){
 function checkUserSIPassword(){
     var userSIPassword = document.getElementById("userSIPassword");
     var userSIPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
+    userSIPasswordFormat = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
     if(userSIPassword.value.match(userSIPasswordFormat)){
         flag = false;
@@ -394,11 +407,18 @@ function checkUserPassword(){
 }
 // xxxxxxxxxx Submitting and Creating new user in firebase authentication xxxxxxxxxx
 //!!NEED to add verification that the email is on an approved list
-function signUp(){
+async function signUp(){
+    await readPermittedEmailsFB();
     var uFirstName = document.getElementById("userFirstName").value;
     var uLastName = document.getElementById("userLastName").value;
     var uEmail = document.getElementById("userEmail").value;
     var uPassword = document.getElementById("userPassword").value;
+    var flag = false;
+    for(email in permittedEmails) {
+        if(permittedEmails[email] == uEmail) {
+            flag = true;
+        }
+    }
     var userFullNameFormat = /^([A-Za-z.\s_-])/;    
     var userEmailFormat = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var userPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
@@ -415,6 +435,9 @@ function signUp(){
         return checkUserEmail();
     }else if(checkUserPasswordValid == null){
         return checkUserPassword();
+    }else if(flag == false){
+        alert("Permissions not granted for this email")
+        return false;
     }else{
         firebase.auth().createUserWithEmailAndPassword(uEmail, uPassword).then((success) => {
             var user = firebase.auth().currentUser;

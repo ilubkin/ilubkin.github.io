@@ -74,6 +74,18 @@ button:hover {
     max-width: 400px;
 }
 
+#signUpForm {
+    display: flex;
+    flex-direction: column;
+    max-width: 270px;
+}
+
+#signInForm {
+    display: flex;
+    flex-direction: column;
+    max-width: 270px;
+}
+
 .single-input-wrapper label { display: block;
     text-align: left;
 }
