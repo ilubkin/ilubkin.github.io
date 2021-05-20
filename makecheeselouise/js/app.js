@@ -450,11 +450,6 @@ async function signUp(){
                 uFirstName: uFirstName,
                 uLastName: uLastName,
                 uEmail: uEmail,
-                uPassword: uPassword,
-                userFb: "https://www.facebook.com/",
-                userTw: "https://twitter.com/",
-                userGp: "https://plus.google.com/",
-                userBio: "User biography",
             }
             firebaseRef.child(uid).set(userData);
             alert('Your Account Created','Your account was created successfully, you can log in now.',
