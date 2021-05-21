@@ -10,6 +10,7 @@
 <body>
     <header>
         <button type='button' id='signOutButton' style='display:none'>Sign Out</button>
+        <button type='button' id='welcome-button' style='dipslay:none'>Return to welcome dialogue</button>
         <div class="navbar">
   
             <div class="dropdown">
@@ -72,11 +73,12 @@
             <!-- Populated from js -->
             <h2 id='welcome-message'>Welcome!</h2>
             <!-- Populated from js -->
-            <p id='schedule-message'>Hmmm... I'm not sure what you're up to today. Let Ian know that something's wrong!</p>
-            <button type='button' id='change-role-loc-button'>Change role or location</button>
-            <div id='role-loc-form' style='display:none'>
+            <!--p id='schedule-message'>Hmmm... I'm not sure what you're up to today. Let Ian know that something's wrong!</p-->
+            <!-- <button type='button' id='change-role-loc-button'>Change role or location</button> -->
+            <p id='change-loc-prompt'>Change Location</p> 
+            <div id='role-loc-form' style='display:inline'>
                 <!-- Populated from js -->
-                <select name='role-selector' id='role-selector'></select>
+                <!-- <select name='role-selector' id='role-selector'></select> -->
                 <select name='loc-selector' id='loc-selector'></select>
                 <button id='role-loc-submit' type='select'>Submit</button>
             </div>

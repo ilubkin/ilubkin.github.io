@@ -27,6 +27,7 @@ var sandwichChecklist = null;
 var sandwiches = null;
 var revenues = null;
 var permittedEmails = null;
+var userLocation = null;
 var weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function daysInMonth(month, year) {
@@ -79,6 +80,11 @@ async function readLocationsFB() {
     await locationSearch.once('value', (snapshot) => {
         locations = snapshot.val();
     });
+    for(loc in locations){
+        if(locations[loc] !== 'active') {
+            delete locations[loc];
+        }
+    }
 }
 
 async function readItemChecklistFB() {
@@ -490,6 +496,10 @@ async function pageInfoLoader() {
         }).then( () => {
             return readRevenuesFB();
         }).then( () => {
+            return readLocationsFB();
+        }).then( () => {
+            return roleLocationLoader();
+        }).then( () => {
             return sandwichChecklistLoader();
         });
     }
@@ -501,6 +511,24 @@ function hideAllForms() {
     specialForms.forEach( (specialForm) => {
         specialForm.style.display = 'none';
     });
+}
+
+function roleLocationLoader(){
+    document.querySelector('#role-loc-dialogue').style.display = 'inline';
+    for(loc in locations) {
+        var skip = false;
+        document.querySelectorAll('option').forEach( (opt) => {
+            if(opt.value === loc) {
+                skip = true;
+            }
+        });
+        if(!skip) {
+            var newLoc = document.createElement('option');
+            newLoc.value = loc;
+            newLoc.innerHTML = dashToSpace(loc);
+            document.querySelector('#loc-selector').add(newLoc);
+        }
+    }
 }
 
 function sandwichChecklistLoader() {
@@ -818,12 +846,11 @@ function revenueInputLoader() {
     for(loc in locations) {
         var skip = false;
         document.querySelectorAll('tr').forEach( (row) => {
-            var skip = false;
             if (row.id === loc) {
                 skip = true;
             }
         });
-        if( !(skip===true)) {
+        if(skip===false) {
             var newRow = document.createElement('tr');
             newRow.id = loc;
             var nameCell = document.createElement('td');
@@ -832,7 +859,10 @@ function revenueInputLoader() {
             for(var i = 0; i<7; i++) {
                 var newCell = document.createElement('td');
                 var newInput = document.createElement('input');
-                newInput.type = 'text';
+                newInput.type = 'number';
+                newInput.max = 99999;
+                newInput.step = 100;
+                newInput.style.maxWidth = '4em';
                 newInput.name = weekdays[i] + '-'+ loc + '-input';
                 newInput.id = weekdays[i] + '-'+ loc + '-input';
                 newCell.id = weekdays[i] + '-'+ loc + '-td';
@@ -844,38 +874,40 @@ function revenueInputLoader() {
     }
 }
 
-function revenueInputSubmit() {
+function revenueInputSubmit() { //need to fix!
     //get todays date
     var today = new Date();
     var weekday = today.getDay();
     today = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var nextMon = getDateString((weekday == 0 ? -6 : -weekday+1)+7); 
-    var locSelector = 'settlers-green'; //later, location is chosen by user
-    //weekdays[weekday] gives day of week
-    var revenuePredictions = {
-        [thisMon]: {
-            [locSelector]: {
-                Monday: '',
+    for(loc in locations) { 
+        var locSelector = loc; //later, location is chosen by user
+        //weekdays[weekday] gives day of week
+        var revenuePredictions = {
+            [thisMon]: {
+                [locSelector]: {
+                    Monday: '',
+                },
             },
-        },
-    };
+        };
 
-    //need to add logic to choose this or next monday
+        //need to add logic to choose this or next monday
 
-    var data = document.querySelectorAll('#revenue-input-tbody td');
-    for(datum in data) {
-        if(!((data[datum].id === "") || (data[datum].id === undefined))) {
-            if(data[datum].id.includes(locSelector)) {
-                for(day in weekdays) {
-                    if(data[datum].id.includes(weekdays[day])) { //logs the info to use as firebase key
-                        revenuePredictions[`${thisMon}`][`${locSelector}`][`${weekdays[day]}`] = document.querySelector('#'+weekdays[day]+'-'+locSelector+'-input').value;
+        var data = document.querySelectorAll('#revenue-input-tbody td');
+        for(datum in data) {
+            if(!((data[datum].id === "") || (data[datum].id === undefined))) {
+                if(data[datum].id.includes(locSelector)) {
+                    for(day in weekdays) {
+                        if(data[datum].id.includes(weekdays[day])) { //logs the info to use as firebase key
+                            revenuePredictions[weekdays[day]] = document.querySelector('#'+weekdays[day]+'-'+locSelector+'-input').value;
+                        }
                     }
                 }
             }
         }
+        database.ref('/revenue-predictions/'+thisMon+'/'+locSelector).update(revenuePredictions);
     }
-    database.ref('/revenue-predictions/').update(revenuePredictions);
 }
 
 function addIngedientHandler() {
@@ -1009,4 +1041,10 @@ document.querySelector('#inventory-from-checklist-button').addEventListener('cli
 document.querySelector('#sandwich-from-inventory-button').addEventListener('click', () => {
     hideAllForms();
     sandwichChecklistLoader();
+});
+// document.querySelector('#change-role-loc-button').addEventListener('click', () => {
+//     document.querySelector('#role-loc-form').style.display = 'inline';
+// });
+document.querySelector('#role-loc-submit').addEventListener('click', () => {
+    userLocation = document.querySelector('#loc-selector').value;
 });
