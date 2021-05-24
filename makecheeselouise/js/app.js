@@ -27,8 +27,8 @@ var sandwichChecklist = null;
 var sandwiches = null;
 var revenues = null;
 var permittedEmails = null;
-var userLocation = null;
-var weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+var userLocation = 'settlers-green'; //later pull from user info for default
+var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function daysInMonth(month, year) {
     return new Date(year, month, 0).getDate();
@@ -103,10 +103,9 @@ async function readYesterdayItemChecklistFB() {
     });
 }
 
-async function readSandwichChecklistFB(dayOffset = 0) {
+async function readSandwichChecklistFB(dayOffset = 0, locSelector = 'settlers-green') {
     var today = new Date();
     today = getDateString(dayOffset);
-    var locSelector = 'settlers-green';
     await database.ref().child('inventory-record/' + today + '/' + locSelector + '/sandwiches').once('value', (snapshot) => {
         sandwichChecklist = snapshot.val();
     });
@@ -132,21 +131,24 @@ async function readPermittedEmailsFB() {
 
 async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if already written
     await readItemListFB().then( () => { 
-        readLocationsFB();
+        return readLocationsFB();
     }).then( () => { 
         return readSandwichesFB();
     }).then( () => { 
-        return readSandwichChecklistFB(dayOffset);
-    }).then( () => {
-        var today = new Date();
-        var weekday = today.getDay() + dayOffset;
-        today = getDateString(dayOffset);
-        var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1) + dayOffset);
-        var revenue = '0';
-        var locSelector = 'settlers-green';//later, itterate through all locations, or pass as arg
-        database.ref().child('revenue-predictions/' + thisMon + '/' + locSelector + '/' + weekdays[(weekday == 0 ? 6 : weekday-1)]).once('value', (snapshot) => {
-            return revenue = Number(snapshot.val());
-        }).then(() => {
+        return readRevenuesFB();
+    });
+    var today = new Date();
+    var weekday = today.getDay() + dayOffset;
+    today = getDateString(dayOffset);
+    var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1) + dayOffset);
+    var revenue = '0';
+    // var locSelector = 'settlers-green';//later, itterate through all locations, or pass as arg
+    for(locSelector in locations) {
+        revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+        await readSandwichChecklistFB(dayOffset, locSelector).then(() => {
+            console.log(locSelector);
+            console.log(revenue);
+            console.log(sandwichChecklist);
             for(var i in itemList) {
                 database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
                     name: itemList[i].name,
@@ -160,7 +162,6 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
                     //need to add current inventory into account (for cur inv. and to bring)
                 });
             }
-            
         }).then(() => {
             if(sandwichChecklist == null) {
                 for(var sandwich in sandwiches) {
@@ -174,7 +175,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
                 }
             }
         });
-    });
+    }
 }
 
 function writeItemLocal(i) {
@@ -534,12 +535,18 @@ function roleLocationLoader(){
 function sandwichChecklistLoader() {
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     document.querySelector('#sandwich-checklist').style.display = 'flex';
-    var locSelector = 'settlers-green';
+    var locSelector = userLocation;
     var today = new Date();
     var weekday = today.getDay();
     today = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+    if(document.querySelector('#sandwich-checklist-table').caption.innerHTML !== userLocation) {
+            var blankTBody = document.createElement('tbody');
+            blankTBody.id = 'sandwich-checklist-tbody';
+            sandwichTBody.parentNode.replaceChild(blankTBody, sandwichTBody);
+            sandwichTBody = blankTBody;
+    }
     for(var i in itemChecklist[locSelector]['sandwiches']) {
         var SODinventory = itemChecklist[locSelector]['sandwiches'][i]['SODinventory'];
         var EODinventory = null;
@@ -550,8 +557,9 @@ function sandwichChecklistLoader() {
             EODinventory = yesterdayItemChecklist[locSelector]['sandwiches'][i]['EODinventory'];
         }
         var skip = false;
+        
         document.querySelectorAll('tr.checklist-sandwich').forEach( (item) => {
-            if (dashToSpace(item.id) === itemChecklist[locSelector]['sandwiches'][i].name) {
+            if ((dashToSpace(item.id) === itemChecklist[locSelector]['sandwiches'][i].name) ) { 
                 skip = true;
             }
         });
@@ -576,15 +584,17 @@ function sandwichChecklistLoader() {
             newRow.id = spaceToDash(itemChecklist[locSelector]['sandwiches'][i]['name']);
             sandwichTBody.appendChild(newRow);
         }
-        //Need to add functionality for removing later items based on this
-        //Likely best to make this it's own form. That allows an 'offset' variable to be created in writeChecklistFB
-        //On submit, first re-update that offset with these variables, just adding to it off the form
     }
+    document.querySelector('#sandwich-checklist-table').caption.innerHTML = locSelector;
 }
+
+// var new_tbody = document.createElement('tbody');
+// populate_with_new_rows(new_tbody);
+// old_tbody.parentNode.replaceChild(new_tbody, old_tbody)
 
 function sandwichChecklistSubmit() {
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
-    var locSelector = 'settlers-green';
+    var locSelector = userLocation;
     var today = new Date();
     today = getDateString();
     for(var i = 1, row; row = sandwichTBody.rows[i]; i++) {
@@ -622,7 +632,7 @@ function itemChecklistLoader() {
     //may not need the item
     var tableBody = document.querySelector('#item-checklist-tbody');
     document.querySelector('#item-checklist').style.display = 'flex';
-    var locSelector = 'settlers-green';
+    var locSelector = userLocation;
     for(var i in itemChecklist[locSelector]) { //pass location as variable
         var skip = false;
         document.querySelectorAll('tr.checklist-item').forEach( (item) => {
@@ -695,7 +705,7 @@ function itemChecklistLoader() {
 function inventoryFormLoader() {
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
-    var locSelector = 'settlers-green';
+    var locSelector = userLocation;
     for(var i in itemChecklist[locSelector]['sandwiches']) {
         var skip = false;
         document.querySelectorAll('tr.inventory').forEach( (item) => {
@@ -758,7 +768,7 @@ function inventoryFormSubmit() {
     var today = new Date();
     today = getDateString();
     var table = document.querySelector('#inventory-form-table');
-    var locSelector = 'settlers-green'; //eventually pass as arg or get elsewhere...
+    var locSelector = userLocation; //eventually pass as arg or get elsewhere...
     var updateObj = {};
     var sandwichNode = '';
     for(var i = 1, row; row = table.rows[i]; i++) {
@@ -880,16 +890,11 @@ function revenueInputSubmit() { //need to fix!
     var weekday = today.getDay();
     today = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
-    var nextMon = getDateString((weekday == 0 ? -6 : -weekday+1)+7); 
+    // var nextMon = getDateString((weekday == 0 ? -6 : -weekday+1)+7); 
     for(loc in locations) { 
         var locSelector = loc; //later, location is chosen by user
         //weekdays[weekday] gives day of week
         var revenuePredictions = {
-            [thisMon]: {
-                [locSelector]: {
-                    Monday: '',
-                },
-            },
         };
 
         //need to add logic to choose this or next monday
@@ -906,7 +911,7 @@ function revenueInputSubmit() { //need to fix!
                 }
             }
         }
-        database.ref('/revenue-predictions/'+thisMon+'/'+locSelector).update(revenuePredictions);
+        database.ref('/revenue-predictions/'+thisMon+'/'+locSelector).set(revenuePredictions);
     }
 }
 
@@ -952,7 +957,7 @@ function checklistSubmit() {
     var today = new Date();
     today = getDateString();
     var table = document.querySelector('#item-checklist-table');
-    var locSelector = 'settlers-green'; //eventually pass as arg or get elsewhere...
+    var locSelector = userLocation; //eventually pass as arg or get elsewhere...
     var updateObj = {
 
     }
@@ -1047,4 +1052,10 @@ document.querySelector('#sandwich-from-inventory-button').addEventListener('clic
 // });
 document.querySelector('#role-loc-submit').addEventListener('click', () => {
     userLocation = document.querySelector('#loc-selector').value;
+    hideAllForms();
+    sandwichChecklistLoader();
 });
+document.querySelector('#welcome-button').addEventListener('click', () => {
+    hideAllForms();
+    document.querySelector('#role-loc-dialogue').style.display = 'inline';
+})

@@ -10,7 +10,7 @@
 <body>
     <header>
         <button type='button' id='signOutButton' style='display:none'>Sign Out</button>
-        <button type='button' id='welcome-button' style='dipslay:none'>Return to welcome dialogue</button>
+        <button type='button' id='welcome-button'>Change location</button>
         <div class="navbar">
   
             <div class="dropdown">
@@ -91,12 +91,15 @@
         <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
             <button id='inventory-from-sandwich-button' name='inventory-from-sandwich-button' type='button'>Inventory Form</button>
             <table id='sandwich-checklist-table'>
-                <tbody id='sandwich-checklist-tbody'>
+                <caption></caption>
+                <thead>
                     <tr>
                         <th colspan="2">What you're bringing</th>
                         <th>Inventory</th>
                         <th>Max need</th>
                     </tr>
+                </thead>
+                <tbody id='sandwich-checklist-tbody'>
                 </tbody>
             </table>
             <button id='sandwich-checklist-submit' name='sandwich-checklist-submit' type='button'>Submit</button>
