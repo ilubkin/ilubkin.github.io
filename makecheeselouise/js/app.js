@@ -253,7 +253,9 @@ userSignUp.addEventListener('click', () => {
     signUpForm.style.display = 'flex';
 });
 signInButton.addEventListener('click', () => {
-    
+    signIn().then( () => {
+        document.querySelector('#signOutButton').style.display = 'flex';
+    });
 });
 signOutButton.addEventListener('click', () => {
     signOut().then( () => {
