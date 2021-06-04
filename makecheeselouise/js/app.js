@@ -146,9 +146,6 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
     for(locSelector in locations) {
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
         await readSandwichChecklistFB(dayOffset, locSelector).then(() => {
-            console.log(locSelector);
-            console.log(revenue);
-            console.log(sandwichChecklist);
             for(var i in itemList) {
                 database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
                     name: itemList[i].name,
@@ -479,6 +476,7 @@ async function signUp(){
 async function pageInfoLoader() {
 //current idea is to have it call dif. fn's from below based on time, date, role, location
     hideAllForms();
+    document.querySelector('#page-loading-display').style.display = 'flex';
     //readItemsFB().then( () => { itemChecklistLoader(); });
     if(firebase.auth().currentUser) {
         signInForm.style.display = 'none';
@@ -503,6 +501,7 @@ async function pageInfoLoader() {
         }).then( () => {
             return roleLocationLoader();
         }).then( () => {
+            document.querySelector('#page-loading-display').style.display = 'none';
             return sandwichChecklistLoader();
         });
     }
