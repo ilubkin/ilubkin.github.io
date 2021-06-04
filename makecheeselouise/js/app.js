@@ -1002,7 +1002,7 @@ document.querySelector('#add-item-button').addEventListener('click', () => {
     readItemListFB().then( () => {itemListLoader();} );
 });
 document.querySelector('#revenue-input-submit').addEventListener('click', () => {
-    readLocationsFB().then( () => { revenueInputSubmit(); });
+    readLocationsFB().then( () => { return revenueInputSubmit(); }).then( () => { return alert('Revenues submited sucessfully!')});
 });
 document.querySelector('#go-back-sandwich-button').addEventListener('click', () => {
     hideAllForms();
