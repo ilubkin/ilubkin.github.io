@@ -867,7 +867,10 @@ function revenueInputLoader() {
             var nameCell = document.createElement('td');
             nameCell.innerHTML = loc;
             newRow.appendChild(nameCell);
-            for(var i = 0; i<7; i++) {
+            for(var i = 1; i<8; i++) {
+                if(i == 7) {
+                    i = 0;
+                }
                 var newCell = document.createElement('td');
                 var newInput = document.createElement('input');
                 newInput.type = 'number';
@@ -879,6 +882,9 @@ function revenueInputLoader() {
                 newCell.id = weekdays[i] + '-'+ loc + '-td';
                 newCell.appendChild(newInput);
                 newRow.appendChild(newCell);
+                if(i == 0) {
+                    i = 8;
+                }
             }
             tableBody.appendChild(newRow);
         }
