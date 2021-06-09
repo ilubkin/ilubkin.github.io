@@ -831,6 +831,9 @@ function itemListLoader() {
     var tableBody = document.querySelector('#item-list-tbody');
     document.querySelector('#item-list-container').style.display = 'flex';
     for(var i in itemList) {
+        if(typeof(itemList[i] !== 'object')) {
+            continue;
+        }
         document.querySelectorAll('tr').forEach( (item) => {
             if (item.id === spaceToDash(itemList[i].name)) {
                 item.remove();
@@ -965,6 +968,7 @@ function addIngedientHandler() {
     if(!skip) {
         var newIngWrapper = document.createElement('div');
         newIngWrapper.classList.add('input-pair-wrapper');
+        newIngWrapper.style.width = '100%'
         var newIng = document.createElement('input');
         newIng.classList.add('ingredient-input');
         newIng.type = 'text';
