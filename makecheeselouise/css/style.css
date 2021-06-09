@@ -53,8 +53,15 @@ button:hover {
     box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
 }
 
+input:focus {
+  outline: 3px solid gold;
+}
+
+
 #item-add-form {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 20% 20% 20% 20% 20%;
+    gap: 15px;
 }
 
 #sandwich-add-form {

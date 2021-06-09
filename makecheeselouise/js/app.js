@@ -147,6 +147,9 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
         await readSandwichChecklistFB(dayOffset, locSelector).then(() => {
             for(var i in itemList) {
+                if(typeof(itemList[i] !== 'object')) {
+                    continue;
+                }
                 database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
                     name: itemList[i].name,
                     unit: itemList[i].unit,
@@ -179,12 +182,36 @@ function writeItemLocal(i) {
 
 }
 
-function writeAllItemsLocal() {
-
+async function writeItemListLocal() {
+    await readItemListFB();
+    localStorage.setItem('itemList', JSON.stringify(itemList));
 }
 
-function readAllItemsLocal() {
+async function readItemListLocal() {
+    //Date.parse(string) will turn a date string from Date.toString() into an integer value
+    var today = new Date();
+    today = Date.parse(today.toString());
+    var lastRead = new Date();
+    var lastWrite = new Date();
+    const dbRef = firebase.database().ref();
 
+    await dbRef.child("item-list").child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Date.parse(snapshot.val());
+            console.log(snapshot.val());
+        } else {
+            console.log("Error reading from last-write of item-list: No data available");
+        }
+        }).catch((error) => {
+            console.error(error);
+    });
+    if(localStorage.getItem('itemList') !== null) {
+        lastRead = Date.parse(JSON.parse(localStorage.getItem('itemList'))['last-write']);
+    }
+    if(lastRead < lastWrite) /*local object is outdated*/ {
+        await writeItemListLocal();
+    }
+    return JSON.parse(localStorage.getItem('itemList'));
 }
 
 function writeTemplateItemFB(i) {
@@ -852,6 +879,11 @@ function itemListLoader() {
     });
 }
 
+async function prepChecklistLoader() {
+    await readItemListLocal();
+
+}
+
 function revenueInputLoader() {
     var tableBody = document.querySelector('#revenue-input-tbody');
     for(loc in locations) {
@@ -1037,6 +1069,9 @@ document.querySelector('#add-revenues-nav').addEventListener('click', () => {
 document.querySelector('#home-nav').addEventListener('click', () => {
     pageInfoLoader();
 });
+document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
+    //prepChecklistLoader();
+});
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#inventory-form-table').style.display = 'inline';
@@ -1065,4 +1100,4 @@ document.querySelector('#role-loc-submit').addEventListener('click', () => {
 document.querySelector('#welcome-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#role-loc-dialogue').style.display = 'inline';
-})
+});
