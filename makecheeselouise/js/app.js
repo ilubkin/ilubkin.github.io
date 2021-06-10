@@ -191,7 +191,7 @@ async function readItemListLocal() {
     //Date.parse(string) will turn a date string from Date.toString() into an integer value
     var today = new Date();
     today = Date.parse(today.toString());
-    var lastRead = new Date();
+    var lastRead = 0;
     var lastWrite = new Date();
     const dbRef = firebase.database().ref();
 
@@ -211,7 +211,7 @@ async function readItemListLocal() {
     if(lastRead < lastWrite) /*local object is outdated*/ {
         await writeItemListLocal();
     }
-    return JSON.parse(localStorage.getItem('itemList'));
+    // return JSON.parse(localStorage.getItem('itemList'));
 }
 
 function writeTemplateItemFB(i) {
@@ -897,9 +897,86 @@ function itemListLoader() {
     });
 }
 
-async function prepChecklistLoader() {
+async function prepChecklistLoader(revenue = 0) {
     await readItemListLocal();
-
+    document.querySelector('#prep-revenue-input').addEventListener('input', () => {
+        if(document.querySelector('#prep-revenue-input').value != 0) {
+            prepChecklistLoader(document.querySelector('#prep-revenue-input').value);
+        }
+        else {
+            prepChecklistLoader();
+        }
+    });
+    //UNFINISHED - Need to create table rows in if statement below 
+    var localItemList = JSON.parse(localStorage.getItem('itemList'));
+    var tableBody = document.querySelector('#prep-checklist-tbody');
+    document.querySelector('#prep-checklist').style.display = 'flex';
+    //need to: itterate through locally stored items; create or update a row for each using input revenue
+    for(i in localItemList) {
+        if(typeof(localItemList[i]) !== 'object' ) {
+            continue;
+        }
+        var skip = false;
+        document.querySelectorAll('tr.preplist-item').forEach( (item) => {
+            if (/*dashToSpace(item.id) === localItemList[i].name
+                ||*/ i == 'sandwiches') {
+                skip = true;
+            }
+        });
+        if(skip == false) { //also add logic (here or above) to ensure item is in use, and (here) that it hasn't been prepped yet
+            //need to incoperate back of house inventory as well
+            var quantNeeded = Math.round(revenue*Number(localItemList[i]['dollarToQuant']) * 10) / 10;
+            //
+            if(document.querySelector('#' + spaceToDash(localItemList[i]['name'])) !== null) {
+                document.querySelector('#' + spaceToDash(localItemList[i]['name']) + '-quant').innerHTML = quantNeeded;
+                if(quantNeeded <= 0) {
+                    document.querySelector('#' + spaceToDash(localItemList[i]['name']) + '-checkbox').checked = true;
+                    document.querySelector('#' + spaceToDash(localItemList[i]['name']) + '-checkbox').parentElement.classList.add('checked');
+                }
+                else {
+                    document.querySelector('#' + spaceToDash(localItemList[i]['name']) + '-checkbox').checked = false;
+                    document.querySelector('#' + spaceToDash(localItemList[i]['name']) + '-checkbox').parentElement.classList.remove('checked');
+                }
+                continue;
+            }
+            var newRow = document.createElement('tr');
+            var newCheckbox = document.createElement('input');
+            newCheckbox.type = 'checkbox';
+            if(quantNeeded <= 0) {
+                newCheckbox.checked = true;
+                newRow.classList.add('checked');
+            }
+            newCheckbox.id = spaceToDash(localItemList[i]['name'] + '-checkbox');
+            newRow.appendChild(newCheckbox);
+            var newName = document.createElement('td');
+            newName.innerHTML = localItemList[i]['name'];
+            newRow.appendChild(newName);
+            var newQuantNeeded = document.createElement('td'); 
+            newQuantNeeded.innerHTML = quantNeeded;
+            newQuantNeeded.id = spaceToDash(localItemList[i]['name'] + '-quant');
+            newRow.appendChild(newQuantNeeded);
+            var newUnit = document.createElement('td');
+            newUnit.innerHTML = localItemList[i]['unit'] + (quantNeeded > 1 ? 's' : '');
+            newRow.classList.add('checklist-item');
+            newRow.id = spaceToDash(localItemList[i]['name']);
+            tableBody.appendChild(newRow);
+        }
+    }
+    
+    document.querySelectorAll("input[type='checkbox']").forEach( (elt) => {
+        var newElt = elt.cloneNode(true);
+        elt.parentNode.replaceChild(newElt, elt);
+        newElt.parentElement.addEventListener('click', () => {
+            if(newElt.parentElement.classList.contains('checked')) {
+                newElt.parentElement.classList.remove('checked');
+                newElt.checked = false;
+            }
+            else{
+                newElt.parentElement.classList.add('checked');
+                newElt.checked = true;
+            }
+        });
+    });
 }
 
 function revenueInputLoader() {
@@ -1089,7 +1166,8 @@ document.querySelector('#home-nav').addEventListener('click', () => {
     pageInfoLoader();
 });
 document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
-    //prepChecklistLoader();
+    hideAllForms();
+    prepChecklistLoader();
 });
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();

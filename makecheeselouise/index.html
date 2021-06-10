@@ -117,8 +117,7 @@
             <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>
-                <tbody id='item-checklist-tbody'>
-                    <caption></caption>
+                <caption></caption>
                     <thead>
                         <tr>
                             <th></th><!-- checkbox column -->
@@ -129,6 +128,8 @@
                             <!-- <th>Where to find</th> -->
                         </tr>
                     </thead>
+                    <tbody id='item-checklist-tbody'>
+                    
                         <!-- Add other rows with JS -->
                     <!--tr>
                         <td><input type='checkbox'></td>
@@ -141,15 +142,15 @@
         <div id='inventory-form' class='flex-container special-form table-card' style='display:none'>
             <button id='sandwich-from-inventory-button' name='sandwich-from-inventory-button' type='button'>Start of day checklist</button>
             <table id='inventory-form-table'>
+                <caption></caption>
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Unit</th>
+                        <th>Item Name</th>
+                    </tr>
+                </thead>
                 <tbody id='inventory-form-tbody'>
-                    <caption></caption>
-                    <thead>
-                        <tr>
-                            <th>Number</th>
-                            <th>Unit</th>
-                            <th>Item Name</th>
-                        </tr>
-                    </thead>
                 </tbody>
             </table>
             <button type='button' id='inventory-form-submit'>Submit</button>
@@ -247,19 +248,20 @@
 
         <div id='prep-checklist' class='flex-container special-form table-card' style='display:none'>
             <table id='prep-checklist-table'>
-                <tbody id='prep-checklist-tbody'>
+                <thead>
+                    <tr>
+                        <input type='number' id='prep-revenue-input'>
+                    </tr>
                     <tr>
                         <th></th><!-- checkbox column -->
-                        <th>What to bring</th>
+                        <th>What to prep</th>
                         <th></th>
                         <th></th>
                         <th>Inventory</th>
                         <!-- <th>Where to find</th> -->
                     </tr>
-                        <!-- Add other rows with JS -->
-                    <!--tr>
-                        <td><input type='checkbox'></td>
-                    </tr-->
+                </thead>
+                <tbody id='prep-checklist-tbody'>
                 </tbody>
             </table>
             <button id='prep-checklist-submit' name='prep-checklist-submit' type='button'>Submit</button>
