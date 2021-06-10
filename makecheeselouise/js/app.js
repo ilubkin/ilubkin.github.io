@@ -613,7 +613,7 @@ function sandwichChecklistLoader() {
             sandwichTBody.appendChild(newRow);
         }
     }
-    document.querySelector('#sandwich-checklist-table').caption.innerHTML = locSelector;
+    document.querySelector('#sandwich-checklist-table').caption.innerHTML = dashToSpace(locSelector);
 }
 
 // var new_tbody = document.createElement('tbody');
@@ -661,6 +661,13 @@ function itemChecklistLoader() {
     var tableBody = document.querySelector('#item-checklist-tbody');
     document.querySelector('#item-checklist').style.display = 'flex';
     var locSelector = userLocation;
+    if(document.querySelector('#item-checklist-table').caption.innerHTML !== userLocation) {
+        var blankTBody = document.createElement('tbody');
+        blankTBody.id = 'item-checklist-tbody';
+        tableBody.parentNode.replaceChild(blankTBody, tableBody);
+        tableBody = blankTBody;
+    }
+
     for(var i in itemChecklist[locSelector]) { //pass location as variable
         var skip = false;
         document.querySelectorAll('tr.checklist-item').forEach( (item) => {
@@ -715,6 +722,7 @@ function itemChecklistLoader() {
             tableBody.appendChild(newRow);
             
         }
+        document.querySelector('#item-checklist-table').caption.innerHTML = dashToSpace(locSelector);
     }
     document.querySelectorAll("input[type='checkbox']").forEach( (elt) => {
         elt.parentElement.addEventListener('click', () => {
@@ -734,6 +742,12 @@ function inventoryFormLoader() {
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
     var locSelector = userLocation;
+    if(document.querySelector('#inventory-form-table').caption.innerHTML !== userLocation) {
+        var blankTBody = document.createElement('tbody');
+        blankTBody.id = 'inventory-form-tbody';
+        tableBody.parentNode.replaceChild(blankTBody, tableBody);
+        tableBody = blankTBody;
+    }
     for(var i in itemChecklist[locSelector]['sandwiches']) {
         var skip = false;
         document.querySelectorAll('tr.inventory').forEach( (item) => {
@@ -790,6 +804,7 @@ function inventoryFormLoader() {
             tableBody.appendChild(newRow);
         }
     }
+    document.querySelector('#inventory-form-table').caption.innerHTML = dashToSpace(locSelector);
 }
 
 function inventoryFormSubmit() {

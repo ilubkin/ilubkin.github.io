@@ -14,6 +14,11 @@ td {
     padding-bottom: 0.75em;
 }
 
+th {
+    font-weight: normal;
+    text-decoration: underline;
+}
+
 tr.checked {
     background-color: #c7c7c7 !important;
     color:#686868 !important;
@@ -57,6 +62,12 @@ input:focus {
   outline: 3px solid gold;
 }
 
+caption {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 6px;
+    text-transform: capitalize;
+}
 
 #item-add-form {
     display: grid;

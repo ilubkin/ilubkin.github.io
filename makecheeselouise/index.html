@@ -118,14 +118,17 @@
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>
                 <tbody id='item-checklist-tbody'>
-                    <tr>
-                        <th></th><!-- checkbox column -->
-                        <th>What to bring</th>
-                        <th></th>
-                        <th></th>
-                        <th>Inventory</th>
-                        <!-- <th>Where to find</th> -->
-                    </tr>
+                    <caption></caption>
+                    <thead>
+                        <tr>
+                            <th></th><!-- checkbox column -->
+                            <th>What to bring</th>
+                            <th></th>
+                            <th></th>
+                            <th>Inventory</th>
+                            <!-- <th>Where to find</th> -->
+                        </tr>
+                    </thead>
                         <!-- Add other rows with JS -->
                     <!--tr>
                         <td><input type='checkbox'></td>
@@ -139,11 +142,14 @@
             <button id='sandwich-from-inventory-button' name='sandwich-from-inventory-button' type='button'>Start of day checklist</button>
             <table id='inventory-form-table'>
                 <tbody id='inventory-form-tbody'>
-                    <tr>
-                        <th>Number</th>
-                        <th>Unit</th>
-                        <th>Item Name</th>
-                    </tr>
+                    <caption></caption>
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Unit</th>
+                            <th>Item Name</th>
+                        </tr>
+                    </thead>
                 </tbody>
             </table>
             <button type='button' id='inventory-form-submit'>Submit</button>
