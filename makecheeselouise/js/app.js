@@ -147,7 +147,9 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
         await readSandwichChecklistFB(dayOffset, locSelector).then(() => {
             for(var i in itemList) {
-                if(typeof(itemList[i] !== 'object')) {
+                if(typeof(itemList[i]) !== 'object') {
+                    console.log(typeof(itemList[i]));
+                    console.log(i);
                     continue;
                 }
                 database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
