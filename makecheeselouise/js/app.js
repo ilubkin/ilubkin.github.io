@@ -148,8 +148,6 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         await readSandwichChecklistFB(dayOffset, locSelector).then(() => {
             for(var i in itemList) {
                 if(typeof(itemList[i]) !== 'object') {
-                    console.log(typeof(itemList[i]));
-                    console.log(i);
                     continue;
                 }
                 database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
@@ -184,12 +182,7 @@ function writeItemLocal(i) {
 
 }
 
-async function writeItemListLocal() {
-    await readItemListFB();
-    localStorage.setItem('itemList', JSON.stringify(itemList));
-}
-
-async function readItemListLocal() {
+async function updateItemListLocal() {
     //Date.parse(string) will turn a date string from Date.toString() into an integer value
     var today = new Date();
     today = Date.parse(today.toString());
@@ -200,7 +193,6 @@ async function readItemListLocal() {
     await dbRef.child("item-list").child('last-write').get().then((snapshot) => {
         if (snapshot.exists()) {
             lastWrite = Date.parse(snapshot.val());
-            console.log(snapshot.val());
         } else {
             console.log("Error reading from last-write of item-list: No data available");
         }
@@ -211,9 +203,52 @@ async function readItemListLocal() {
         lastRead = Date.parse(JSON.parse(localStorage.getItem('itemList'))['last-write']);
     }
     if(lastRead < lastWrite) /*local object is outdated*/ {
-        await writeItemListLocal();
+        await localStorage.setItem('itemList', JSON.stringify(itemList));
     }
     // return JSON.parse(localStorage.getItem('itemList'));
+}
+
+async function updateRevenuePredictionsLocal() {
+    var today = new Date();
+    var weekday = today.getDay();
+    today = Date.parse(today.toString());
+    var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
+    var lastRead = 0;
+    var lastWrite = new Date();
+    const dbRef = firebase.database().ref();
+
+    if(localStorage.getItem('revenuePredictions') !== null && JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon] !== undefined) {
+        lastRead = JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon]['last-write'];
+    }
+
+    await dbRef.child("revenue-predictions").child(thisMon).child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Date.parse(snapshot.val());
+        } else {
+            lastWrite = 0
+            console.log("Error reading from last-write of revenue-predictions: No data available");
+        }
+        }).catch((error) => {
+            console.error(error);
+    });
+    if(lastWrite < Date.parse(thisMon)) {
+        await readLocationsFB();
+        for(l in locations) {
+            if(locations[l] == 'active') {
+                for(day in weekdays) {
+                    revenues[thisMon][l][weekdays[day]] = 0;
+                }
+            }
+        }
+        revenues[thisMon]['last-write'] = today;
+        await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
+    }
+    if(lastRead < lastWrite) {
+        await readRevenuesFB().then( () => {
+             localStorage.setItem('revenuePredictions', JSON.stringify(revenues));
+        });
+    }
+    //
 }
 
 function writeTemplateItemFB(i) {
@@ -900,7 +935,7 @@ function itemListLoader() {
 }
 
 async function prepChecklistLoader(revenue = 0) {
-    await readItemListLocal();
+    await updateItemListLocal();
     document.querySelector('#prep-revenue-input').addEventListener('input', () => {
         if(document.querySelector('#prep-revenue-input').value != 0) {
             prepChecklistLoader(document.querySelector('#prep-revenue-input').value);
@@ -981,8 +1016,14 @@ async function prepChecklistLoader(revenue = 0) {
     });
 }
 
-function revenueInputLoader() {
+async function revenueInputLoader() {
     var tableBody = document.querySelector('#revenue-input-tbody');
+    await updateRevenuePredictionsLocal();
+    var today = new Date();
+    var weekday = today.getDay();
+    var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
+    var weekRevenues = JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon];
+
     for(loc in locations) {
         var skip = false;
         document.querySelectorAll('tr').forEach( (row) => {
@@ -990,7 +1031,7 @@ function revenueInputLoader() {
                 skip = true;
             }
         });
-        if(skip===false) {
+        if(skip === false) {
             var newRow = document.createElement('tr');
             newRow.id = loc;
             var nameCell = document.createElement('td');
@@ -1005,6 +1046,7 @@ function revenueInputLoader() {
                 newInput.type = 'number';
                 newInput.max = 99999;
                 newInput.step = 100;
+                newInput.value = (weekRevenues[loc][weekdays[i]] == '' ? 0 : weekRevenues[loc][weekdays[i]]);
                 newInput.style.maxWidth = '4em';
                 newInput.name = weekdays[i] + '-'+ loc + '-input';
                 newInput.id = weekdays[i] + '-'+ loc + '-input';
@@ -1017,6 +1059,14 @@ function revenueInputLoader() {
             }
             tableBody.appendChild(newRow);
         }
+        else {
+            for(var i = 1; i<8; i++) {
+                if(i == 7) {
+                    i = 0;
+                }
+                document.querySelector('#' + weekdays[i] + '-'+ loc + '-input').value = (weekRevenues[loc][weekdays[i]] == '' ? 0 : weekRevenues[loc][weekdays[i]]);
+            }
+        }
     }
 }
 
@@ -1024,7 +1074,6 @@ function revenueInputSubmit() { //need to fix!
     //get todays date
     var today = new Date();
     var weekday = today.getDay();
-    today = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     // var nextMon = getDateString((weekday == 0 ? -6 : -weekday+1)+7); 
     for(loc in locations) { 
@@ -1048,6 +1097,7 @@ function revenueInputSubmit() { //need to fix!
             }
         }
         database.ref('/revenue-predictions/'+thisMon+'/'+locSelector).set(revenuePredictions);
+        database.ref('/revenue-predictions/'+thisMon+'/last-write').set(today.toString());
     }
 }
 
