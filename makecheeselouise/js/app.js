@@ -218,7 +218,7 @@ async function updateRevenuePredictionsLocal() {
     const dbRef = firebase.database().ref();
 
     if(localStorage.getItem('revenuePredictions') !== null && JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon] !== undefined) {
-        lastRead = JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon]['last-write'];
+        lastRead = Date.parse(JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon]['last-write']);
     }
 
     await dbRef.child("revenue-predictions").child(thisMon).child('last-write').get().then((snapshot) => {
@@ -243,6 +243,7 @@ async function updateRevenuePredictionsLocal() {
         revenues[thisMon]['last-write'] = today;
         await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
     }
+    console.log("Last read: " + lastRead + " Last write: " + lastWrite);
     if(lastRead < lastWrite) {
         await readRevenuesFB().then( () => {
              localStorage.setItem('revenuePredictions', JSON.stringify(revenues));
@@ -883,7 +884,7 @@ function itemListLoader() {
     var tableBody = document.querySelector('#item-list-tbody');
     document.querySelector('#item-list-container').style.display = 'flex';
     for(var i in itemList) {
-        if(typeof(itemList[i] !== 'object')) {
+        if(typeof(itemList[i]) !== 'object') {
             continue;
         }
         document.querySelectorAll('tr').forEach( (item) => {
@@ -898,17 +899,21 @@ function itemListLoader() {
         var newLocation = document.createElement('td');
         var newRatio = document.createElement('td');
         var newUse = document.createElement('td');
+        var newEdit = document.createElement('td');
         newUnit.innerHTML = itemList[i]['unit'];
         newName.innerHTML = itemList[i]['name'];
         newLocation.innerHTML = itemList[i]['location'];
         newRatio.innerHTML = itemList[i]['dollarToQuant'];
         newUse.innerHTML = itemList[i]['inUse'];
         newUse.classList.add('item-use-toggle', 'no-select');
+        newEdit.innerHTML = ' edit';
+        newEdit.classList.add('item-edit-button', 'no-select');
         newRow.appendChild(newUnit);
         newRow.appendChild(newName);
         newRow.appendChild(newLocation);
         newRow.appendChild(newRatio);
         newRow.appendChild(newUse);
+        newRow.appendChild(newEdit);
         if(itemList[i]['inUse'] == false) {
             newRow.classList.add('checked');
         }
@@ -930,6 +935,26 @@ function itemListLoader() {
                         inUse: true,
                     });
                 }
+        });
+    });
+    document.querySelectorAll('.item-edit-button').forEach( (elt) => {
+        elt.addEventListener('click', () => {
+            var unitValue = elt.parentNode.childNodes[0].innerHTML;
+            var nameValue = elt.parentNode.childNodes[1].innerHTML;
+            var ratioValue = elt.parentNode.childNodes[3].innerHTML;
+            var storageValue = elt.parentNode.childNodes[2].innerHTML;
+            var useValue = elt.parentNode.childNodes[4].innerHTML;
+            var unitInput = document.querySelector('#unit-input');
+            var nameInput = document.querySelector('#name-input');
+            var ratioInput = document.querySelector('#ratio-input');
+            var storageInput = document.querySelector('#storage-input');
+            var useInput = document.querySelector('#use-input');
+
+            unitInput.value = unitValue;
+            nameInput.value = nameValue;
+            ratioInput.value = ratioValue;
+            storageInput.value = storageValue;
+            useInput.checked = ( useValue == 'true' ? true : false);
         });
     });
 }
@@ -1023,6 +1048,7 @@ async function revenueInputLoader() {
     var weekday = today.getDay();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var weekRevenues = JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon];
+    tableBody.parentNode.caption.innerHTML = 'Week of ' + thisMon;
 
     for(loc in locations) {
         var skip = false;
