@@ -1306,16 +1306,16 @@ document.querySelector('#welcome-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#role-loc-dialogue').style.display = 'inline';
 });
-document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
-    var today = new Date();
-    console.log(typeof(today));
-    console.log(today);
-    console.log(today.getDate());
-    today.setDate(today.getDate() + 7);
-    console.log(typeof(today));
-    console.log(today);
-    console.log(today.getDate());
-    revenueInputLoader(today);
+// document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
+//     var today = new Date();
+//     console.log(typeof(today));
+//     console.log(today);
+//     console.log(today.getDate());
+//     today.setDate(today.getDate() + 7);
+//     console.log(typeof(today));
+//     console.log(today);
+//     console.log(today.getDate());
+//     revenueInputLoader(today);
     
-    //revenueInputLoader(today.setDate(today.getDate() + 7));
-});
+//     //revenueInputLoader(today.setDate(today.getDate() + 7));
+// }); Doesn't work yet :( still getting freezing with this page....
