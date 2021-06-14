@@ -63,6 +63,20 @@ function getDateString(offset = 0) {
     return today;
 }
 
+function getWeekStringHTMLInputWeek(d) { //Can remove (?check for uses) from: https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
+    // Copy date so don't modify original
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    // Get first day of year
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    // Calculate full weeks to nearest Thursday
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    // Return array of year and week number
+    return String(d.getUTCFullYear()) + '-W' + String(weekNo);
+}
+
 async function readItemsFB() {
     await itemSearch.once('value', (snapshot) => {
         //ADD a function to display 'loading' while loading data
@@ -136,6 +150,8 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         return readSandwichesFB();
     }).then( () => { 
         return readRevenuesFB();
+    }).then( () => { 
+        return updateRevenuePredictionsLocal();
     });
     var today = new Date();
     var weekday = today.getDay() + dayOffset;
@@ -220,29 +236,41 @@ async function updateRevenuePredictionsLocal() {
     if(localStorage.getItem('revenuePredictions') !== null && JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon] !== undefined) {
         lastRead = Date.parse(JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon]['last-write']);
     }
-
+    await readLocationsFB();
     await dbRef.child("revenue-predictions").child(thisMon).child('last-write').get().then((snapshot) => {
         if (snapshot.exists()) {
             lastWrite = Date.parse(snapshot.val());
         } else {
-            lastWrite = 0
+            lastWrite = 0;
+            revenues[thisMon] = {};
+            for(l in locations) {
+                console.log(l);
+                revenues[thisMon][l] = {};
+                if(locations[l] == 'active') {
+                    for(day in weekdays) {
+                        revenues[thisMon][l][weekdays[day]] = 0;
+                    }
+                }
+            }
+            revenues[thisMon]['last-write'] = new Date(today);
             console.log("Error reading from last-write of revenue-predictions: No data available");
         }
         }).catch((error) => {
             console.error(error);
     });
-    if(lastWrite < Date.parse(thisMon)) {
-        await readLocationsFB();
-        for(l in locations) {
-            if(locations[l] == 'active') {
-                for(day in weekdays) {
-                    revenues[thisMon][l][weekdays[day]] = 0;
-                }
-            }
-        }
-        revenues[thisMon]['last-write'] = today;
-        await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
-    }
+    await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
+    // if(lastWrite < Date.parse(thisMon)) {
+    //     await readLocationsFB();
+    //     for(l in locations) {
+    //         if(locations[l] == 'active') {
+    //             for(day in weekdays) {
+    //                 revenues[thisMon][l][weekdays[day]] = 0;
+    //             }
+    //         }
+    //     }
+    //     revenues[thisMon]['last-write'] = today;
+    //     await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
+    // }
     console.log("Last read: " + lastRead + " Last write: " + lastWrite);
     if(lastRead < lastWrite) {
         await readRevenuesFB().then( () => {
@@ -1041,10 +1069,12 @@ async function prepChecklistLoader(revenue = 0) {
     });
 }
 
-async function revenueInputLoader() {
+async function revenueInputLoader(day = new Date()) {
     var tableBody = document.querySelector('#revenue-input-tbody');
     await updateRevenuePredictionsLocal();
-    var today = new Date();
+    // var today = new Date();
+    console.log("passed date: " + day + " type: " + typeof(day));
+    var today = day;
     var weekday = today.getDay();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var weekRevenues = JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon];
@@ -1275,4 +1305,17 @@ document.querySelector('#role-loc-submit').addEventListener('click', () => {
 document.querySelector('#welcome-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#role-loc-dialogue').style.display = 'inline';
+});
+document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
+    var today = new Date();
+    console.log(typeof(today));
+    console.log(today);
+    console.log(today.getDate());
+    today.setDate(today.getDate() + 7);
+    console.log(typeof(today));
+    console.log(today);
+    console.log(today.getDate());
+    revenueInputLoader(today);
+    
+    //revenueInputLoader(today.setDate(today.getDate() + 7));
 });
