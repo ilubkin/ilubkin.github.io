@@ -148,9 +148,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         return readLocationsFB();
     }).then( () => { 
         return readSandwichesFB();
-    }).then( () => { 
-        return readRevenuesFB();
-    }).then( () => { 
+    }).then( () => { //removed: .then( () => { return readRevenuesFB(); }) because the next function fills it's place
         return updateRevenuePredictionsLocal();
     });
     await updateItemChecklistLocal();
@@ -159,38 +157,65 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
     today = getDateString(dayOffset);
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1) + dayOffset);
     var revenue = '0';
-    var EODset = 0;
+    // var EODset = 0;
+    const dbRef = firebase.database().ref();
     // var locSelector = 'settlers-green';//later, itterate through all locations, or pass as arg
     for(locSelector in locations) {
+        //lines 164 to 189 update outdated revenue predictions
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
-        await readSandwichChecklistFB(dayOffset, locSelector);
+        var index = 0;
+        while(typeof(itemList[Object.keys(itemList)[index]]) !== 'object') {
+            index++;
+        }
+        var itemName = Object.keys(itemList)[index];
+        await dbRef.child("inventory-record").child(today).child(locSelector).child(itemName).child('SODinventory').get().then((snapshot) => {
+            if (snapshot.exists()) {
+                oldSOD = Number(snapshot.val());
+            } else {
+                oldSOD = null;
+                console.log("Error reading from last-write of item-list: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+        var newSOD = (itemList[itemName].dollarToQuant*revenue);
+        if(oldSOD !== newSOD) {
             for(var i in itemList) {
-            if(typeof(itemList[i]) !== 'object') {
-                continue;
-            }
-            const dbRef = firebase.database().ref();
-            await dbRef.child("inventory-record").child(today).child(locSelector).child(i).child('EODinventory').get().then((snapshot) => {
-                if (snapshot.exists()) {
-                    EODset = Number(snapshot.val());
-                } else {
-                    EODset = 0;
-                    console.log("Error reading from last-write of item-list: No data available");
+                if(typeof(itemList[i]) !== 'object') {
+                    continue;
                 }
-            }).catch((error) => {
-                console.error(error);
-            });
-                await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
-                    name: itemList[i].name,
-                    unit: itemList[i].unit,
-                    dollarToQuant: itemList[i].dollarToQuant,
-                    SODinventory: (itemList[i].dollarToQuant*revenue),
-                    EODinventory: EODset, //add at eod
-                    location: itemList[i].location,
-                    taken: false,
-                    offset: 0,
-                    //need to add current inventory into account (for cur inv. and to bring)
-                });
+                itemList[i]['SODinventory'] = newSOD;
             }
+        }
+        await database.ref('/inventory-record/'+today).set(itemChecklist);
+        // await readSandwichChecklistFB(dayOffset, locSelector);
+        //     for(var i in itemList) {
+        //         if(typeof(itemList[i]) !== 'object') {
+        //             continue;
+        //         }
+        //         const dbRef = firebase.database().ref();
+        //         await dbRef.child("inventory-record").child(today).child(locSelector).child(i).child('EODinventory').get().then((snapshot) => {
+        //             if (snapshot.exists()) {
+        //                 EODset = Number(snapshot.val());
+        //             } else {
+        //                 EODset = 0;
+        //                 console.log("Error reading from last-write of item-list: No data available");
+        //             }
+        //         }).catch((error) => {
+        //             console.error(error);
+        //         });
+        //         await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
+        //             name: itemList[i].name,
+        //             unit: itemList[i].unit,
+        //             dollarToQuant: itemList[i].dollarToQuant,
+        //             SODinventory: (itemList[i].dollarToQuant*revenue),
+        //             EODinventory: EODset, //add at eod
+        //             location: itemList[i].location,
+        //             taken: false,
+        //             offset: 0,
+        //             //need to add current inventory into account (for cur inv. and to bring)
+        //         });
+        //     }
 
     
         if(sandwichChecklist == null) {
@@ -265,12 +290,13 @@ async function updateRevenuePredictionsLocal() {
                     }
                 }
             }
-            revenues[thisMon]['last-write'] = new Date(today);
+            revenues[thisMon]['last-write'] = Date.parse(new Date(today));
             console.log("Error reading from last-write of revenue-predictions: No data available");
         }
         }).catch((error) => {
             console.error(error);
     });
+    await readRevenuesFB();
     await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
 
     console.log("Last read: " + lastRead + " Last write: " + lastWrite);
@@ -281,7 +307,7 @@ async function updateRevenuePredictionsLocal() {
     }
 }
 
-async function updateItemChecklistLocal(date = 0) {
+async function updateItemChecklistLocal(date = 0) { //need to add feature to update if revenue changed
     if(date === 0) {
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -314,8 +340,31 @@ async function updateItemChecklistLocal(date = 0) {
         }).catch((error) => {
             console.error(error);
     });
+    await readItemListFB();
+    await readLocationsFB();
+    var revenue = 0;
     if(lastWrite == 0) {
-        await writeItemChecklistFB();
+        for(locSelector in locations) {
+            revenue = revenues[thisMon][locSelector][weekdays[weekday]];    
+            for(var i in itemList) {
+                if(typeof(itemList[i]) !== 'object') {
+                    continue;
+                }
+                
+                itemChecklist[locSelector][i] = {
+                    name: itemList[i].name,
+                    unit: itemList[i].unit,
+                    dollarToQuant: itemList[i].dollarToQuant,
+                    SODinventory: (itemList[i].dollarToQuant*revenue),
+                    EODinventory: 0, //add at eod
+                    location: itemList[i].location,
+                    taken: false,
+                    offset: 0,
+                }
+            }
+        }
+        itemChecklist['last-write'] = new Date();
+        await database.ref('/inventory-record/'+today).set(itemChecklist);
     }
     if(lastRead < lastWrite) {
         await readItemChecklistFB().then( () => {
