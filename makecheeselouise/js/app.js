@@ -836,7 +836,7 @@ function itemChecklistLoader() {
                 skip = true;
             }
         });
-        if( skip==false && (itemChecklist[locSelector][i]['taken'])==false && (itemList[i]['inUse'])==true) {
+        if( skip==false && (itemList[i]['inUse'])==true) {
             var SODinventory = itemChecklist[locSelector][i]['SODinventory'];
             var EODinventory = null;
             var offset = itemChecklist[locSelector][i]['offset']
@@ -850,7 +850,7 @@ function itemChecklistLoader() {
             var newRow = document.createElement('tr');
             var newCheckbox = document.createElement('input');
             newCheckbox.type = 'checkbox';
-            if(quantNeeded <= 0) {
+            if(quantNeeded <= 0 || (itemChecklist[locSelector][i]['taken'])==true) {
                 newCheckbox.checked = true;
                 newRow.classList.add('checked');
             }
@@ -949,7 +949,7 @@ function inventoryFormLoader() {
                 skip = true;
             }
         });
-        if( !(skip===true) && !(itemChecklist[locSelector][i]['taken']==true) && !(itemChecklist['settlers-green'][i]['name'] == null) ) {
+        if( !(skip===true) && !(itemChecklist['settlers-green'][i]['name'] == null) ) {
             var newRow = document.createElement('tr');
             var newInput = document.createElement('input');
             newInput.type = 'number';
