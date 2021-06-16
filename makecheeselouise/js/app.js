@@ -363,7 +363,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
                 }
             }
         }
-        itemChecklist['last-write'] = new Date();
+        itemChecklist['last-write'] = Date.parse(new Date());
         await database.ref('/inventory-record/'+today).set(itemChecklist);
     }
     if(lastRead < lastWrite) {
