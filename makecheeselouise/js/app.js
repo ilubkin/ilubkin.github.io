@@ -379,6 +379,7 @@ function writeTemplateItemFB(i) {
         unit: i.unit,
         location: i.location,
         dollarToQuant: i.dollarToQuant,
+        type: i.type,
         inUse: i.inUse,
     });
 }
@@ -1070,7 +1071,8 @@ function itemListLoader() {
             var nameValue = elt.parentNode.childNodes[1].innerHTML;
             var ratioValue = elt.parentNode.childNodes[3].innerHTML;
             var storageValue = elt.parentNode.childNodes[2].innerHTML;
-            var useValue = elt.parentNode.childNodes[4].innerHTML;
+            var typeValue = elt.parentNode.childNodes[4].innerHTML;
+            var useValue = elt.parentNode.childNodes[5].innerHTML;
             var unitInput = document.querySelector('#unit-input');
             var nameInput = document.querySelector('#name-input');
             var ratioInput = document.querySelector('#ratio-input');
@@ -1338,6 +1340,7 @@ document.querySelector('#add-item-button').addEventListener('click', () => {
     newItem.unit = document.querySelector('#unit-input').value.toLowerCase();
     newItem.dollarToQuant = document.querySelector('#ratio-input').value.toLowerCase();
     newItem.location = document.querySelector('#storage-input').value.toLowerCase();
+    newItem.type = document.querySelector('#type-input').value.toLowerCase();
     newItem.inUse = document.querySelector('#use-input').checked;
     writeTemplateItemFB(newItem);
     readItemListFB().then( () => {itemListLoader();} );
