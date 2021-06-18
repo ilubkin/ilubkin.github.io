@@ -317,7 +317,9 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
         today.setHours(0,0,0,0);
     }
     //
-    //here 'today' represents the passed date, while 'curDay' represents the current day
+    //here 'today' represents the passed date, while 'curDay' represents the current day 
+    var weekday = today.getDay();
+    var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var curDay = new Date();
     curDay.setHours(0,0,0,0);
     var offset = Math.floor((today.getTime() - curDay.getTime())/ (1000 * 3600 * 24)*1)/1;
@@ -344,8 +346,10 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
     await readLocationsFB();
     var revenue = 0;
     if(lastWrite == 0) {
+        itemChecklist = {};
         for(locSelector in locations) {
-            revenue = revenues[thisMon][locSelector][weekdays[weekday]];    
+            revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+            itemChecklist[locSelector] = {};    
             for(var i in itemList) {
                 if(typeof(itemList[i]) !== 'object') {
                     continue;
