@@ -366,9 +366,22 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
                     offset: 0,
                 }
             }
+            await readSandwichesFB();
+            if(sandwichChecklist == null) {
+                for(var sandwich in sandwiches) {
+                    sandwiches[sandwich].EODinventory = 0;
+                    sandwiches[sandwich].SODinventory = 0;
+                    if(sandwiches[sandwich].bringing == null) {
+                        sandwiches[sandwich].bringing = 0;
+                    }
+                    //add logic to pull from yesterday
+                    itemChecklist[locSelector]['sandwiches'][sandwich] = sandwiches[sandwich];
+                }
+            }
         }
         itemChecklist['last-write'] = Date.parse(new Date());
         await database.ref('/inventory-record/'+today).set(itemChecklist);
+        localStorage.setItem('itemChecklist', JSON.stringify(itemChecklist));
     }
     if(lastRead < lastWrite) {
         await readItemChecklistFB().then( () => {
@@ -724,7 +737,10 @@ function roleLocationLoader(){
     }
 }
 
-function sandwichChecklistLoader() {
+async function sandwichChecklistLoader() {
+    await updateItemChecklistLocal();
+    await readItemChecklistFB();
+    await readSandwichChecklistFB();
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     document.querySelector('#sandwich-checklist').style.display = 'flex';
     var locSelector = userLocation;
