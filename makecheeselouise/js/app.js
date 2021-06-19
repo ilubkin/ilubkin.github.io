@@ -18,6 +18,7 @@ var itemListSearch = database.ref().child('item-list').orderByChild('name');
 var locationSearch = database.ref().child('locations');
 var sandwichSearch = database.ref().child('sandwiches');
 var revenueSearch = database.ref().child('revenue-predictions');
+var cashRecordSearch = database.ref().child('cash-record');
 var items = null;
 var itemList = null;
 var locations = null;
@@ -26,6 +27,7 @@ var yesterdayItemChecklist = null;
 var sandwichChecklist = null;
 var sandwiches = null;
 var revenues = null;
+var cashRecord = {};
 var permittedEmails = null;
 var userLocation = 'settlers-green'; //later pull from user info for default
 var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -136,6 +138,15 @@ async function readRevenuesFB() {
         revenues = snapshot.val();
     });
 }
+
+// async function readCashRecordFB(dayOffset = 0) {
+//     var today = new Date();
+//     today = getDateString(dayOffset);
+//     await database.ref().child('inventory-record/' + today).once('value', (snapshot) => {
+//         cashRecord = snapshot.val();
+//     });
+// } Do I need this? I should instead: have the updater check if it exists, if it doesn't then write zeros
+// and if it does check it's status, if it's newer then pull. Always update the global variable (or local?) from local storage
 
 async function readPermittedEmailsFB() {
     await database.ref().child('permitted-emails').once('value', (snapshot) => {
@@ -364,7 +375,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
                     location: itemList[i].location,
                     taken: false,
                     offset: 0,
-                }
+                };
             }
             await readSandwichesFB();
             if(sandwichChecklist == null) {
@@ -388,6 +399,48 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
         await readItemChecklistFB().then( () => {
              localStorage.setItem('itemChecklist', JSON.stringify(itemChecklist));
         });
+    }
+}
+
+async function updateCashRecordLocal() {
+    var today = new Date();
+    today = Date.parse(today.toString());
+    var todayString = getDateString();
+    var lastRead = 0;
+    var lastWrite = new Date();
+    const dbRef = firebase.database().ref();
+
+    await readLocationsFB();
+
+    await dbRef.child("cash-record").child(todayString).child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            //add logic to set to zero
+            lastWrite = 0;
+            cashRecord[todayString] = {
+                'last-write': today,
+            };
+            for(locSelector in locations) {
+                cashRecord[todayString][locSelector] = {
+                    'cash-collected': 0,
+                    'cash-revenue': 0,
+                    'cash-tips': 0,
+                    'difference': 0,
+                };
+            }
+            dbRef.child("cash-record").child(todayString).set(cashRecord[todayString]);
+            console.log("Error reading from last-write of item-list: No data available. Zeros written.");
+        }
+        }).catch((error) => {
+            console.error(error);
+    });
+    if(JSON.parse(localStorage.getItem('cashRecord')) !== null && JSON.parse(localStorage.getItem('cashRecord'))[todayString] !== null) {
+        lastRead = Number(JSON.parse(localStorage.getItem('cashRecord'))[todayString]['last-write']);
+    }
+    if(lastRead < lastWrite) /*local object is outdated*/ {
+        localStorage.setItem('cashRecord', JSON.stringify(cashRecord));
+        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[today];
     }
 }
 
@@ -924,6 +977,7 @@ function inventoryFormLoader() {
 
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
+    document.querySelector('#eod-cash-wrapper').style.display = 'flex';
     var locSelector = userLocation;
     if(document.querySelector('#inventory-form-table').caption.innerHTML !== userLocation) {
         var blankTBody = document.createElement('tbody');
@@ -1027,6 +1081,30 @@ async function inventoryFormSubmit() {
     loadedMessage.innerHTML='Inventory Submitted';
     invForm.appendChild(loadedMessage);
     //show successful submit message
+}
+
+async function cashRecordSubmit() {
+    var cashTipsInput = document.querySelector('#cash-tips-input');
+    var cashSalesInput = document.querySelector('#cash-sales-input');
+    var cashCollectedInput = document.querySelector('#cash-collected-input');
+    var differenceOutput = document.querySelector('#eod-cash-difference');
+    var cashTips = cashTipsInput.value;
+    var cashSales = cashSalesInput.value;
+    var cashCollected = cashCollectedInput.value;
+    var difference = cashCollected - cashSales;
+    var today = new Date();
+    var todayString = getDateString();
+    today = Date.parse(today.toString());
+    await updateCashRecordLocal();
+
+    cashRecord[todayString][userLocation]['cash-collected'] = cashCollected;
+    cashRecord[todayString][userLocation]['cash-revenue'] = cashSales;
+    cashRecord[todayString][userLocation]['cash-tips'] = cashTips;
+    cashRecord[todayString][userLocation]['difference'] = difference;
+
+    differenceOutput.innerHTML = 'Difference: ' + difference;
+    await database.ref('/cash-record/'+todayString+'/'+userLocation).set(cashRecord[todayString][userLocation]);
+    await database.ref('/cash-record/'+todayString+'/last-write').set(today);
 }
 
 function itemListLoader() {
@@ -1402,7 +1480,8 @@ document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
 });
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();
-    document.querySelector('#inventory-form-table').style.display = 'inline';
+    // document.querySelector('#inventory-form-table').style.display = 'inline';
+    // document.querySelector('#eod-cash-wrapper').style.display = 'flex';
     readItemListFB().then( () => { 
         return readSandwichesFB(); 
     }).then( () => { 
@@ -1429,6 +1508,9 @@ document.querySelector('#welcome-button').addEventListener('click', () => {
     hideAllForms();
     document.querySelector('#role-loc-dialogue').style.display = 'inline';
 });
+document.querySelector('#submit-cash-record-button').addEventListener('click', () => {
+    cashRecordSubmit();
+})
 // document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
 //     var today = new Date();
 //     console.log(typeof(today));

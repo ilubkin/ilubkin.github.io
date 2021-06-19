@@ -112,6 +112,17 @@ caption {
     max-width: 270px;
 }
 
+#eod-cash-wrapper {
+    margin-top: 15px;
+    max-width: 400px;
+    padding: 5px;
+}
+
+#eod-cash-wrapper p {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
 .single-input-wrapper label { display: block;
     text-align: left;
 }
