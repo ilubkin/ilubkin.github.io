@@ -439,8 +439,20 @@ async function updateCashRecordLocal() {
         lastRead = Number(JSON.parse(localStorage.getItem('cashRecord'))[todayString]['last-write']);
     }
     if(lastRead < lastWrite) /*local object is outdated*/ {
+        await dbRef.child("cash-record").child(todayString).get().then((snapshot) => {
+            if (snapshot.exists()) {
+                cashRecord = snapshot.val();
+            } else {
+                console.log("Error reading from last-write of item-list: No data available.");
+            }
+            }).catch((error) => {
+                console.error(error);
+        });
         localStorage.setItem('cashRecord', JSON.stringify(cashRecord));
-        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[today];
+        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[todayString];
+    }
+    else {
+        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[todayString];
     }
 }
 
@@ -1097,13 +1109,13 @@ async function cashRecordSubmit() {
     today = Date.parse(today.toString());
     await updateCashRecordLocal();
 
-    cashRecord[todayString][userLocation]['cash-collected'] = cashCollected;
-    cashRecord[todayString][userLocation]['cash-revenue'] = cashSales;
-    cashRecord[todayString][userLocation]['cash-tips'] = cashTips;
-    cashRecord[todayString][userLocation]['difference'] = difference;
+    cashRecord[userLocation]['cash-collected'] = cashCollected;
+    cashRecord[userLocation]['cash-revenue'] = cashSales;
+    cashRecord[userLocation]['cash-tips'] = cashTips;
+    cashRecord[userLocation]['difference'] = difference;
 
     differenceOutput.innerHTML = 'Difference: ' + difference;
-    await database.ref('/cash-record/'+todayString+'/'+userLocation).set(cashRecord[todayString][userLocation]);
+    await database.ref('/cash-record/'+todayString+'/'+userLocation).set(cashRecord[userLocation]);
     await database.ref('/cash-record/'+todayString+'/last-write').set(today);
 }
 
