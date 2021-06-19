@@ -368,6 +368,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
             }
             await readSandwichesFB();
             if(sandwichChecklist == null) {
+                itemChecklist[locSelector]['sandwiches'] = {};
                 for(var sandwich in sandwiches) {
                     sandwiches[sandwich].EODinventory = 0;
                     sandwiches[sandwich].SODinventory = 0;
