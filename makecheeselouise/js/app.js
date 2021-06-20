@@ -727,8 +727,8 @@ async function signUp(){
                 uLastName: uLastName,
                 uEmail: uEmail,
             }
-            firebaseRef.child(uid).set(userData);
-            alert('Your Account Created','Your account was created successfully, you can log in now.',
+            firebaseRef.child('users').child(uid).set(userData);
+            alert('Account Created','Your account was created successfully, you can log in now.',
             )
                 setTimeout(function(){
                     signUpForm.style.display = 'none';
