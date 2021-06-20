@@ -501,12 +501,18 @@ const signUpButton = document.getElementById('signUpButton');
 const signUpForm = document.getElementById('signUpForm');
 const userSignIn = document.getElementById('userSignIn');
 
-userSIEmail.addEventListener('onblur', () => {
+userSIEmail.addEventListener('blur', () => {
     checkUserSIEmail();
 });
-userSIPassword.addEventListener('onblur', () => {
+// userSIEmail.addEventListener('input', () => {
+//     checkUserSIEmail();
+// });
+userSIPassword.addEventListener('blur', () => {
     checkUserSIPassword();
 });
+// userSIPassword.addEventListener('input', () => {
+//     checkUserSIPassword();
+// });
 userSIPassword.addEventListener('keypress', (e) => {
     if(e.key === 'Enter') {
         signIn().then( () => {
@@ -529,16 +535,16 @@ signOutButton.addEventListener('click', () => {
         document.querySelector('#signOutButton').style.display = 'none';
     });
 });
-userFirstName.addEventListener('onblur', () => {
-    checkUserFirstName();
-});
-userLastName.addEventListener('onblur', () => {
-    checkUserLastName();
-});
-userEmail.addEventListener('onblur', () => {
+// userFirstName.addEventListener('blur', () => {
+//     checkUserFirstName();
+// });
+// userLastName.addEventListener('blur', () => {
+//     checkUserLastName();
+// });
+userEmail.addEventListener('blur', () => {
     checkUserEmail();
 });
-userPassword.addEventListener('onblur', () => {
+userPassword.addEventListener('blur', () => {
     checkUserPassword();
 });
 signUpButton.addEventListener('click', () => {
@@ -550,7 +556,7 @@ userSignIn.addEventListener('click',  () => {
 });
 // xxxxxxxxxx Sign In Email Validation xxxxxxxxxx
 function checkUserSIEmail(){
-    var userSIEmail = document.getElementById("userSIEmail");
+    // var userSIEmail = document.getElementById("userSIEmail");
     var userSIEmailFormat = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
     if(userSIEmail.value.match(userSIEmailFormat)){
@@ -566,7 +572,7 @@ function checkUserSIEmail(){
 }
 // xxxxxxxxxx Sign In Password Validation xxxxxxxxxx
 function checkUserSIPassword(){
-    var userSIPassword = document.getElementById("userSIPassword");
+    // var userSIPassword = document.getElementById("userSIPassword");
     var userSIPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
     userSIPasswordFormat = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
@@ -625,7 +631,7 @@ async function signOut(){
 }
 // xxxxxxxxxx First Name Validation xxxxxxxxxx
 function checkUserFullName(){
-    var uFirstName = document.getElementById("userFirstName").value;
+    // var uFirstName = document.getElementById("userFirstName").value;
     var flag = false;
     if(uFirstName === ""){
         flag = true;
@@ -638,7 +644,7 @@ function checkUserFullName(){
 }
 // xxxxxxxxxx User Surname Validation xxxxxxxxxx
 function checkUserSurname(){
-    var uLastName = document.getElementById("userLastName").value;
+    // var uLastName = document.getElementById("userLastName").value;
     var flag = false;
     if(uLastName === ""){
         flag = true;
@@ -651,7 +657,7 @@ function checkUserSurname(){
 }
 // xxxxxxxxxx Email Validation xxxxxxxxxx
 function checkUserEmail(){
-    var userEmail = document.getElementById("userEmail");
+    // var userEmail = document.getElementById("userEmail");
     var userEmailFormat = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
     if(userEmail.value.match(userEmailFormat)){
@@ -667,7 +673,7 @@ function checkUserEmail(){
 }
 // xxxxxxxxxx Password Validation xxxxxxxxxx
 function checkUserPassword(){
-    var userPassword = document.getElementById("userPassword");
+    // var userPassword = document.getElementById("userPassword");
     var userPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
     var flag;
     if(userPassword.value.match(userPasswordFormat)){

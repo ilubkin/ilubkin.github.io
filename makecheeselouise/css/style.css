@@ -69,6 +69,10 @@ caption {
     text-transform: capitalize;
 }
 
+small {
+    display: none;
+}
+
 @media (min-width: 1000px) {
     #item-add-form {
         display: grid;
@@ -118,13 +122,25 @@ caption {
 #signUpForm {
     display: flex;
     flex-direction: column;
-    max-width: 270px;
+    max-width: 350px;
+    padding: 15px;
+}
+
+#signUpForm div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
 #signInForm {
     display: flex;
     flex-direction: column;
     max-width: 270px;
+    padding: 15px;
+}
+
+#signInForm div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
 #eod-cash-wrapper {

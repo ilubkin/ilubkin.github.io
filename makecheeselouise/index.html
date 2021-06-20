@@ -33,46 +33,46 @@
             <p id='loading-message'>Loading</p>
         </div>
         
-        <div id='signInForm'>
+        <div id='signInForm' class='table-card'>
             <h2>Sign In</h2>
             <div>
                 <label for='userSIEmail'>Email</label>
                 <input type="email" id="userSIEmail" placeholder="mail@mail.com">
-                <small id="userSIEmailError">Please check your login information.</small>
             </div>
+            <small id="userSIEmailError">Please check your login information.</small>
 
             <div>
                 <label for="userSIPassword">Password</label>
                 <input type="password" id="userSIPassword" placeholder="password">
-                <small id="userSIPasswordError">Please check your password.</small>
             </div>
+            <small id="userSIPasswordError">Please check your password.</small>
 
             <button type='button' id='signInButton'>Sign In</button>
-            <p>Not a member yet? Become a member: <button class='no-select' id='userSignUp'>Sign Up</button></p>
+            <p>Not account yet? <button class='no-select' id='userSignUp'>Sign Up</button></p>
         </div>
 
-        <div id="signUpForm" style="display: none" class='special-form'>
+        <div id="signUpForm" style="display: none" class='special-form table-card'>
             <h2>Sign Up</h2>
             <div class="form-group">
                 <label for="userFirstName">First Name</label>
                 <input type="text" id="userFirstName" placeholder="first name">
-                <small id="userFirstNameError">This Field must be filled.</small>
             </div>
+            <small id="userFirstNameError">This Field must be filled.</small>
             <div class="form-group">
                 <label for="userLastName">Last Name</label>
                 <input type="text" id="userLastName" placeholder="Last Name">
-                <small id="userLastNameError">This Field must be filled.</small>
             </div>
+            <small id="userLastNameError">This Field must be filled.</small>
             <div class="form-group">
                 <label for="userEmail">Email address</label>
                 <input type="email"id="userEmail" placeholder="mail@mail.com">
-                <small id="userEmailError">Please check your email address.</small>
             </div>
+            <small id="userEmailError">Please check your email address.</small>
             <div class="form-group">
                 <label for="userPassword">Password</label>
                 <input type="password" id="userPassword" placeholder="**********">
-                <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
             </div>
+            <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
             <button type="button" id="signUpButton">Sign Up</button>
             <p>Already a member? Sign in: <button class='no-select' id='userSignIn'>Sign In</button></p>
         </div>
