@@ -14,13 +14,13 @@ class item {
 
 var database = firebase.database();
 var itemSearch = database.ref().child('items').orderByChild('name');
-var itemListSearch = database.ref().child('item-list').orderByChild('name');
+var preppedItemListSearch = database.ref().child('item-list').orderByChild('type').startAt('prepared item').endAt('purchased item');
 var locationSearch = database.ref().child('locations');
 var sandwichSearch = database.ref().child('sandwiches');
 var revenueSearch = database.ref().child('revenue-predictions');
 var cashRecordSearch = database.ref().child('cash-record');
 var items = null;
-var itemList = null;
+var preppedItemList = null;
 var locations = null;
 var itemChecklist = null;
 var yesterdayItemChecklist = null;
@@ -87,8 +87,8 @@ async function readItemsFB() {
 }
 
 async function readItemListFB() {
-    await itemListSearch.once('value', (snapshot) => {
-        itemList = snapshot.val();
+    await preppedItemListSearch.once('value', (snapshot) => {
+        preppedItemList = snapshot.val();
     });
 }
 
@@ -175,10 +175,10 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         //lines 164 to 189 update outdated revenue predictions
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
         var index = 0;
-        while(typeof(itemList[Object.keys(itemList)[index]]) !== 'object') {
+        while(typeof(preppedItemList[Object.keys(preppedItemList)[index]]) !== 'object') {
             index++;
         }
-        var itemName = Object.keys(itemList)[index];
+        var itemName = Object.keys(preppedItemList)[index];
         await dbRef.child("inventory-record").child(today).child(locSelector).child(itemName).child('SODinventory').get().then((snapshot) => {
             if (snapshot.exists()) {
                 oldSOD = Number(snapshot.val());
@@ -189,19 +189,19 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         }).catch((error) => {
             console.error(error);
         });
-        var newSOD = (itemList[itemName].dollarToQuant*revenue);
+        var newSOD = (preppedItemList[itemName].dollarToQuant*revenue);
         if(oldSOD !== newSOD) {
-            for(var i in itemList) {
-                if(typeof(itemList[i]) !== 'object') {
+            for(var i in preppedItemList) {
+                if(typeof(preppedItemList[i]) !== 'object') {
                     continue;
                 }
-                itemList[i]['SODinventory'] = newSOD;
+                preppedItemList[i]['SODinventory'] = newSOD;
             }
         }
         await database.ref('/inventory-record/'+today).set(itemChecklist);
         // await readSandwichChecklistFB(dayOffset, locSelector);
-        //     for(var i in itemList) {
-        //         if(typeof(itemList[i]) !== 'object') {
+        //     for(var i in preppedItemList) {
+        //         if(typeof(preppedItemList[i]) !== 'object') {
         //             continue;
         //         }
         //         const dbRef = firebase.database().ref();
@@ -216,12 +216,12 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         //             console.error(error);
         //         });
         //         await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
-        //             name: itemList[i].name,
-        //             unit: itemList[i].unit,
-        //             dollarToQuant: itemList[i].dollarToQuant,
-        //             SODinventory: (itemList[i].dollarToQuant*revenue),
+        //             name: preppedItemList[i].name,
+        //             unit: preppedItemList[i].unit,
+        //             dollarToQuant: preppedItemList[i].dollarToQuant,
+        //             SODinventory: (preppedItemList[i].dollarToQuant*revenue),
         //             EODinventory: EODset, //add at eod
-        //             location: itemList[i].location,
+        //             location: preppedItemList[i].location,
         //             taken: false,
         //             offset: 0,
         //             //need to add current inventory into account (for cur inv. and to bring)
@@ -265,11 +265,11 @@ async function updateItemListLocal() {
         }).catch((error) => {
             console.error(error);
     });
-    if(localStorage.getItem('itemList') !== null) {
-        lastRead = Number(JSON.parse(localStorage.getItem('itemList'))['last-write']);
+    if(localStorage.getItem('preppedItemList') !== null) {
+        lastRead = Number(JSON.parse(localStorage.getItem('preppedItemList'))['last-write']);
     }
     if(lastRead < lastWrite) /*local object is outdated*/ {
-        await localStorage.setItem('itemList', JSON.stringify(itemList));
+        await localStorage.setItem('preppedItemList', JSON.stringify(preppedItemList));
     }
 }
 
@@ -361,18 +361,18 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
         for(locSelector in locations) {
             revenue = revenues[thisMon][locSelector][weekdays[weekday]];
             itemChecklist[locSelector] = {};    
-            for(var i in itemList) {
-                if(typeof(itemList[i]) !== 'object') {
+            for(var i in preppedItemList) {
+                if(typeof(preppedItemList[i]) !== 'object') {
                     continue;
                 }
                 
                 itemChecklist[locSelector][i] = {
-                    name: itemList[i].name,
-                    unit: itemList[i].unit,
-                    dollarToQuant: itemList[i].dollarToQuant,
-                    SODinventory: (itemList[i].dollarToQuant*revenue),
+                    name: preppedItemList[i].name,
+                    unit: preppedItemList[i].unit,
+                    dollarToQuant: preppedItemList[i].dollarToQuant,
+                    SODinventory: (preppedItemList[i].dollarToQuant*revenue),
                     EODinventory: 0, //add at eod
-                    location: itemList[i].location,
+                    location: preppedItemList[i].location,
                     taken: false,
                     offset: 0,
                 };
@@ -928,7 +928,7 @@ function itemChecklistLoader() {
                 skip = true;
             }
         });
-        if( skip==false && (itemList[i]['inUse'])==true) {
+        if( skip==false && (preppedItemList[i]['inUse'])==true) {
             var SODinventory = itemChecklist[locSelector][i]['SODinventory'];
             var EODinventory = null;
             var offset = itemChecklist[locSelector][i]['offset']
@@ -991,7 +991,7 @@ function itemChecklistLoader() {
 }
 
 function inventoryFormLoader() {
-    console.log(itemList);
+    console.log(preppedItemList);
 
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
@@ -1038,7 +1038,7 @@ function inventoryFormLoader() {
         }
         document.querySelectorAll('tr.inventory').forEach( (item) => {
             if (dashToSpace(item.id) === itemChecklist[locSelector][i].name
-            || itemList[i]['inUse'] === false ) {
+            || preppedItemList[i]['inUse'] === false ) {
                 skip = true;
             }
         });
@@ -1140,28 +1140,28 @@ async function cashRecordSubmit() {
 function itemListLoader() {
     var tableBody = document.querySelector('#item-list-tbody');
     document.querySelector('#item-list-container').style.display = 'flex';
-    for(var i in itemList) {
-        if(typeof(itemList[i]) !== 'object') {
+    for(var i in preppedItemList) {
+        if(typeof(preppedItemList[i]) !== 'object') {
             continue;
         }
         document.querySelectorAll('tr').forEach( (item) => {
-            if (item.id === spaceToDash(itemList[i].name)) {
+            if (item.id === spaceToDash(preppedItemList[i].name)) {
                 item.remove();
             }
         });
         var newRow = document.createElement('tr');
-        newRow.id = spaceToDash(itemList[i].name);
+        newRow.id = spaceToDash(preppedItemList[i].name);
         var newUnit = document.createElement('td');
         var newName = document.createElement('td');
         var newLocation = document.createElement('td');
         var newRatio = document.createElement('td');
         var newUse = document.createElement('td');
         var newEdit = document.createElement('td');
-        newUnit.innerHTML = itemList[i]['unit'];
-        newName.innerHTML = itemList[i]['name'];
-        newLocation.innerHTML = itemList[i]['location'];
-        newRatio.innerHTML = itemList[i]['dollarToQuant'];
-        newUse.innerHTML = itemList[i]['inUse'];
+        newUnit.innerHTML = preppedItemList[i]['unit'];
+        newName.innerHTML = preppedItemList[i]['name'];
+        newLocation.innerHTML = preppedItemList[i]['location'];
+        newRatio.innerHTML = preppedItemList[i]['dollarToQuant'];
+        newUse.innerHTML = preppedItemList[i]['inUse'];
         newUse.classList.add('item-use-toggle', 'no-select');
         newEdit.innerHTML = ' edit';
         newEdit.classList.add('item-edit-button', 'no-select');
@@ -1171,7 +1171,7 @@ function itemListLoader() {
         newRow.appendChild(newRatio);
         newRow.appendChild(newUse);
         newRow.appendChild(newEdit);
-        if(itemList[i]['inUse'] == false) {
+        if(preppedItemList[i]['inUse'] == false) {
             newRow.classList.add('checked');
         }
         tableBody.appendChild(newRow);
@@ -1228,7 +1228,7 @@ async function prepChecklistLoader(revenue = 0) {
         }
     });
     //UNFINISHED - Need to create table rows in if statement below 
-    var localItemList = JSON.parse(localStorage.getItem('itemList'));
+    var localItemList = JSON.parse(localStorage.getItem('preppedItemList'));
     var tableBody = document.querySelector('#prep-checklist-tbody');
     document.querySelector('#prep-checklist').style.display = 'flex';
     //need to: itterate through locally stored items; create or update a row for each using input revenue
