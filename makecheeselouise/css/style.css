@@ -83,6 +83,21 @@ caption {
     }
 }
 
+@media (min-width: 800px) {
+    #page-wrapper {
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+}
+
+@media (max-width: 800px) {
+    #page-wrapper {
+        flex-direction: column;
+        justify-content: space-evenly;
+    }
+}
+
+
 #sandwich-add-form {
     flex-direction: row;
     flex-wrap: wrap;
@@ -115,6 +130,7 @@ caption {
 #eod-cash-wrapper {
     margin-top: 15px;
     max-width: 400px;
+    max-height: 300px;
     padding: 5px;
 }
 
@@ -211,6 +227,13 @@ caption {
 
 .dropdown:hover .dropdown-content {
     display: block;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 6px;
+    text-transform: capitalize;
 }
 
 /* loader */
