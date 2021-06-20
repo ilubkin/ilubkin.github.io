@@ -418,25 +418,25 @@ async function updateCashRecordLocal() {
         } else {
             //add logic to set to zero
             lastWrite = 0;
-            cashRecord[todayString] = {
+            cashRecord = {
                 'last-write': today,
             };
             for(locSelector in locations) {
-                cashRecord[todayString][locSelector] = {
+                cashRecord[locSelector] = {
                     'cash-collected': 0,
                     'cash-revenue': 0,
                     'cash-tips': 0,
                     'difference': 0,
                 };
             }
-            dbRef.child("cash-record").child(todayString).set(cashRecord[todayString]);
+            dbRef.child("cash-record").child(todayString).set(cashRecord);
             console.log("Error reading from last-write of item-list: No data available. Zeros written.");
         }
         }).catch((error) => {
             console.error(error);
     });
-    if(JSON.parse(localStorage.getItem('cashRecord')) !== null && JSON.parse(localStorage.getItem('cashRecord'))[todayString] !== null) {
-        lastRead = Number(JSON.parse(localStorage.getItem('cashRecord'))[todayString]['last-write']);
+    if(JSON.parse(localStorage.getItem('cashRecord')) !== null) {
+        lastRead = Number(JSON.parse(localStorage.getItem('cashRecord'))['last-write']);
     }
     if(lastRead < lastWrite) /*local object is outdated*/ {
         await dbRef.child("cash-record").child(todayString).get().then((snapshot) => {
@@ -449,10 +449,10 @@ async function updateCashRecordLocal() {
                 console.error(error);
         });
         localStorage.setItem('cashRecord', JSON.stringify(cashRecord));
-        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[todayString];
+        cashRecord = JSON.parse(localStorage.getItem('cashRecord'));
     }
     else {
-        cashRecord = JSON.parse(localStorage.getItem('cashRecord'))[todayString];
+        cashRecord = JSON.parse(localStorage.getItem('cashRecord'));
     }
 }
 
