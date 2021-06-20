@@ -1297,6 +1297,15 @@ async function revenueInputLoader(day = new Date()) {
         document.querySelectorAll('tr').forEach( (row) => {
             if (row.id === loc) {
                 skip = true;
+                for(var a = 1; a < 8; a++) {
+                    if(a == 7) {
+                        a = 0;
+                    }
+                    row.childNodes[a].childNodes[0].value = (weekRevenues[loc][weekdays[a]] == '' ? 0 : weekRevenues[loc][weekdays[a]]);
+                    if(a == 0) {
+                        a = 8;
+                    }
+                }
             }
         });
         if(skip === false) {
