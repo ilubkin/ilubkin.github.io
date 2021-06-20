@@ -1063,21 +1063,31 @@ function inventoryFormLoader() {
 async function inventoryFormSubmit() {
     var today = new Date();
     today = getDateString();
+    var curTimeInt = Date.parse(new Date());
     var table = document.querySelector('#inventory-form-table');
-    var locSelector = userLocation; //eventually pass as arg or get elsewhere...
+    var locSelector = userLocation;
     var updateObj = {};
+    updateObj['sandwiches'] = {};
     var sandwichNode = '';
     for(var i = 1, row; row = table.rows[i]; i++) {
-        updateObj[dashToSpace(row.id)] = false;
-        if(row.children[0].value == '') {
-            updateObj[dashToSpace(row.id)] = { EODinventory: 0, };
-        }
-        else {
-            updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+        if(!row.childNodes[0].id.includes('sandwich')) {
+            updateObj[dashToSpace(row.id)] = {};
+            if(row.children[0].value == '') {
+                updateObj[dashToSpace(row.id)] = { EODinventory: 0, };
+            }
+            else {
+                updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+            }
         }
         if(row.childNodes[0].id.includes('sandwich')) {
+            if(row.children[0].value == '') {
+                updateObj['sandwiches'][dashToSpace(row.id)] = { EODinventory: 0, };
+            }
+            else {
+                updateObj['sandwiches'][dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+            }
             await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches'+'/'+dashToSpace(row.id)).update({
-                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+                EODinventory: updateObj['sandwiches'][dashToSpace(row.id)]['EODinventory'],
             });
         }
         else {
@@ -1087,6 +1097,8 @@ async function inventoryFormSubmit() {
         }
         row.classList.add('checked');
     }
+    updateObj['written'] = curTimeInt;
+    await database.ref('/eod-inventory-record/'+today+'/'+locSelector+'/'+curTimeInt).set(updateObj);
     table.style.display = 'none';
     var invForm = document.querySelector('#inventory-form');
     var loadedMessage = document.createElement('p');
@@ -1446,6 +1458,32 @@ function checklistSubmit() {
         database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
              taken: updateObj[dashToSpace(row.id)]['taken'],
         });
+    }
+}
+
+async function fixEODInventoryFromRecord(locSelector = 'settlers-green', dateString = getDateString()) {
+    var eodRecord = {};
+    const eodQuery = firebase.database().ref('/eod-inventory-record/'+dateString+'/'+locSelector).orderByChild('written').limitToLast(1);
+    
+    await eodQuery.once('value', (snapshot) => {
+        eodRecord = snapshot.val()[Object.keys(snapshot.val())[0]];
+    });
+    for(ing in eodRecord) {
+        if(typeof(eodRecord[ing]) !== 'object') {
+            continue; 
+        }
+        if(ing == 'sandwiches') {
+            for(sandwich in eodRecord[ing]) {
+                await firebase.database().ref('/inventory-record/'+dateString+'/'+locSelector+'/'+ing+'/'+sandwich).update({ 
+                    EODinventory: eodRecord[ing][sandwich]['EODinventory'],
+                });
+            }
+        }
+        else {
+            await firebase.database().ref('/inventory-record/'+dateString+'/'+locSelector+'/'+ing).update({ 
+                EODinventory: eodRecord[ing]['EODinventory'],
+            });
+        }
     }
 }
 
