@@ -119,7 +119,7 @@ async function readYesterdayItemChecklistFB() {
     });
 }
 
-async function readSandwichChecklistFB(dayOffset = 0, locSelector = 'settlers-green') {
+async function readSandwichChecklistFB(dayOffset = 0, locSelector = userLocation) {
     var today = new Date();
     today = getDateString(dayOffset);
     await database.ref().child('inventory-record/' + today + '/' + locSelector + '/sandwiches').once('value', (snapshot) => {
@@ -179,6 +179,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
             index++;
         }
         var itemName = Object.keys(preppedItemList)[index];
+        console.log(itemName);
         await dbRef.child("inventory-record").child(today).child(locSelector).child(itemName).child('SODinventory').get().then((snapshot) => {
             if (snapshot.exists()) {
                 oldSOD = Number(snapshot.val());
@@ -229,17 +230,17 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         //     }
 
     
-        if(sandwichChecklist == null) {
-            for(var sandwich in sandwiches) {
-                sandwiches[sandwich].EODinventory = 0;
-                sandwiches[sandwich].SODinventory = 0;
-                if(sandwiches[sandwich].bringing == null) {
-                    sandwiches[sandwich].bringing = 0;
-                }
-                //add logic to pull from yesterday
-                await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+ sandwich).update(sandwiches[sandwich]);
-            }
-        }
+        // if(sandwichChecklist == null) {
+        //     for(var sandwich in sandwiches) {
+        //         sandwiches[sandwich].EODinventory = 0;
+        //         sandwiches[sandwich].SODinventory = 0;
+        //         if(sandwiches[sandwich].bringing == null) {
+        //             sandwiches[sandwich].bringing = 0;
+        //         }
+        //         //add logic to pull from yesterday
+        //         await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+ sandwich).update(sandwiches[sandwich]);
+        //     }
+        // }
         
     }
 }
@@ -378,6 +379,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
                 };
             }
             await readSandwichesFB();
+            await readSandwichChecklistFB();
             if(sandwichChecklist == null) {
                 itemChecklist[locSelector]['sandwiches'] = {};
                 for(var sandwich in sandwiches) {
@@ -477,6 +479,19 @@ firebase.auth().onAuthStateChanged( function(user) {
     if (user) {
         hideAllForms();
         pageInfoLoader();
+        var uid = user.uid;
+        var primaryLocation = 'settlers-green';
+        const dbRef = firebase.database().ref();
+        dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
+            if (snapshot.exists()) {
+                primaryLocation = snapshot.val();
+            } else {
+                console.log("Error reading from primaryLocation of user: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        }).then( () => { return userLocation = primaryLocation; });
+        
         //gives current user email
         //add logic for user dependent loading
         // User is signed in.
@@ -807,6 +822,7 @@ function roleLocationLoader(){
             document.querySelector('#loc-selector').add(newLoc);
         }
     }
+    document.querySelector('#loc-selector').value = userLocation;
 }
 
 async function sandwichChecklistLoader() {
@@ -1491,6 +1507,7 @@ async function fixEODInventoryFromRecord(locSelector = 'settlers-green', dateStr
             });
         }
     }
+    await firebase.database().ref('/inventory-record/'+dateString+'/last-write').set(Date.parse(new Date()));
 }
 
 document.querySelector('#item-checklist-submit').addEventListener('click', checklistSubmit);
