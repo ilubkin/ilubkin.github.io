@@ -18,9 +18,10 @@
                 <i class="fa fa-caret-down"></i>
                 </button>
                 <div class="dropdown-content">
+                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
+                    <p id='load-inventory-nav' class='no-select'>Load old inventory</p>
                     <p id='add-sandwich-nav' class='no-select'> Add sandwich</p>
                     <p id='add-ingredient-nav' class='no-select'> Add ingredient</p>
-                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
                     <p id='prep-checklist-nav' class='no-select'> Prep checklist</p>
                     <p id='home-nav' class='no-select'> Home</p>
                 </div>
@@ -77,7 +78,7 @@
             <p>Already a member? Sign in: <button class='no-select' id='userSignIn'>Sign In</button></p>
         </div>
 
-        <div id='role-loc-dialogue' class='flex-container special-form'> 
+        <div id='role-loc-dialogue' class='flex-container special-form table-card'> 
             <!-- Populated from js -->
             <h2 id='welcome-message'>Welcome!</h2>
             <!-- Populated from js -->
@@ -92,8 +93,20 @@
             </div>
         </div>
 
-        <div id='widget-container' class='special-form'>
+        <div id='load-inventory-wrapper' class='flex-container special-form table-card' style='display:none'>
+            <p id='load-inventory-location'></p>
+            <div>
+                <label for='inventory-date-selector'>Load inventory from</label>
+                <input type='date' id='inventory-date-selector'>
+            </div>
+            <button id='load-inventory-submit' name='load-inventory-submit' type='button'>Submit</button>
+        </div> 
 
+        <div id='widget-container' class='flex-container special-form table-card' style='display:none'>
+            <div id='notes-container'>
+                <h2>Notes:</h2>
+                <p id='yesterday-notes'></p>
+            </div>
         </div>
         
         <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
@@ -113,7 +126,7 @@
             <button id='sandwich-checklist-submit' name='sandwich-checklist-submit' type='button'>Submit</button>
         </div>
 
-        <div id='item-checklist' class='flex-container special-form table-card' style='display:none'>
+        <div id='item-checklist' class='flex-container special-form table-card' style='display:none' data-write=''>
             <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>

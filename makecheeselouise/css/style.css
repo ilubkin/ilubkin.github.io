@@ -91,6 +91,7 @@ small {
     #page-wrapper {
         flex-direction: row;
         justify-content: space-evenly;
+        align-items: flex-start;
     }
 }
 
@@ -101,6 +102,27 @@ small {
     }
 }
 
+#role-loc-dialogue {
+    padding: 10px;
+}
+
+#load-inventory-wrapper {
+    padding: 10px;
+}
+
+#load-inventory-wrapper div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    /* grid-auto-rows: auto; */
+}
+
+#load-inventory-wrapper>p {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 6px;
+    text-transform: capitalize;
+}
 
 #sandwich-add-form {
     flex-direction: row;
@@ -153,6 +175,10 @@ small {
 #eod-cash-wrapper p {
     display: grid;
     grid-template-columns: 1fr 1fr;
+}
+
+#notes-container {
+    padding: 10px;
 }
 
 .single-input-wrapper label { display: block;
