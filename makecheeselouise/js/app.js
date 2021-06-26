@@ -470,11 +470,18 @@ async function updateNotesRecordLocal(offset = 0, locSelector = userLocation) {
         });
         localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
     }
-    else if(lastRead < lastWrite) {
+    else if(lastRead < lastWrite) { //the notes have been updated since last read
         //update object
         notesRecord[todayString] = {
             'last-write': todayNumber,
         };
+        notesRecord[todayString][locSelector] = {};
+        await database.ref().child('notes-record/' + todayString + '/' + locSelector).orderByChild('written').limitToLast(1).once('value', (snapshot) => {
+            notesRecord[todayString][locSelector] = snapshot.val();
+        });
+        localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
+    }
+    else if(notesRecord[todayString][locSelector] == undefined) { //the notes were present and haven't been updated, but the current location is not in the local storage
         notesRecord[todayString][locSelector] = {};
         await database.ref().child('notes-record/' + todayString + '/' + locSelector).orderByChild('written').limitToLast(1).once('value', (snapshot) => {
             notesRecord[todayString][locSelector] = snapshot.val();
@@ -922,27 +929,25 @@ async function sandwichChecklistLoader() {
 // populate_with_new_rows(new_tbody);
 // old_tbody.parentNode.replaceChild(new_tbody, old_tbody)
 
-function sandwichChecklistSubmit() {
+async function sandwichChecklistSubmit() {
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     var locSelector = userLocation;
-    var today = new Date();
-    today = getDateString();
-    for(var i = 1, row; row = sandwichTBody.rows[i]; i++) {
+    var today = getDateString();
+    for(var i = 0, row; row = sandwichTBody.rows[i]; i++) {
         var todayCount = Number(row.childNodes[1].value);
         itemChecklist[locSelector]['sandwiches'][dashToSpace(row.id)]['bringing'] = Number(row.childNodes[1].value);
-        database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+dashToSpace(row.id)).update({
+        await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+dashToSpace(row.id)).update({
             bringing:  Number(row.childNodes[1].value),
         });
         var yesterdayCount = Number(row.childNodes[2].innerHTML);
         var sandwichName = dashToSpace(row.id);
-        var locSelector = 'settlers-green';
         var maxNeed = Number(row.childNodes[3].innerHTML);
         var offsetCount = ((todayCount+yesterdayCount) < maxNeed ? (todayCount+yesterdayCount) : maxNeed);
         for(var j in sandwiches[sandwichName]) {
             if(itemChecklist[locSelector][j] !== undefined) {
                 var offsetv = Number(itemChecklist[locSelector][j]['offset']) + offsetCount*Number(sandwiches[sandwichName][j]);
                 itemChecklist[locSelector][j]['offset'] = offsetv;
-                database.ref('/inventory-record/'+today+'/'+locSelector+'/'+j).update({
+                await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+j).update({
                     offset: offsetv,
                 });
             }
@@ -1599,7 +1604,9 @@ document.querySelector('#add-sandwich-button').addEventListener('click', addSand
 document.querySelector('#inventory-form-submit').addEventListener('click', inventoryFormSubmit);
 document.querySelector('#sandwich-checklist-submit').addEventListener('click', () => {
     writeItemChecklistFB();
-    notesLoader();
+    updateNotesRecordLocal().then( () => {
+        notesLoader();
+    });
     sandwichChecklistSubmit();
 });
 document.querySelector('#add-item-button').addEventListener('click', () => {
