@@ -995,11 +995,12 @@ function itemChecklistLoader() {
                 EODinventory = yesterdayItemChecklist[locSelector][i]['EODinventory'];
             }
             var quantNeeded = Math.ceil((SODinventory-EODinventory-offset  > 0 ? SODinventory-EODinventory-offset : 0).toFixed(1));
+            //the next two if statements temporarily fix cash inventory numbers
             if(i == '1 dollar') {
-                quantNeeded = 100-EODinventory;
+                (locSelector == 'commissary' ? quantNeeded = 500-EODinventory : quantNeeded = 100-EODinventory);
             }
             if(i == '5 dollar') {
-                quantNeeded = 20-EODinventory;
+                (locSelector == 'commissary' ? quantNeeded = 100-EODinventory : quantNeeded = 20-EODinventory);
             }
             var newRow = document.createElement('tr');
             var newCheckbox = document.createElement('input');
@@ -1132,7 +1133,7 @@ function inventoryFormLoader() {
     var notesInputTd = document.createElement('td');
     notesInputTd.colSpan = 2;
     var notesInput = document.createElement('textarea');
-    notesInput.placeholder = 'Type any notes for tomorrow\'s leader';
+    notesInput.placeholder = 'Type special ingredients inventory and other notes for tomorrow\'s leader';
     notesInput.id = 'notes-input';
     notesInput.cols = 28;
     notesInput.rows = 5;
