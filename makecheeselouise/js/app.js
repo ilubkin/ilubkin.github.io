@@ -995,6 +995,12 @@ function itemChecklistLoader() {
                 EODinventory = yesterdayItemChecklist[locSelector][i]['EODinventory'];
             }
             var quantNeeded = Math.ceil((SODinventory-EODinventory-offset  > 0 ? SODinventory-EODinventory-offset : 0).toFixed(1));
+            if(i == '1 dollar') {
+                quantNeeded = 100-EODinventory;
+            }
+            if(i == '5 dollar') {
+                quantNeeded = 20-EODinventory;
+            }
             var newRow = document.createElement('tr');
             var newCheckbox = document.createElement('input');
             newCheckbox.type = 'checkbox';
