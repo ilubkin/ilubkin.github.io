@@ -26,9 +26,10 @@ var itemChecklist = null;
 var yesterdayItemChecklist = null;
 var sandwichChecklist = null;
 var sandwiches = null;
-var revenues = null;
+var revenues = {};
 var cashRecord = {};
 var permittedEmails = null;
+var altrevenuePredictions = {};
 var userLocation = 'settlers-green'; //later pull from user info for default
 var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -273,13 +274,59 @@ async function updateItemListLocal() {
     }
 }
 
+async function altupdateRevenuePredictionLocal(offset = 0) {
+    var lastRead = 0;
+    var lastWrite = Date.parse(new Date());
+    var dayString = getDateString(offset);
+    var dayNumber = Date.parse(new Date());
+    const dbRef = firebase.database().ref();
+
+    if(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString] !== undefined) {
+        lastRead = Number(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString]['last-write']);
+    }
+    await readLocationsFB(); //should swap with a local update function
+    await dbRef.child('altrevenue-predictions').child(dayString).child('last-write').get().then((snapshot) => {
+        if(snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        }
+        else { //no data has been written anywhere
+            lastWrite = 0;
+            altrevenuePredictions[dayString] = {
+                "last-write": dayNumber,
+            };
+            for(loc in locations) {
+                altrevenuePredictions[dayString][loc] = 0;
+            }
+
+            database.ref('/altrevenue-predictions/'+dayString).set(altrevenuePredictions[dayString]);
+            console.log("Error reading from last-write of altrevenue-predictions: No data available, zeros written");
+        }
+    });
+    if(lastRead < lastWrite) { //local storage is outdated
+        await dbRef.child("altrevenue-predictions").child(dayString).get().then( (snapshot) => {
+            if (snapshot.exists()) {
+                altrevenuePredictions[dayString] = snapshot.val();
+            } else {
+                console.log("Error reading from last-write of item-list: No data available.");
+            }
+            }).catch((error) => {
+                console.error(error);
+        });
+        localStorage.setItem('altrevenuePredictions', JSON.stringify(altrevenuePredictions));
+        altrevenuePredictions = JSON.parse(localStorage.getItem('altrevenuePredictions'));
+    }
+    else {
+        altrevenuePredictions = JSON.parse(localStorage.getItem('altrevenuePredictions'));
+    }
+}
+
 async function updateRevenuePredictionsLocal() {
     var today = new Date();
     var weekday = today.getDay();
     today = Date.parse(today.toString());
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var lastRead = 0;
-    var lastWrite = new Date();
+    var lastWrite = Date.parse(new Date());
     const dbRef = firebase.database().ref();
 
     if(localStorage.getItem('revenuePredictions') !== null && JSON.parse(localStorage.getItem('revenuePredictions'))[thisMon] !== undefined) {
@@ -1281,9 +1328,95 @@ async function prepChecklistLoader(revenue = 0) {
     });
 }
 
+async function altrevenueInputLoader(offset = -1) {
+    var tableBody = document.querySelector('#altrevenue-input-tbody');
+    tableBody.dataset.offset = offset;
+    await readLocationsFB(); //replace later with update fn
+    for(var i = offset; i < offset+9; i++) {
+        await altupdateRevenuePredictionLocal(i); //will update for a single day
+    }
+    for(loc in locations) {
+        var skip = false;
+        document.querySelector('#altrevenue-input-tbody').querySelectorAll('tr').forEach( (row) => {
+            if(row.id == 'altrevenue-input-header-row') {
+                var j = -1;
+                row.querySelectorAll('th').forEach( (elt) => { 
+                    if(elt.id !== '') {
+                        elt.innerHTML = getDateString(j++).substring(0,5);
+                    }
+                });
+            } //runs four times which is unnecessary but whatevs
+            
+            if(row.id === loc) {
+                for(var a = 1; a < 9; a++) {
+                    if(row.dataset.write !== altrevenuePredictions[getDateString(offset+a-1)]['last-write']) {
+                        row.childNodes[a].childNodes[0].value = altrevenuePredictions[getDateString(offset+a-1)][loc];
+                    }
+                }
+                skip = true;
+                 // return is equivilent to continue, continue is not valid in forEach()
+            }
+        });
+        if(!skip) {
+            var newRow = document.createElement('tr');
+            newRow.id = loc;
+            var nameCell = document.createElement('td');
+            nameCell.innerHTML = dashToSpace(loc);
+            newRow.appendChild(nameCell);
+            for(var i = offset; i < offset+9; i++) {
+                var newCell = document.createElement('td');
+                var newInput = document.createElement('input');
+                newInput.type = 'number';
+                newInput.max = 99999;
+                newInput.step = 100;
+                newInput.value = altrevenuePredictions[getDateString(i)][loc];
+                newInput.style.maxWidth = '4em';
+                newInput.name = getDateString(i) + '-'+ loc + '-input';
+                newInput.id = getDateString(i) + '-'+ loc + '-input';
+                newCell.id = getDateString(i) + '-'+ loc + '-td';
+                newCell.appendChild(newInput);
+                newRow.appendChild(newCell);
+            }
+            tableBody.appendChild(newRow);
+        }
+    }
+}
+
+async function altrevenueInputSubmit() {
+    for(loc in locations) { 
+        var locSelector = loc; 
+        var data = document.querySelectorAll('#altrevenue-input-tbody td');
+        var offset = Number(document.querySelector('#altrevenue-input-tbody').dataset.offset);
+        //console.log(data);
+        for(datum in data) {
+            if(!((data[datum].id === "") || (data[datum].id === undefined))) {
+                console.log(data[datum].id);
+                //console.log(data[datum].id.includes(locSelector));
+                for(var i = offset; i < offset+9; i++) {
+                    console.log(getDateString(i));
+                    console.log(data[datum].id.includes(getDateString(i)));
+                }
+                if(data[datum].id.includes(locSelector)) {
+                    for(var i = offset; i < offset+9; i++) {
+                        if(data[datum].id.includes(getDateString(i))) { //logs the info to use as firebase key
+                            console.log(('#'+getDateString(i)+'-'+locSelector+'-input')); 
+                            console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input'));
+                            console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input').value);
+                            altrevenuePredictions[getDateString(i)][loc] = document.getElementById(getDateString(i)+'-'+locSelector+'-input').value; //querySelector doesn't work on id's that start with numbers
+                            database.ref('/altrevenue-predictions/'+getDateString(i)+'/'+locSelector).set(altrevenuePredictions[getDateString(i)][locSelector]);
+                            database.ref('/altrevenue-predictions/'+getDateString(i)+'/last-write').set(Date.parse(new Date())); //changed to number on 6/15, will ripple
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 async function revenueInputLoader(day = new Date()) {
     var tableBody = document.querySelector('#revenue-input-tbody');
     await updateRevenuePredictionsLocal();
+    await readLocationsFB();
     // var today = new Date();
     console.log("passed date: " + day + " type: " + typeof(day));
     var today = day;
