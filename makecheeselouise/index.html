@@ -18,9 +18,10 @@
                 <i class="fa fa-caret-down"></i>
                 </button>
                 <div class="dropdown-content">
+                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
+                    <p id='load-inventory-nav' class='no-select'>Load old inventory</p>
                     <p id='add-sandwich-nav' class='no-select'> Add sandwich</p>
                     <p id='add-ingredient-nav' class='no-select'> Add ingredient</p>
-                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
                     <p id='prep-checklist-nav' class='no-select'> Prep checklist</p>
                     <p id='home-nav' class='no-select'> Home</p>
                 </div>
@@ -33,51 +34,51 @@
             <p id='loading-message'>Loading</p>
         </div>
         
-        <div id='signInForm'>
+        <div id='signInForm' class='table-card'>
             <h2>Sign In</h2>
             <div>
                 <label for='userSIEmail'>Email</label>
                 <input type="email" id="userSIEmail" placeholder="mail@mail.com">
-                <small id="userSIEmailError">Please check your login information.</small>
             </div>
+            <small id="userSIEmailError">Please check your login information.</small>
 
             <div>
                 <label for="userSIPassword">Password</label>
                 <input type="password" id="userSIPassword" placeholder="password">
-                <small id="userSIPasswordError">Please check your password.</small>
             </div>
+            <small id="userSIPasswordError">Please check your password.</small>
 
             <button type='button' id='signInButton'>Sign In</button>
-            <p>Not a member yet? Become a member: <button class='no-select' id='userSignUp'>Sign Up</button></p>
+            <p>Not account yet? <button class='no-select' id='userSignUp'>Sign Up</button></p>
         </div>
 
-        <div id="signUpForm" style="display: none" class='special-form'>
+        <div id="signUpForm" style="display: none" class='special-form table-card'>
             <h2>Sign Up</h2>
             <div class="form-group">
                 <label for="userFirstName">First Name</label>
                 <input type="text" id="userFirstName" placeholder="first name">
-                <small id="userFirstNameError">This Field must be filled.</small>
             </div>
+            <small id="userFirstNameError">This Field must be filled.</small>
             <div class="form-group">
                 <label for="userLastName">Last Name</label>
                 <input type="text" id="userLastName" placeholder="Last Name">
-                <small id="userLastNameError">This Field must be filled.</small>
             </div>
+            <small id="userLastNameError">This Field must be filled.</small>
             <div class="form-group">
                 <label for="userEmail">Email address</label>
                 <input type="email"id="userEmail" placeholder="mail@mail.com">
-                <small id="userEmailError">Please check your email address.</small>
             </div>
+            <small id="userEmailError">Please check your email address.</small>
             <div class="form-group">
                 <label for="userPassword">Password</label>
                 <input type="password" id="userPassword" placeholder="**********">
-                <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
             </div>
+            <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
             <button type="button" id="signUpButton">Sign Up</button>
             <p>Already a member? Sign in: <button class='no-select' id='userSignIn'>Sign In</button></p>
         </div>
 
-        <div id='role-loc-dialogue' class='flex-container special-form'> 
+        <div id='role-loc-dialogue' class='flex-container special-form table-card'> 
             <!-- Populated from js -->
             <h2 id='welcome-message'>Welcome!</h2>
             <!-- Populated from js -->
@@ -92,8 +93,20 @@
             </div>
         </div>
 
-        <div id='widget-container' class='special-form'>
+        <div id='load-inventory-wrapper' class='flex-container special-form table-card' style='display:none'>
+            <p id='load-inventory-location'></p>
+            <div>
+                <label for='inventory-date-selector'>Load inventory from</label>
+                <input type='date' id='inventory-date-selector'>
+            </div>
+            <button id='load-inventory-submit' name='load-inventory-submit' type='button'>Submit</button>
+        </div> 
 
+        <div id='widget-container' class='flex-container special-form table-card' style='display:none'>
+            <div id='notes-container'>
+                <h2>Notes:</h2>
+                <p id='yesterday-notes'></p>
+            </div>
         </div>
         
         <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
@@ -113,7 +126,7 @@
             <button id='sandwich-checklist-submit' name='sandwich-checklist-submit' type='button'>Submit</button>
         </div>
 
-        <div id='item-checklist' class='flex-container special-form table-card' style='display:none'>
+        <div id='item-checklist' class='flex-container special-form table-card' style='display:none' data-write=''>
             <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>

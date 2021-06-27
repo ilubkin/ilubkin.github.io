@@ -14,13 +14,13 @@ class item {
 
 var database = firebase.database();
 var itemSearch = database.ref().child('items').orderByChild('name');
-var itemListSearch = database.ref().child('item-list').orderByChild('name');
+var preppedItemListSearch = database.ref().child('item-list').orderByChild('type').startAt('prepared item').endAt('purchased item');
 var locationSearch = database.ref().child('locations');
 var sandwichSearch = database.ref().child('sandwiches');
 var revenueSearch = database.ref().child('revenue-predictions');
 var cashRecordSearch = database.ref().child('cash-record');
 var items = null;
-var itemList = null;
+var preppedItemList = null;
 var locations = null;
 var itemChecklist = null;
 var yesterdayItemChecklist = null;
@@ -28,6 +28,8 @@ var sandwichChecklist = null;
 var sandwiches = null;
 var revenues = {};
 var cashRecord = {};
+var notesRecord = {};
+var curUserFirstName = 'null';
 var permittedEmails = null;
 var altrevenuePredictions = {};
 var userLocation = 'settlers-green'; //later pull from user info for default
@@ -88,8 +90,8 @@ async function readItemsFB() {
 }
 
 async function readItemListFB() {
-    await itemListSearch.once('value', (snapshot) => {
-        itemList = snapshot.val();
+    await preppedItemListSearch.once('value', (snapshot) => {
+        preppedItemList = snapshot.val();
     });
 }
 
@@ -120,7 +122,7 @@ async function readYesterdayItemChecklistFB() {
     });
 }
 
-async function readSandwichChecklistFB(dayOffset = 0, locSelector = 'settlers-green') {
+async function readSandwichChecklistFB(dayOffset = 0, locSelector = userLocation) {
     var today = new Date();
     today = getDateString(dayOffset);
     await database.ref().child('inventory-record/' + today + '/' + locSelector + '/sandwiches').once('value', (snapshot) => {
@@ -168,80 +170,44 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
     var weekday = today.getDay() + dayOffset;
     today = getDateString(dayOffset);
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1) + dayOffset);
-    var revenue = '0';
+    var revenue = 0;
     // var EODset = 0;
     const dbRef = firebase.database().ref();
+    var revenueWrite = null;
+    var checklistWrite = null;
     // var locSelector = 'settlers-green';//later, itterate through all locations, or pass as arg
+    await dbRef.child('revenue-predictions').child(thisMon).child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            revenueWrite = Number(snapshot.val());
+        } else {
+            updateRevenuePredictionsLocal().then( () => {
+                console.log("Error reading from last-write of revenue-predictions: No data available, zeros written, try again");
+            });
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    await dbRef.child('inventory-record').child(today).child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            checklistWrite = Number(snapshot.val());
+        } else {
+            console.log("Error reading from last-write of inventory-record: No data available");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
     for(locSelector in locations) {
-        //lines 164 to 189 update outdated revenue predictions
+        // the following 10 lines update outdated revenue predictions
         revenue = revenues[thisMon][locSelector][weekdays[weekday]];
-        var index = 0;
-        while(typeof(itemList[Object.keys(itemList)[index]]) !== 'object') {
-            index++;
+        if(checklistWrite < revenueWrite) {
+            for(var i in preppedItemList) {
+                        if(typeof(preppedItemList[i]) !== 'object') {
+                            continue;
+                        }
+                        itemChecklist[locSelector][i]['SODinventory'] = preppedItemList[i].dollarToQuant*revenue;
+                    }
         }
-        var itemName = Object.keys(itemList)[index];
-        await dbRef.child("inventory-record").child(today).child(locSelector).child(itemName).child('SODinventory').get().then((snapshot) => {
-            if (snapshot.exists()) {
-                oldSOD = Number(snapshot.val());
-            } else {
-                oldSOD = null;
-                console.log("Error reading from last-write of item-list: No data available");
-            }
-        }).catch((error) => {
-            console.error(error);
-        });
-        var newSOD = (itemList[itemName].dollarToQuant*revenue);
-        if(oldSOD !== newSOD) {
-            for(var i in itemList) {
-                if(typeof(itemList[i]) !== 'object') {
-                    continue;
-                }
-                itemList[i]['SODinventory'] = newSOD;
-            }
-        }
-        await database.ref('/inventory-record/'+today).set(itemChecklist);
-        // await readSandwichChecklistFB(dayOffset, locSelector);
-        //     for(var i in itemList) {
-        //         if(typeof(itemList[i]) !== 'object') {
-        //             continue;
-        //         }
-        //         const dbRef = firebase.database().ref();
-        //         await dbRef.child("inventory-record").child(today).child(locSelector).child(i).child('EODinventory').get().then((snapshot) => {
-        //             if (snapshot.exists()) {
-        //                 EODset = Number(snapshot.val());
-        //             } else {
-        //                 EODset = 0;
-        //                 console.log("Error reading from last-write of item-list: No data available");
-        //             }
-        //         }).catch((error) => {
-        //             console.error(error);
-        //         });
-        //         await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+i).set({
-        //             name: itemList[i].name,
-        //             unit: itemList[i].unit,
-        //             dollarToQuant: itemList[i].dollarToQuant,
-        //             SODinventory: (itemList[i].dollarToQuant*revenue),
-        //             EODinventory: EODset, //add at eod
-        //             location: itemList[i].location,
-        //             taken: false,
-        //             offset: 0,
-        //             //need to add current inventory into account (for cur inv. and to bring)
-        //         });
-        //     }
-
-    
-        if(sandwichChecklist == null) {
-            for(var sandwich in sandwiches) {
-                sandwiches[sandwich].EODinventory = 0;
-                sandwiches[sandwich].SODinventory = 0;
-                if(sandwiches[sandwich].bringing == null) {
-                    sandwiches[sandwich].bringing = 0;
-                }
-                //add logic to pull from yesterday
-                await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+ sandwich).update(sandwiches[sandwich]);
-            }
-        }
-        
+        await database.ref('/inventory-record/'+today).set(itemChecklist);       
     }
 }
 
@@ -266,11 +232,11 @@ async function updateItemListLocal() {
         }).catch((error) => {
             console.error(error);
     });
-    if(localStorage.getItem('itemList') !== null) {
-        lastRead = Number(JSON.parse(localStorage.getItem('itemList'))['last-write']);
+    if(localStorage.getItem('preppedItemList') !== null) {
+        lastRead = Number(JSON.parse(localStorage.getItem('preppedItemList'))['last-write']);
     }
     if(lastRead < lastWrite) /*local object is outdated*/ {
-        await localStorage.setItem('itemList', JSON.stringify(itemList));
+        await localStorage.setItem('preppedItemList', JSON.stringify(preppedItemList));
     }
 }
 
@@ -408,23 +374,24 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
         for(locSelector in locations) {
             revenue = revenues[thisMon][locSelector][weekdays[weekday]];
             itemChecklist[locSelector] = {};    
-            for(var i in itemList) {
-                if(typeof(itemList[i]) !== 'object') {
+            for(var i in preppedItemList) {
+                if(typeof(preppedItemList[i]) !== 'object') {
                     continue;
                 }
                 
                 itemChecklist[locSelector][i] = {
-                    name: itemList[i].name,
-                    unit: itemList[i].unit,
-                    dollarToQuant: itemList[i].dollarToQuant,
-                    SODinventory: (itemList[i].dollarToQuant*revenue),
+                    name: preppedItemList[i].name,
+                    unit: preppedItemList[i].unit,
+                    dollarToQuant: preppedItemList[i].dollarToQuant,
+                    SODinventory: (preppedItemList[i].dollarToQuant*revenue),
                     EODinventory: 0, //add at eod
-                    location: itemList[i].location,
+                    location: preppedItemList[i].location,
                     taken: false,
                     offset: 0,
                 };
             }
             await readSandwichesFB();
+            await readSandwichChecklistFB();
             if(sandwichChecklist == null) {
                 itemChecklist[locSelector]['sandwiches'] = {};
                 for(var sandwich in sandwiches) {
@@ -454,7 +421,7 @@ async function updateCashRecordLocal() {
     today = Date.parse(today.toString());
     var todayString = getDateString();
     var lastRead = 0;
-    var lastWrite = new Date();
+    var lastWrite = Date.parse(new Date());
     const dbRef = firebase.database().ref();
 
     await readLocationsFB();
@@ -503,6 +470,73 @@ async function updateCashRecordLocal() {
     }
 }
 
+async function updateNotesRecordLocal(offset = 0, locSelector = userLocation) {
+    var todayNumber = Date.parse(getDateString(offset));
+    var todayString = getDateString(offset);
+    var lastRead = 0;
+    var lastWrite = Date.parse(new Date());
+    const dbRef = firebase.database().ref();
+
+    await readLocationsFB();
+    if(localStorage.getItem('notesRecord')!==null) {
+        //the local storage item exists
+        notesRecord = JSON.parse(localStorage.getItem('notesRecord'));
+        if(JSON.parse(localStorage.getItem('notesRecord'))[todayString]!==undefined) {
+            //local storage item has a today record
+            lastRead = JSON.parse(localStorage.getItem('notesRecord'))[todayString]['last-write'];
+        }
+    }
+
+    await dbRef.child("notes-record").child(todayString).child('last-write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } 
+        else {
+            //add logic to set to blank
+            lastWrite = 0;
+            notesRecord[todayString] = {
+                'last-write': todayNumber,
+            };
+            notesRecord[todayString][locSelector] = {};
+            notesRecord[todayString][locSelector][todayNumber] = {
+                'note-text': '',
+                'uFirstName': 'no notes',
+                'written': todayNumber,
+            }
+            dbRef.child("notes-record").child(todayString).child(locSelector).set(notesRecord[todayString][locSelector]);
+            dbRef.child("notes-record").child(todayString).child('last-write').set(todayNumber);
+            console.log("Error reading from last-write of notes: No data available. Empty data written.");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastWrite === 0) {
+        //handle zero write
+        await database.ref().child('notes-record/' + todayString + '/' + locSelector).once('value', (snapshot) => {
+            notesRecord[todayString][locSelector] = snapshot.val();
+        });
+        localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
+    }
+    else if(lastRead < lastWrite) { //the notes have been updated since last read
+        //update object
+        notesRecord[todayString] = {
+            'last-write': todayNumber,
+        };
+        notesRecord[todayString][locSelector] = {};
+        await database.ref().child('notes-record/' + todayString + '/' + locSelector).orderByChild('written').limitToLast(1).once('value', (snapshot) => {
+            notesRecord[todayString][locSelector] = snapshot.val();
+        });
+        localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
+    }
+    else if(notesRecord[todayString][locSelector] == undefined) { //the notes were present and haven't been updated, but the current location is not in the local storage
+        notesRecord[todayString][locSelector] = {};
+        await database.ref().child('notes-record/' + todayString + '/' + locSelector).orderByChild('written').limitToLast(1).once('value', (snapshot) => {
+            notesRecord[todayString][locSelector] = snapshot.val();
+        });
+        localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
+    }
+}
+
 function writeTemplateItemFB(i) {
     database.ref('/item-list/'+i.name).set({
         name: i.name,
@@ -524,6 +558,28 @@ firebase.auth().onAuthStateChanged( function(user) {
     if (user) {
         hideAllForms();
         pageInfoLoader();
+        var uid = user.uid;
+        var primaryLocation = 'settlers-green';
+        const dbRef = firebase.database().ref();
+        dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
+            if (snapshot.exists()) {
+                primaryLocation = snapshot.val();
+            } else {
+                console.log("Error reading from primaryLocation of user: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        }).then( () => { return userLocation = primaryLocation; });
+        dbRef.child("users").child(uid).child('uFirstName').get().then((snapshot) => {
+            if (snapshot.exists()) {
+                curUserFirstName = snapshot.val();
+            } else {
+                console.log("Error reading from uFirstName of user: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+        
         //gives current user email
         //add logic for user dependent loading
         // User is signed in.
@@ -548,12 +604,18 @@ const signUpButton = document.getElementById('signUpButton');
 const signUpForm = document.getElementById('signUpForm');
 const userSignIn = document.getElementById('userSignIn');
 
-userSIEmail.addEventListener('onblur', () => {
+userSIEmail.addEventListener('blur', () => {
     checkUserSIEmail();
 });
-userSIPassword.addEventListener('onblur', () => {
+// userSIEmail.addEventListener('input', () => {
+//     checkUserSIEmail();
+// });
+userSIPassword.addEventListener('blur', () => {
     checkUserSIPassword();
 });
+// userSIPassword.addEventListener('input', () => {
+//     checkUserSIPassword();
+// });
 userSIPassword.addEventListener('keypress', (e) => {
     if(e.key === 'Enter') {
         signIn().then( () => {
@@ -576,16 +638,16 @@ signOutButton.addEventListener('click', () => {
         document.querySelector('#signOutButton').style.display = 'none';
     });
 });
-userFirstName.addEventListener('onblur', () => {
-    checkUserFirstName();
-});
-userLastName.addEventListener('onblur', () => {
-    checkUserLastName();
-});
-userEmail.addEventListener('onblur', () => {
+// userFirstName.addEventListener('blur', () => {
+//     checkUserFirstName();
+// });
+// userLastName.addEventListener('blur', () => {
+//     checkUserLastName();
+// });
+userEmail.addEventListener('blur', () => {
     checkUserEmail();
 });
-userPassword.addEventListener('onblur', () => {
+userPassword.addEventListener('blur', () => {
     checkUserPassword();
 });
 signUpButton.addEventListener('click', () => {
@@ -597,7 +659,7 @@ userSignIn.addEventListener('click',  () => {
 });
 // xxxxxxxxxx Sign In Email Validation xxxxxxxxxx
 function checkUserSIEmail(){
-    var userSIEmail = document.getElementById("userSIEmail");
+    // var userSIEmail = document.getElementById("userSIEmail");
     var userSIEmailFormat = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
     if(userSIEmail.value.match(userSIEmailFormat)){
@@ -613,7 +675,7 @@ function checkUserSIEmail(){
 }
 // xxxxxxxxxx Sign In Password Validation xxxxxxxxxx
 function checkUserSIPassword(){
-    var userSIPassword = document.getElementById("userSIPassword");
+    // var userSIPassword = document.getElementById("userSIPassword");
     var userSIPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
     userSIPasswordFormat = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
@@ -672,7 +734,7 @@ async function signOut(){
 }
 // xxxxxxxxxx First Name Validation xxxxxxxxxx
 function checkUserFullName(){
-    var uFirstName = document.getElementById("userFirstName").value;
+    // var uFirstName = document.getElementById("userFirstName").value;
     var flag = false;
     if(uFirstName === ""){
         flag = true;
@@ -685,7 +747,7 @@ function checkUserFullName(){
 }
 // xxxxxxxxxx User Surname Validation xxxxxxxxxx
 function checkUserSurname(){
-    var uLastName = document.getElementById("userLastName").value;
+    // var uLastName = document.getElementById("userLastName").value;
     var flag = false;
     if(uLastName === ""){
         flag = true;
@@ -698,7 +760,7 @@ function checkUserSurname(){
 }
 // xxxxxxxxxx Email Validation xxxxxxxxxx
 function checkUserEmail(){
-    var userEmail = document.getElementById("userEmail");
+    // var userEmail = document.getElementById("userEmail");
     var userEmailFormat = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var flag;
     if(userEmail.value.match(userEmailFormat)){
@@ -714,7 +776,7 @@ function checkUserEmail(){
 }
 // xxxxxxxxxx Password Validation xxxxxxxxxx
 function checkUserPassword(){
-    var userPassword = document.getElementById("userPassword");
+    // var userPassword = document.getElementById("userPassword");
     var userPasswordFormat = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{10,}/;      
     var flag;
     if(userPassword.value.match(userPasswordFormat)){
@@ -774,8 +836,8 @@ async function signUp(){
                 uLastName: uLastName,
                 uEmail: uEmail,
             }
-            firebaseRef.child(uid).set(userData);
-            alert('Your Account Created','Your account was created successfully, you can log in now.',
+            firebaseRef.child('users').child(uid).set(userData);
+            alert('Account Created','Your account was created successfully, you are logged in now.',
             )
                 setTimeout(function(){
                     signUpForm.style.display = 'none';
@@ -848,6 +910,7 @@ function roleLocationLoader(){
             document.querySelector('#loc-selector').add(newLoc);
         }
     }
+    document.querySelector('#loc-selector').value = userLocation;
 }
 
 async function sandwichChecklistLoader() {
@@ -913,27 +976,25 @@ async function sandwichChecklistLoader() {
 // populate_with_new_rows(new_tbody);
 // old_tbody.parentNode.replaceChild(new_tbody, old_tbody)
 
-function sandwichChecklistSubmit() {
+async function sandwichChecklistSubmit() {
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     var locSelector = userLocation;
-    var today = new Date();
-    today = getDateString();
-    for(var i = 1, row; row = sandwichTBody.rows[i]; i++) {
+    var today = getDateString();
+    for(var i = 0, row; row = sandwichTBody.rows[i]; i++) {
         var todayCount = Number(row.childNodes[1].value);
         itemChecklist[locSelector]['sandwiches'][dashToSpace(row.id)]['bringing'] = Number(row.childNodes[1].value);
-        database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+dashToSpace(row.id)).update({
+        await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+dashToSpace(row.id)).update({
             bringing:  Number(row.childNodes[1].value),
         });
         var yesterdayCount = Number(row.childNodes[2].innerHTML);
         var sandwichName = dashToSpace(row.id);
-        var locSelector = 'settlers-green';
         var maxNeed = Number(row.childNodes[3].innerHTML);
         var offsetCount = ((todayCount+yesterdayCount) < maxNeed ? (todayCount+yesterdayCount) : maxNeed);
         for(var j in sandwiches[sandwichName]) {
             if(itemChecklist[locSelector][j] !== undefined) {
                 var offsetv = Number(itemChecklist[locSelector][j]['offset']) + offsetCount*Number(sandwiches[sandwichName][j]);
                 itemChecklist[locSelector][j]['offset'] = offsetv;
-                database.ref('/inventory-record/'+today+'/'+locSelector+'/'+j).update({
+                await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+j).update({
                     offset: offsetv,
                 });
             }
@@ -954,7 +1015,8 @@ function itemChecklistLoader() {
     var tableBody = document.querySelector('#item-checklist-tbody');
     document.querySelector('#item-checklist').style.display = 'flex';
     var locSelector = userLocation;
-    if(document.querySelector('#item-checklist-table').caption.innerHTML !== userLocation) {
+    if(document.querySelector('#item-checklist-table').caption.innerHTML !== userLocation ||
+        document.querySelector('#item-checklist-table').dataset.write != itemChecklist[lastWrite]) {
         var blankTBody = document.createElement('tbody');
         blankTBody.id = 'item-checklist-tbody';
         tableBody.parentNode.replaceChild(blankTBody, tableBody);
@@ -969,7 +1031,7 @@ function itemChecklistLoader() {
                 skip = true;
             }
         });
-        if( skip==false && (itemList[i]['inUse'])==true) {
+        if( skip==false && (preppedItemList[i]['inUse'])==true) {
             var SODinventory = itemChecklist[locSelector][i]['SODinventory'];
             var EODinventory = null;
             var offset = itemChecklist[locSelector][i]['offset']
@@ -980,6 +1042,13 @@ function itemChecklistLoader() {
                 EODinventory = yesterdayItemChecklist[locSelector][i]['EODinventory'];
             }
             var quantNeeded = Math.ceil((SODinventory-EODinventory-offset  > 0 ? SODinventory-EODinventory-offset : 0).toFixed(1));
+            //the next two if statements temporarily fix cash inventory numbers
+            if(i == '1 dollar') {
+                (locSelector == 'commissary' ? quantNeeded = 500-EODinventory : quantNeeded = 100-EODinventory);
+            }
+            if(i == '5 dollar') {
+                (locSelector == 'commissary' ? quantNeeded = 100-EODinventory : quantNeeded = 20-EODinventory);
+            }
             var newRow = document.createElement('tr');
             var newCheckbox = document.createElement('input');
             newCheckbox.type = 'checkbox';
@@ -1013,7 +1082,7 @@ function itemChecklistLoader() {
             // }
             newRow.id = spaceToDash(itemChecklist[locSelector][i]['name']);
             tableBody.appendChild(newRow);
-            
+            document.querySelector('#item-checklist').dataset.write = itemChecklist['last-write'];
         }
         document.querySelector('#item-checklist-table').caption.innerHTML = dashToSpace(locSelector);
     }
@@ -1032,7 +1101,7 @@ function itemChecklistLoader() {
 }
 
 function inventoryFormLoader() {
-    console.log(itemList);
+    console.log(preppedItemList);
 
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
@@ -1079,7 +1148,7 @@ function inventoryFormLoader() {
         }
         document.querySelectorAll('tr.inventory').forEach( (item) => {
             if (dashToSpace(item.id) === itemChecklist[locSelector][i].name
-            || itemList[i]['inUse'] === false ) {
+            || preppedItemList[i]['inUse'] === false ) {
                 skip = true;
             }
         });
@@ -1104,36 +1173,74 @@ function inventoryFormLoader() {
             tableBody.appendChild(newRow);
         }
     }
+    var notesRow = document.createElement('tr');
+    notesRow.id = 'notes-row';
+    var notesLabel = document.createElement('td');
+    notesLabel.innerHTML = 'Notes: ';
+    var notesInputTd = document.createElement('td');
+    notesInputTd.colSpan = 2;
+    var notesInput = document.createElement('textarea');
+    notesInput.placeholder = 'Type special ingredients inventory and other notes for tomorrow\'s leader';
+    notesInput.id = 'notes-input';
+    notesInput.cols = 28;
+    notesInput.rows = 5;
+    notesInputTd.appendChild(notesInput);
+    notesRow.appendChild(notesLabel);
+    notesRow.appendChild(notesInputTd);
+    tableBody.appendChild(notesRow);   
+
     document.querySelector('#inventory-form-table').caption.innerHTML = dashToSpace(locSelector);
 }
 
 async function inventoryFormSubmit() {
-    var today = new Date();
-    today = getDateString();
+    updateNotesRecordLocal();
+    var todayNumber = Date.parse(new Date());
+    var todayString= getDateString();
+    var curTimeInt = Date.parse(new Date());
     var table = document.querySelector('#inventory-form-table');
-    var locSelector = userLocation; //eventually pass as arg or get elsewhere...
+    var locSelector = userLocation;
     var updateObj = {};
+    updateObj['sandwiches'] = {};
     var sandwichNode = '';
     for(var i = 1, row; row = table.rows[i]; i++) {
-        updateObj[dashToSpace(row.id)] = false;
-        if(row.children[0].value == '') {
-            updateObj[dashToSpace(row.id)] = { EODinventory: 0, };
-        }
-        else {
-            updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+        if(!row.childNodes[0].id.includes('sandwich') && !row.id.includes('notes')) {
+            updateObj[dashToSpace(row.id)] = {};
+            if(row.children[0].value == '') {
+                updateObj[dashToSpace(row.id)] = { EODinventory: 0, };
+            }
+            else {
+                updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+            }
         }
         if(row.childNodes[0].id.includes('sandwich')) {
-            await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches'+'/'+dashToSpace(row.id)).update({
-                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+            if(row.children[0].value == '') {
+                updateObj['sandwiches'][dashToSpace(row.id)] = { EODinventory: 0, };
+            }
+            else {
+                updateObj['sandwiches'][dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
+            }
+            await database.ref('/inventory-record/'+todayString+'/'+locSelector+'/sandwiches'+'/'+dashToSpace(row.id)).update({
+                EODinventory: updateObj['sandwiches'][dashToSpace(row.id)]['EODinventory'],
             });
         }
-        else {
-            await database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
-                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
-            });
-        }
+        // else {
+        //     await database.ref('/inventory-record/'+todayString+'/'+locSelector+'/'+dashToSpace(row.id)).update({
+        //         EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+        //     });
+        // }
         row.classList.add('checked');
     }
+    notesRecord[todayString][locSelector][todayNumber] = {
+        'note-text': document.querySelector('#notes-input').value,
+        'uFirstName': curUserFirstName,
+        'written': todayNumber,
+    }
+    localStorage.setItem('notesRecord', JSON.stringify(notesRecord));
+    await database.ref('/notes-record/'+todayString+'/'+locSelector+'/'+curTimeInt).set(notesRecord[todayString][locSelector][todayNumber]);
+    
+
+    updateObj['written'] = curTimeInt;
+    await database.ref('/eod-inventory-record/'+todayString+'/'+locSelector+'/'+curTimeInt).set(updateObj);
     table.style.display = 'none';
     var invForm = document.querySelector('#inventory-form');
     var loadedMessage = document.createElement('p');
@@ -1169,28 +1276,28 @@ async function cashRecordSubmit() {
 function itemListLoader() {
     var tableBody = document.querySelector('#item-list-tbody');
     document.querySelector('#item-list-container').style.display = 'flex';
-    for(var i in itemList) {
-        if(typeof(itemList[i]) !== 'object') {
+    for(var i in preppedItemList) {
+        if(typeof(preppedItemList[i]) !== 'object') {
             continue;
         }
         document.querySelectorAll('tr').forEach( (item) => {
-            if (item.id === spaceToDash(itemList[i].name)) {
+            if (item.id === spaceToDash(preppedItemList[i].name)) {
                 item.remove();
             }
         });
         var newRow = document.createElement('tr');
-        newRow.id = spaceToDash(itemList[i].name);
+        newRow.id = spaceToDash(preppedItemList[i].name);
         var newUnit = document.createElement('td');
         var newName = document.createElement('td');
         var newLocation = document.createElement('td');
         var newRatio = document.createElement('td');
         var newUse = document.createElement('td');
         var newEdit = document.createElement('td');
-        newUnit.innerHTML = itemList[i]['unit'];
-        newName.innerHTML = itemList[i]['name'];
-        newLocation.innerHTML = itemList[i]['location'];
-        newRatio.innerHTML = itemList[i]['dollarToQuant'];
-        newUse.innerHTML = itemList[i]['inUse'];
+        newUnit.innerHTML = preppedItemList[i]['unit'];
+        newName.innerHTML = preppedItemList[i]['name'];
+        newLocation.innerHTML = preppedItemList[i]['location'];
+        newRatio.innerHTML = preppedItemList[i]['dollarToQuant'];
+        newUse.innerHTML = preppedItemList[i]['inUse'];
         newUse.classList.add('item-use-toggle', 'no-select');
         newEdit.innerHTML = ' edit';
         newEdit.classList.add('item-edit-button', 'no-select');
@@ -1200,7 +1307,7 @@ function itemListLoader() {
         newRow.appendChild(newRatio);
         newRow.appendChild(newUse);
         newRow.appendChild(newEdit);
-        if(itemList[i]['inUse'] == false) {
+        if(preppedItemList[i]['inUse'] == false) {
             newRow.classList.add('checked');
         }
         tableBody.appendChild(newRow);
@@ -1257,7 +1364,7 @@ async function prepChecklistLoader(revenue = 0) {
         }
     });
     //UNFINISHED - Need to create table rows in if statement below 
-    var localItemList = JSON.parse(localStorage.getItem('itemList'));
+    var localItemList = JSON.parse(localStorage.getItem('preppedItemList'));
     var tableBody = document.querySelector('#prep-checklist-tbody');
     document.querySelector('#prep-checklist').style.display = 'flex';
     //need to: itterate through locally stored items; create or update a row for each using input revenue
@@ -1582,11 +1689,66 @@ function checklistSubmit() {
     }
 }
 
+function loadInventoryHandler() {
+    var dateInput = document.querySelector('#inventory-date-selector');
+    var today = new Date(); 
+    var inventoryDay = new Date(dateInput.value);
+    today.setHours(0,0,0,0);
+    inventoryDay.setHours(0,0,0,0);
+    var offset = (inventoryDay.getTime() - today.getTime())/ (1000 * 3600 * 24) + 1;
+    //console.log(userLocation + ': ' + getDateString(offset) + ': ' + getDateString());
+    fixEODInventoryFromRecord(userLocation, getDateString(offset), getDateString(-1));
+
+    document.querySelector('#load-inventory-wrapper').style.display = 'none';
+    readYesterdayItemChecklistFB().then( () => {
+        document.querySelector('#sandwich-checklist').style.display = 'flex';
+    });
+}
+
+async function notesLoader(offset = -1) {
+    await updateNotesRecordLocal(offset);
+    document.querySelector('#yesterday-notes').innerHTML = notesRecord[getDateString(offset)][userLocation][Object.keys(notesRecord[getDateString(offset)][userLocation])[0]]["note-text"] + '<br/>-' + notesRecord[getDateString(offset)][userLocation][Object.keys(notesRecord[getDateString(offset)][userLocation])[0]]["uFirstName"];
+    document.querySelector('#widget-container').style.display = 'flex';
+}
+
+async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceDateString = getDateString(-1), destDateString = getDateString()) {
+    var eodRecord = {};
+    const eodQuery = firebase.database().ref('/eod-inventory-record/'+sourceDateString+'/'+locSelector).orderByChild('written').limitToLast(1);
+    
+    await eodQuery.once('value', (snapshot) => {
+        eodRecord = snapshot.val()[Object.keys(snapshot.val())[0]];
+    });
+    for(ing in eodRecord) {
+        if(typeof(eodRecord[ing]) !== 'object') {
+            continue; 
+        }
+        if(ing == 'sandwiches') {
+            for(sandwich in eodRecord[ing]) {
+                await firebase.database().ref('/inventory-record/'+destDateString+'/'+locSelector+'/'+ing+'/'+sandwich).update({ 
+                    EODinventory: eodRecord[ing][sandwich]['EODinventory'],
+                });
+            }
+        }
+        else {
+            await firebase.database().ref('/inventory-record/'+destDateString+'/'+locSelector+'/'+ing).update({ 
+                EODinventory: eodRecord[ing]['EODinventory'],
+            });
+        }
+    }
+    await firebase.database().ref('/inventory-record/'+destDateString+'/last-write').set(Date.parse(new Date()));
+}
+
 document.querySelector('#item-checklist-submit').addEventListener('click', checklistSubmit);
 document.querySelector('#add-ingedient-button').addEventListener('click', addIngedientHandler);
 document.querySelector('#add-sandwich-button').addEventListener('click', addSandwichSubmit);
 document.querySelector('#inventory-form-submit').addEventListener('click', inventoryFormSubmit);
-document.querySelector('#sandwich-checklist-submit').addEventListener('click', sandwichChecklistSubmit);
+document.querySelector('#sandwich-checklist-submit').addEventListener('click', () => {
+    writeItemChecklistFB();
+    updateNotesRecordLocal().then( () => {
+        notesLoader();
+    });
+    sandwichChecklistSubmit();
+});
 document.querySelector('#add-item-button').addEventListener('click', () => {
     var newItem = new item();
     newItem.name = document.querySelector('#name-input').value.toLowerCase();
@@ -1632,6 +1794,11 @@ document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
     hideAllForms();
     prepChecklistLoader();
 });
+document.querySelector('#load-inventory-nav').addEventListener('click', () => {
+    hideAllForms();
+    document.querySelector('#load-inventory-location').innerHTML = dashToSpace(userLocation);
+    document.querySelector('#load-inventory-wrapper').style.display = 'flex';
+});
 document.querySelector('#inventory-from-sandwich-button').addEventListener('click', () => {
     hideAllForms();
     // document.querySelector('#inventory-form-table').style.display = 'inline';
@@ -1664,7 +1831,8 @@ document.querySelector('#welcome-button').addEventListener('click', () => {
 });
 document.querySelector('#submit-cash-record-button').addEventListener('click', () => {
     cashRecordSubmit();
-})
+});
+document.querySelector('#load-inventory-submit').addEventListener('click', loadInventoryHandler);
 // document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
 //     var today = new Date();
 //     console.log(typeof(today));
