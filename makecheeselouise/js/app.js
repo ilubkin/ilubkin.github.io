@@ -34,6 +34,7 @@ var permittedEmails = null;
 var altrevenuePredictions = {};
 var userLocation = 'settlers-green'; //later pull from user info for default
 var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+var getDayToWeekAbbrv = ['Su', 'M', 'T', 'W', 'R', 'F', 'Sa'];
 
 function daysInMonth(month, year) {
     return new Date(year, month, 0).getDate();
@@ -164,6 +165,8 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         return readSandwichesFB();
     }).then( () => { //removed: .then( () => { return readRevenuesFB(); }) because the next function fills it's place
         return updateRevenuePredictionsLocal();
+    }).then( () => {
+        return altupdateRevenuePredictionLocal(dayOffset);
     });
     await updateItemChecklistLocal();
     var today = new Date();
@@ -176,7 +179,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
     var revenueWrite = null;
     var checklistWrite = null;
     // var locSelector = 'settlers-green';//later, itterate through all locations, or pass as arg
-    await dbRef.child('revenue-predictions').child(thisMon).child('last-write').get().then((snapshot) => {
+    await dbRef.child('altrevenue-predictions').child(today).child('last-write').get().then((snapshot) => {
         if (snapshot.exists()) {
             revenueWrite = Number(snapshot.val());
         } else {
@@ -198,7 +201,8 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
     });
     for(locSelector in locations) {
         // the following 10 lines update outdated revenue predictions
-        revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+        //revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+        revenue = altrevenuePredictions[today][locSelector];
         if(checklistWrite < revenueWrite) {
             for(var i in preppedItemList) {
                         if(typeof(preppedItemList[i]) !== 'object') {
@@ -361,7 +365,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
             lastWrite = Number(snapshot.val());
         } else {
             lastWrite = 0;
-            console.log("Error reading from last-write of revenue-predictions: No data available");
+            console.log("Error reading from last-write of inventory-record: No data available");
         }
         }).catch((error) => {
             console.error(error);
@@ -497,13 +501,15 @@ async function updateNotesRecordLocal(offset = 0, locSelector = userLocation) {
             notesRecord[todayString] = {
                 'last-write': todayNumber,
             };
-            notesRecord[todayString][locSelector] = {};
-            notesRecord[todayString][locSelector][todayNumber] = {
-                'note-text': '',
-                'uFirstName': 'no notes',
-                'written': todayNumber,
+            for(loc in locations) {
+                notesRecord[todayString][loc] = {};
+                notesRecord[todayString][loc][todayNumber] = {
+                    'note-text': '',
+                    'uFirstName': 'no notes',
+                    'written': todayNumber,
+                }
             }
-            dbRef.child("notes-record").child(todayString).child(locSelector).set(notesRecord[todayString][locSelector]);
+            dbRef.child("notes-record").child(todayString).set(notesRecord[todayString]);
             dbRef.child("notes-record").child(todayString).child('last-write').set(todayNumber);
             console.log("Error reading from last-write of notes: No data available. Empty data written.");
         }
@@ -917,6 +923,7 @@ async function sandwichChecklistLoader() {
     await updateItemChecklistLocal();
     await readItemChecklistFB();
     await readSandwichChecklistFB();
+    await altupdateRevenuePredictionLocal();
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     document.querySelector('#sandwich-checklist').style.display = 'flex';
     var locSelector = userLocation;
@@ -924,7 +931,8 @@ async function sandwichChecklistLoader() {
     var weekday = today.getDay();
     today = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
-    var revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+    // var revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+    var revenue = altrevenuePredictions[today][locSelector];
     if(document.querySelector('#sandwich-checklist-table').caption.innerHTML !== userLocation) {
             var blankTBody = document.createElement('tbody');
             blankTBody.id = 'sandwich-checklist-tbody';
@@ -1449,16 +1457,14 @@ async function altrevenueInputLoader(offset = -1) {
                 var j = -1;
                 row.querySelectorAll('th').forEach( (elt) => { 
                     if(elt.id !== '') {
-                        elt.innerHTML = getDateString(j++).substring(0,5);
+                        elt.innerHTML = getDateString(j).substring(0,5) + ' (' + getDayToWeekAbbrv[(new Date(getDateString(j++))).getDay()] + ')';
                     }
                 });
             } //runs four times which is unnecessary but whatevs
             
             if(row.id === loc) {
                 for(var a = 1; a < 9; a++) {
-                    if(row.dataset.write !== altrevenuePredictions[getDateString(offset+a-1)]['last-write']) {
-                        row.childNodes[a].childNodes[0].value = altrevenuePredictions[getDateString(offset+a-1)][loc];
-                    }
+                    row.childNodes[a].childNodes[0].value = altrevenuePredictions[getDateString(offset+a-1)][loc];
                 }
                 skip = true;
                  // return is equivilent to continue, continue is not valid in forEach()
@@ -1706,7 +1712,7 @@ function loadInventoryHandler() {
 }
 
 async function notesLoader(offset = -1) {
-    await updateNotesRecordLocal(offset);
+    await updateNotesRecordLocal(offset, userLocation);
     document.querySelector('#yesterday-notes').innerHTML = notesRecord[getDateString(offset)][userLocation][Object.keys(notesRecord[getDateString(offset)][userLocation])[0]]["note-text"] + '<br/>-' + notesRecord[getDateString(offset)][userLocation][Object.keys(notesRecord[getDateString(offset)][userLocation])[0]]["uFirstName"];
     document.querySelector('#widget-container').style.display = 'flex';
 }
@@ -1761,7 +1767,7 @@ document.querySelector('#add-item-button').addEventListener('click', () => {
     readItemListFB().then( () => {itemListLoader();} );
 });
 document.querySelector('#revenue-input-submit').addEventListener('click', () => {
-    readLocationsFB().then( () => { return revenueInputSubmit(); }).then( () => { alert('Revenues submited sucessfully!')});
+    readLocationsFB().then( () => { return revenueInputSubmit(); }).then( () => { alert('Revenues submited sucessfully!'); });
 });
 document.querySelector('#go-back-sandwich-button').addEventListener('click', () => {
     hideAllForms();
@@ -1782,9 +1788,9 @@ document.querySelector('#add-sandwich-nav').addEventListener('click', () => {
 document.querySelector('#add-revenues-nav').addEventListener('click', () => {
     hideAllForms();
     readLocationsFB().then( () => {
-        revenueInputLoader();
+        altrevenueInputLoader();
     }).then( () => {
-        document.querySelector('#revenue-input-container').style.display = 'flex';
+        document.querySelector('#altrevenue-input-container').style.display = 'flex';
     });
 });
 document.querySelector('#home-nav').addEventListener('click', () => {
@@ -1833,6 +1839,13 @@ document.querySelector('#submit-cash-record-button').addEventListener('click', (
     cashRecordSubmit();
 });
 document.querySelector('#load-inventory-submit').addEventListener('click', loadInventoryHandler);
+document.querySelector('#altrevenue-input-submit').addEventListener('click', () => {
+    altrevenueInputSubmit().then( () => { 
+        alert('Revenues submited sucessfully!');
+    });
+    document.querySelector('#altrevenue-input-container').style.display = 'none';
+    pageInfoLoader();
+});
 // document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
 //     var today = new Date();
 //     console.log(typeof(today));

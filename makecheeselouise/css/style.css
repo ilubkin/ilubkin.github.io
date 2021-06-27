@@ -89,6 +89,7 @@ small {
 
 @media (min-width: 800px) {
     #page-wrapper {
+        flex-wrap: wrap;
         flex-direction: row;
         justify-content: space-evenly;
         align-items: flex-start;
@@ -97,6 +98,7 @@ small {
 
 @media (max-width: 800px) {
     #page-wrapper {
+        flex-wrap: wrap;
         flex-direction: column;
         justify-content: space-evenly;
     }
