@@ -251,8 +251,10 @@ async function altupdateRevenuePredictionLocal(offset = 0) {
     var dayNumber = Date.parse(new Date());
     const dbRef = firebase.database().ref();
 
-    if(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString] !== undefined) {
-        lastRead = Number(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString]['last-write']);
+    if(localStorage.getItem('altrevenuePredictions') !== null) {
+        if(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString] !== undefined) {
+            lastRead = Number(JSON.parse(localStorage.getItem('altrevenuePredictions'))[dayString]['last-write']);
+        }
     }
     await readLocationsFB(); //should swap with a local update function
     await dbRef.child('altrevenue-predictions').child(dayString).child('last-write').get().then((snapshot) => {
