@@ -163,9 +163,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         return readLocationsFB();
     }).then( () => { 
         return readSandwichesFB();
-    }).then( () => { //removed: .then( () => { return readRevenuesFB(); }) because the next function fills it's place
-        return updateRevenuePredictionsLocal();
-    }).then( () => {
+    }).then( () => { //removed: .then( () => { return readRevenuesFB(); }) because the next function fills it's place; //removed .then( () => { then removed return updateRevenuePredictionsLocal(); }) because altupdateRevenuePredictions has replaced it
         return altupdateRevenuePredictionLocal(dayOffset);
     });
     await updateItemChecklistLocal();
@@ -183,8 +181,8 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         if (snapshot.exists()) {
             revenueWrite = Number(snapshot.val());
         } else {
-            updateRevenuePredictionsLocal().then( () => {
-                console.log("Error reading from last-write of revenue-predictions: No data available, zeros written, try again");
+            altupdateRevenuePredictionsLocal().then( () => {
+                console.log("Error reading from last-write of altrevenue-predictions: No data available, zeros written, try again");
             });
         }
     }).catch((error) => {
@@ -1530,7 +1528,7 @@ async function altrevenueInputSubmit() {
 
 async function revenueInputLoader(day = new Date()) {
     var tableBody = document.querySelector('#revenue-input-tbody');
-    await updateRevenuePredictionsLocal();
+    //await updateRevenuePredictionsLocal();
     await readLocationsFB();
     // var today = new Date();
     console.log("passed date: " + day + " type: " + typeof(day));
