@@ -1717,7 +1717,7 @@ async function notesLoader(offset = -1) {
     document.querySelector('#widget-container').style.display = 'flex';
 }
 
-async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceDateString = getDateString(-1), destDateString = getDateString()) {
+async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceDateString = getDateString(-1), destDateString = getDateString(-1)) {
     var eodRecord = {};
     const eodQuery = firebase.database().ref('/eod-inventory-record/'+sourceDateString+'/'+locSelector).orderByChild('written').limitToLast(1);
     
@@ -1749,11 +1749,16 @@ document.querySelector('#add-ingedient-button').addEventListener('click', addIng
 document.querySelector('#add-sandwich-button').addEventListener('click', addSandwichSubmit);
 document.querySelector('#inventory-form-submit').addEventListener('click', inventoryFormSubmit);
 document.querySelector('#sandwich-checklist-submit').addEventListener('click', () => {
-    writeItemChecklistFB();
+    hideAllForms();
     updateNotesRecordLocal().then( () => {
         notesLoader();
     });
-    sandwichChecklistSubmit();
+    document.querySelector('#page-loading-display').style.display = 'flex';
+    updateItemChecklistLocal().then( () => {
+        sandwichChecklistSubmit();
+    }).then( () => {
+        document.querySelector('#page-loading-display').style.display = 'none';
+    });
 });
 document.querySelector('#add-item-button').addEventListener('click', () => {
     var newItem = new item();
@@ -1845,6 +1850,12 @@ document.querySelector('#altrevenue-input-submit').addEventListener('click', () 
     });
     document.querySelector('#altrevenue-input-container').style.display = 'none';
     pageInfoLoader();
+});
+document.querySelectorAll('#reload-inventory-from-checklist-button, #reload-inventory-from-sandwich-button').forEach( (button) => {
+    button.addEventListener('click', () => {
+        fixEODInventoryFromRecord(userLocation);
+        pageInfoLoader();
+    });
 });
 // document.querySelector('#revenue-input-next-week').addEventListener('click', () => {
 //     var today = new Date();

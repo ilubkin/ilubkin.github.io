@@ -110,7 +110,10 @@
         </div>
         
         <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
-            <button id='inventory-from-sandwich-button' name='inventory-from-sandwich-button' type='button'>Inventory Form</button>
+            <div>
+                <button id='inventory-from-sandwich-button' name='inventory-from-sandwich-button' type='button'>Inventory Form</button>
+                <button id='reload-inventory-from-sandwich-button' name='reload-inventory-from-sandwich-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
             <table id='sandwich-checklist-table'>
                 <caption></caption>
                 <thead>
@@ -127,7 +130,10 @@
         </div>
 
         <div id='item-checklist' class='flex-container special-form table-card' style='display:none' data-write=''>
-            <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
+            <div class='two-buttons-grid-div'>
+                <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
+                <button id='reload-inventory-from-checklist-button' name='reload-inventory-from-checklist-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>
                 <caption></caption>

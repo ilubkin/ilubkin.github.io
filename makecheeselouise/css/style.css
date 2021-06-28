@@ -42,7 +42,7 @@ tbody tr:nth-child(even) {
 }
 button {
     background-color: var(--primary-color);
-    border: none;
+    border: 1px solid var(--primary-color);
     border-radius: 4px;
     color: white;
     padding: 12px 28px;
@@ -181,6 +181,17 @@ small {
 
 #notes-container {
     padding: 10px;
+}
+
+#two-buttons-grid-div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.ghost-button {
+    background-color: white;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
 }
 
 .single-input-wrapper label { display: block;
