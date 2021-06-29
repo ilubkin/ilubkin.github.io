@@ -203,7 +203,7 @@ async function writeItemChecklistFB(dayOffset = 0) { //need to fix to check if a
         revenue = altrevenuePredictions[today][locSelector];
         if(checklistWrite < revenueWrite) {
             for(var i in preppedItemList) {
-                        if(typeof(preppedItemList[i]) !== 'object') {
+                        if(typeof(preppedItemList[i]) !== 'object' || itemChecklist[locSelector][i] == undefined) {
                             continue;
                         }
                         itemChecklist[locSelector][i]['SODinventory'] = preppedItemList[i].dollarToQuant*revenue;
@@ -395,7 +395,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
                 };
             }
             await readSandwichesFB();
-            await readSandwichChecklistFB();
+            await readSandwichChecklistFB(); //sandwichChecklist is currently just checking if sandwiches are written; there's a more effiecient way!
             if(sandwichChecklist == null) {
                 itemChecklist[locSelector]['sandwiches'] = {};
                 for(var sandwich in sandwiches) {
