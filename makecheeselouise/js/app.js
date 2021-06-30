@@ -116,8 +116,7 @@ async function readItemChecklistFB() {
 }
 
 async function readYesterdayItemChecklistFB() {
-    var yesterday = new Date();
-    yesterday = getDateString(-1);
+    var yesterday = getDateString(-1);
     await database.ref().child('inventory-record/' + yesterday).once('value', (snapshot) => {
         yesterdayItemChecklist = snapshot.val();
     });
@@ -1219,6 +1218,9 @@ async function inventoryFormSubmit() {
             else {
                 updateObj[dashToSpace(row.id)] = { EODinventory: Number(row.children[0].value), };
             }
+            await database.ref('/inventory-record/'+todayString+'/'+locSelector+'/'+dashToSpace(row.id)).update({
+                EODinventory: updateObj[dashToSpace(row.id)]['EODinventory'],
+            });
         }
         if(row.childNodes[0].id.includes('sandwich')) {
             if(row.children[0].value == '') {
