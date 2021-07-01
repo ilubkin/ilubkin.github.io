@@ -346,6 +346,7 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
     //
     //here 'today' represents the passed date, while 'curDay' represents the current day 
     var weekday = today.getDay();
+    var todayString = getDateString();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
     var curDay = new Date();
     curDay.setHours(0,0,0,0);
@@ -375,7 +376,8 @@ async function updateItemChecklistLocal(date = 0) { //need to add feature to upd
     if(lastWrite == 0) {
         itemChecklist = {};
         for(locSelector in locations) {
-            revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+            //revenue = revenues[thisMon][locSelector][weekdays[weekday]];
+            revenue = altrevenuePredictions[today][locSelector];
             itemChecklist[locSelector] = {};    
             for(var i in preppedItemList) {
                 if(typeof(preppedItemList[i]) !== 'object') {
