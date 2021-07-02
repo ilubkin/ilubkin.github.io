@@ -326,7 +326,7 @@ async function updateRevenuePredictionsLocal() {
     await readRevenuesFB();
     await database.ref('/revenue-predictions/'+thisMon).set(revenues[thisMon]);
 
-    console.log("Last read: " + lastRead + " Last write: " + lastWrite);
+    // console.log("Last read: " + lastRead + " Last write: " + lastWrite);
     if(lastRead < lastWrite) {
         await readRevenuesFB().then( () => {
              localStorage.setItem('revenuePredictions', JSON.stringify(revenues));
@@ -1108,7 +1108,7 @@ function itemChecklistLoader() {
 }
 
 function inventoryFormLoader() {
-    console.log(preppedItemList);
+    // console.log(preppedItemList);
 
     var tableBody = document.querySelector('#inventory-form-tbody');
     document.querySelector('#inventory-form').style.display = 'flex';
@@ -1505,18 +1505,18 @@ async function altrevenueInputSubmit() {
         //console.log(data);
         for(datum in data) {
             if(!((data[datum].id === "") || (data[datum].id === undefined))) {
-                console.log(data[datum].id);
+                // console.log(data[datum].id);
                 //console.log(data[datum].id.includes(locSelector));
                 for(var i = offset; i < offset+9; i++) {
-                    console.log(getDateString(i));
-                    console.log(data[datum].id.includes(getDateString(i)));
+                    // console.log(getDateString(i));
+                    // console.log(data[datum].id.includes(getDateString(i)));
                 }
                 if(data[datum].id.includes(locSelector)) {
                     for(var i = offset; i < offset+9; i++) {
                         if(data[datum].id.includes(getDateString(i))) { //logs the info to use as firebase key
-                            console.log(('#'+getDateString(i)+'-'+locSelector+'-input')); 
-                            console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input'));
-                            console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input').value);
+                            // console.log(('#'+getDateString(i)+'-'+locSelector+'-input')); 
+                            // console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input'));
+                            // console.log(document.getElementById(getDateString(i)+'-'+locSelector+'-input').value);
                             altrevenuePredictions[getDateString(i)][loc] = document.getElementById(getDateString(i)+'-'+locSelector+'-input').value; //querySelector doesn't work on id's that start with numbers
                             database.ref('/altrevenue-predictions/'+getDateString(i)+'/'+locSelector).set(altrevenuePredictions[getDateString(i)][locSelector]);
                             database.ref('/altrevenue-predictions/'+getDateString(i)+'/last-write').set(Date.parse(new Date())); //changed to number on 6/15, will ripple
@@ -1533,7 +1533,7 @@ async function revenueInputLoader(day = new Date()) {
     //await updateRevenuePredictionsLocal();
     await readLocationsFB();
     // var today = new Date();
-    console.log("passed date: " + day + " type: " + typeof(day));
+    // console.log("passed date: " + day + " type: " + typeof(day));
     var today = day;
     var weekday = today.getDay();
     var thisMon = getDateString((weekday == 0 ? -6 : -weekday+1));
