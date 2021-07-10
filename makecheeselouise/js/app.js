@@ -1022,7 +1022,7 @@ function itemChecklistLoader() {
     //Need to add a heads up for items where we've got a ton of that pre-prep
     //Making the row red with a message would be good, so people can know they 
     //may not need the item
-    altrevenuePredictions().then( () => {
+    altupdateRevenuePredictionLocal().then( () => {
         document.querySelector('#item-predicted-revenue').innerHTML = "Revenue: " + altrevenuePredictions[getDateString()][userLocation];
     });
     var tableBody = document.querySelector('#item-checklist-tbody');
