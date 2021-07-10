@@ -190,7 +190,12 @@ small {
     padding: 1em;
 }
 
-#weather-container h2{
+#weather-location {
+    grid-column: 1/4;
+    user-select: none;
+}
+
+#weather-container h2 {
     grid-column: 1/4;
     user-select: none;
 }

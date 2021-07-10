@@ -1755,7 +1755,7 @@ async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceD
     await firebase.database().ref('/inventory-record/'+destDateString+'/last-write').set(Date.parse(new Date()));
 }
 
-async function weatherLoader(location = [44.05, -71.13]) {
+async function weatherLoader(locationString = 'North Conway, NH, US', location = [44.05, -71.13]) {
     let apiKey = ''; 
     const dbRef = firebase.database().ref();
     await dbRef.child("openweathermaps-api-key").get().then((snapshot) => {
@@ -1768,9 +1768,17 @@ async function weatherLoader(location = [44.05, -71.13]) {
     }).catch((error) => {
         console.error(error);
     });
-    //console.log(apiKey);
-    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${location[0]}&lon=${location[1]}&exclude=current,minutely,daily,alerts&units=imperial&appid=${apiKey}`;
-    fetch('https://api.openweathermap.org/data/2.5/onecall?lat=44.05&lon=-71.13&units=imperial&appid=2cf109adf7b97a8c84fdd5a0dc37543f').then(response => response.json()).then(data => {
+    const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${locationString}&limit=1&appid=${apiKey}`;
+    await fetch(geoURL).then(response => response.json()).then(data => {
+        location[0] = data[0]['lat'];
+        location[1] = data[0]['lon'];
+    })
+    .catch(() => {
+      alert("Please search for a valid city 😩");
+    });
+    document.querySelector('#weather-location').innerHTML = locationString;
+    const onecallURL = `https://api.openweathermap.org/data/2.5/onecall?lat=${location[0]}&lon=${location[1]}&exclude=current,minutely,daily,alerts&units=imperial&appid=${apiKey}`;
+    fetch(onecallURL).then(response => response.json()).then(data => {
     for(let i = 0; i < 9; i++) {
         let dtConversion = new Date(data['hourly'][i]['dt'] * 1000);
         let timeString = (dtConversion.getHours() > 12 ? String(dtConversion.getHours()-12) + 'pm' : String(dtConversion.getHours()) +'am');
@@ -1785,10 +1793,9 @@ async function weatherLoader(location = [44.05, -71.13]) {
         document.querySelector(`#weather-hour-${i}-description`).innerHTML = weatherString;
         document.querySelector(`#weather-hour-${i}-icon`).src = iconURL;
     }
-    
   })
   .catch(() => {
-    msg.textContent = "Please search for a valid city 😩";
+    alert("Please search for a valid city 😩");
   });
 }
 
