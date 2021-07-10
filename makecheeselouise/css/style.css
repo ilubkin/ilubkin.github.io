@@ -183,7 +183,7 @@ small {
     padding: 10px;
 }
 
-#two-buttons-grid-div {
+.two-buttons-grid-div {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }

@@ -927,6 +927,7 @@ async function sandwichChecklistLoader() {
     await altupdateRevenuePredictionLocal();
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     document.querySelector('#sandwich-checklist').style.display = 'flex';
+    document.querySelector('#sandwich-predicted-revenue').innerHTML = "Revenue: " + altrevenuePredictions[getDateString()][userLocation];
     var locSelector = userLocation;
     var today = new Date();
     var weekday = today.getDay();
@@ -1021,8 +1022,12 @@ function itemChecklistLoader() {
     //Need to add a heads up for items where we've got a ton of that pre-prep
     //Making the row red with a message would be good, so people can know they 
     //may not need the item
+    altrevenuePredictions().then( () => {
+        document.querySelector('#item-predicted-revenue').innerHTML = "Revenue: " + altrevenuePredictions[getDateString()][userLocation];
+    });
     var tableBody = document.querySelector('#item-checklist-tbody');
     document.querySelector('#item-checklist').style.display = 'flex';
+    
     var locSelector = userLocation;
     if(document.querySelector('#item-checklist-table').caption.innerHTML !== userLocation ||
         document.querySelector('#item-checklist-table').dataset.write != itemChecklist[lastWrite]) {
@@ -1859,6 +1864,16 @@ document.querySelectorAll('#reload-inventory-from-checklist-button, #reload-inve
     button.addEventListener('click', () => {
         fixEODInventoryFromRecord(userLocation);
         pageInfoLoader();
+    });
+});
+document.querySelectorAll('#change-revenue-from-sandwich-button, #change-revenue-from-item-button').forEach( (button) => {
+    button.addEventListener('click', () => {
+        hideAllForms();
+        readLocationsFB().then( () => {
+            altrevenueInputLoader();
+        }).then( () => {
+            document.querySelector('#altrevenue-input-container').style.display = 'flex';
+        });
     });
 });
 // document.querySelector('#revenue-input-next-week').addEventListener('click', () => {

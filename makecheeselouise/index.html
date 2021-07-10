@@ -127,9 +127,13 @@
         </div>
         
         <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
-            <div>
+            <div class='two-buttons-grid-div'>
                 <button id='inventory-from-sandwich-button' name='inventory-from-sandwich-button' type='button'>Inventory Form</button>
                 <button id='reload-inventory-from-sandwich-button' name='reload-inventory-from-sandwich-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
+            <div class='two-buttons-grid-div'>
+                <p style="text-align: center;" id='sandwich-predicted-revenue'></p>
+                <button id='change-revenue-from-sandwich-button' type='button' class='ghost-button'>Change Revenue</button>
             </div>
             <table id='sandwich-checklist-table'>
                 <caption></caption>
@@ -150,6 +154,10 @@
             <div class='two-buttons-grid-div'>
                 <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
                 <button id='reload-inventory-from-checklist-button' name='reload-inventory-from-checklist-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
+            <div class='two-buttons-grid-div'>
+                <p style="text-align: center;" id='item-predicted-revenue'></p>
+                <button id='change-revenue-from-item-button' type='button' class='ghost-button'>Change Revenue</button>
             </div>
             <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
             <table id='item-checklist-table'>
