@@ -1756,7 +1756,19 @@ async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceD
 }
 
 async function weatherLoader(location = [44.05, -71.13]) {
-    const apiKey = '2cf109adf7b97a8c84fdd5a0dc37543f';
+    let apiKey = ''; 
+    const dbRef = firebase.database().ref();
+    await dbRef.child("openweathermaps-api-key").get().then((snapshot) => {
+        if (snapshot.exists()) {
+            apiKey = String(snapshot.val());
+        } 
+        else {
+            console.log("Error reading from openweathermaps-api-key: No data available. Default used.");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    //console.log(apiKey);
     const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${location[0]}&lon=${location[1]}&exclude=current,minutely,daily,alerts&units=imperial&appid=${apiKey}`;
     fetch('https://api.openweathermap.org/data/2.5/onecall?lat=44.05&lon=-71.13&units=imperial&appid=2cf109adf7b97a8c84fdd5a0dc37543f').then(response => response.json()).then(data => {
     for(let i = 0; i < 9; i++) {
