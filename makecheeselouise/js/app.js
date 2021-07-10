@@ -1769,7 +1769,7 @@ async function weatherLoader(locationString = 'North Conway, NH, US', location =
         console.error(error);
     });
 
-    const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${locationString}&limit=1&appid=${apiKey}`;
+    const geoURL = `https://api.openweathermap.org/geo/1.0/direct?q=${locationString}&limit=1&appid=${apiKey}`;
     await fetch(geoURL).then(response => response.json()).then(data => {
         location[0] = data[0]['lat'];
         location[1] = data[0]['lon'];
@@ -1789,7 +1789,7 @@ async function weatherLoader(locationString = 'North Conway, NH, US', location =
         }
         let tempString = data['hourly'][i]['temp'] + '\u00B0F';
         let weatherString = data['hourly'][i]['weather'][0]['description'];
-        let iconURL = `http://openweathermap.org/img/wn/${data['hourly'][i]['weather'][0]['icon']}.png`;
+        let iconURL = `https://openweathermap.org/img/wn/${data['hourly'][i]['weather'][0]['icon']}.png`;
         document.querySelector(`#weather-hour-${i}-time`).innerHTML = timeString;
         document.querySelector(`#weather-hour-${i}-temperature`).innerHTML = tempString;
         document.querySelector(`#weather-hour-${i}-description`).innerHTML = weatherString;
