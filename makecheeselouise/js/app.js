@@ -1772,8 +1772,6 @@ async function weatherLoader(location = [44.05, -71.13]) {
         document.querySelector(`#weather-hour-${i}-temperature`).innerHTML = tempString;
         document.querySelector(`#weather-hour-${i}-description`).innerHTML = weatherString;
         document.querySelector(`#weather-hour-${i}-icon`).src = iconURL;
-        document.querySelector(`#weather-hour-${i}-container`).classList.remove('table-card');
-        document.querySelector(`#weather-hour-${i}-container`).classList.add('table-card');
     }
     
   })
