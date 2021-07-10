@@ -183,6 +183,24 @@ small {
     padding: 10px;
 }
 
+#weather-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 0.5em;
+}
+
+#weather-container h2{
+    grid-column: 1/4;
+}
+
+#weather-container div {
+    padding: 0.5em;
+}
+
+#weather-container div p:first-child {
+    font-weight: bold;
+}
+
 .two-buttons-grid-div {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -888,6 +888,8 @@ async function pageInfoLoader() {
             return roleLocationLoader();
         }).then( () => {
             document.querySelector('#page-loading-display').style.display = 'none';
+            weatherLoader();
+            document.querySelector('#weather-container').style.display = 'grid';
             return sandwichChecklistLoader();
         });
     }
@@ -1753,6 +1755,33 @@ async function fixEODInventoryFromRecord(locSelector = 'settlers-green', sourceD
     await firebase.database().ref('/inventory-record/'+destDateString+'/last-write').set(Date.parse(new Date()));
 }
 
+async function weatherLoader(location = [44.05, -71.13]) {
+    const apiKey = '2cf109adf7b97a8c84fdd5a0dc37543f';
+    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${location[0]}&lon=${location[1]}&exclude=current,minutely,daily,alerts&units=imperial&appid=${apiKey}`;
+    fetch('https://api.openweathermap.org/data/2.5/onecall?lat=44.05&lon=-71.13&units=imperial&appid=2cf109adf7b97a8c84fdd5a0dc37543f').then(response => response.json()).then(data => {
+    for(let i = 0; i < 9; i++) {
+        let dtConversion = new Date(data['hourly'][i]['dt'] * 1000);
+        let timeString = (dtConversion.getHours() > 12 ? String(dtConversion.getHours()-12) + 'pm' : String(dtConversion.getHours()) +'am');
+        if(timeString === '0am') {
+            timeString = '12am';
+        }
+        let tempString = data['hourly'][i]['temp'] + '\u00B0F';
+        let weatherString = data['hourly'][i]['weather'][0]['description'];
+        let iconURL = `http://openweathermap.org/img/wn/${data['hourly'][i]['weather'][0]['icon']}.png`;
+        document.querySelector(`#weather-hour-${i}-time`).innerHTML = timeString;
+        document.querySelector(`#weather-hour-${i}-temperature`).innerHTML = tempString;
+        document.querySelector(`#weather-hour-${i}-description`).innerHTML = weatherString;
+        document.querySelector(`#weather-hour-${i}-icon`).src = iconURL;
+        document.querySelector(`#weather-hour-${i}-container`).classList.remove('table-card');
+        document.querySelector(`#weather-hour-${i}-container`).classList.add('table-card');
+    }
+    
+  })
+  .catch(() => {
+    msg.textContent = "Please search for a valid city 😩";
+  });
+}
+
 document.querySelector('#item-checklist-submit').addEventListener('click', checklistSubmit);
 document.querySelector('#add-ingedient-button').addEventListener('click', addIngedientHandler);
 document.querySelector('#add-sandwich-button').addEventListener('click', addSandwichSubmit);
@@ -1786,6 +1815,8 @@ document.querySelector('#revenue-input-submit').addEventListener('click', () => 
 document.querySelector('#go-back-sandwich-button').addEventListener('click', () => {
     hideAllForms();
     sandwichChecklistLoader();
+    weatherLoader();
+    document.querySelector('#weather-container').style.display = 'grid';
 });
 document.querySelector('#add-sandwich-nav').addEventListener('click', () => {
 
@@ -1836,6 +1867,9 @@ document.querySelector('#inventory-from-checklist-button').addEventListener('cli
 document.querySelector('#sandwich-from-inventory-button').addEventListener('click', () => {
     hideAllForms();
     sandwichChecklistLoader();
+    weatherLoader();
+    document.querySelector('#weather-container').style.display = 'grid';
+
 });
 // document.querySelector('#change-role-loc-button').addEventListener('click', () => {
 //     document.querySelector('#role-loc-form').style.display = 'inline';
@@ -1844,6 +1878,8 @@ document.querySelector('#role-loc-submit').addEventListener('click', () => {
     userLocation = document.querySelector('#loc-selector').value;
     hideAllForms();
     sandwichChecklistLoader();
+    weatherLoader();
+    document.querySelector('#weather-container').style.display = 'grid';
 });
 document.querySelector('#welcome-button').addEventListener('click', () => {
     hideAllForms();
