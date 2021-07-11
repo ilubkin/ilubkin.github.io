@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='UTF-8'>
+	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="./css/style.css">
+	<title>Cheese Time</title>
+</head>
+<body>
+    <header>
+        <button type='button' id='signOutButton' style='display:none'>Sign Out</button>
+        <button type='button' id='welcome-button'>Change location</button>
+        <div class="navbar">
+  
+            <div class="dropdown">
+                <button class="dropbtn">Menu 
+                <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <p id='add-revenues-nav' class='no-select'> Enter revenues</p>
+                    <p id='load-inventory-nav' class='no-select'>Load old inventory</p>
+                    <p id='add-sandwich-nav' class='no-select'> Add sandwich</p>
+                    <p id='add-ingredient-nav' class='no-select'> Add ingredient</p>
+                    <p id='prep-checklist-nav' class='no-select'> Prep checklist</p>
+                    <p id='home-nav' class='no-select'> Home</p>
+                </div>
+            </div> 
+        </div>
+    </header>
+    <div id='page-wrapper' class='flex-container'>
+        <div id='page-loading-display' class='flex-container' style='display:none'>
+            <div class='loader'></div>
+            <p id='loading-message'>Loading</p>
+        </div>
+        
+        <div id='signInForm' class='table-card'>
+            <h2>Sign In</h2>
+            <div>
+                <label for='userSIEmail'>Email</label>
+                <input type="email" id="userSIEmail" placeholder="mail@mail.com">
+            </div>
+            <small id="userSIEmailError">Please check your login information.</small>
+
+            <div>
+                <label for="userSIPassword">Password</label>
+                <input type="password" id="userSIPassword" placeholder="password">
+            </div>
+            <small id="userSIPasswordError">Please check your password.</small>
+
+            <button type='button' id='signInButton'>Sign In</button>
+            <p>Not account yet? <button class='no-select' id='userSignUp'>Sign Up</button></p>
+        </div>
+
+        <div id="signUpForm" style="display: none" class='special-form table-card'>
+            <h2>Sign Up</h2>
+            <div class="form-group">
+                <label for="userFirstName">First Name</label>
+                <input type="text" id="userFirstName" placeholder="first name">
+            </div>
+            <small id="userFirstNameError">This Field must be filled.</small>
+            <div class="form-group">
+                <label for="userLastName">Last Name</label>
+                <input type="text" id="userLastName" placeholder="Last Name">
+            </div>
+            <small id="userLastNameError">This Field must be filled.</small>
+            <div class="form-group">
+                <label for="userEmail">Email address</label>
+                <input type="email"id="userEmail" placeholder="mail@mail.com">
+            </div>
+            <small id="userEmailError">Please check your email address.</small>
+            <div class="form-group">
+                <label for="userPassword">Password</label>
+                <input type="password" id="userPassword" placeholder="**********">
+            </div>
+            <small id="userPasswordError">Your password must be uppercase, lowercase and more than 10 characters.</small>
+            <button type="button" id="signUpButton">Sign Up</button>
+            <p>Already a member? Sign in: <button class='no-select' id='userSignIn'>Sign In</button></p>
+        </div>
+
+        <div id='role-loc-dialogue' class='flex-container special-form table-card'> 
+            <!-- Populated from js -->
+            <h2 id='welcome-message'>Welcome!</h2>
+            <!-- Populated from js -->
+            <!--p id='schedule-message'>Hmmm... I'm not sure what you're up to today. Let Ian know that something's wrong!</p-->
+            <!-- <button type='button' id='change-role-loc-button'>Change role or location</button> -->
+            <p id='change-loc-prompt'>Change Location</p> 
+            <div id='role-loc-form' style='display:inline'>
+                <!-- Populated from js -->
+                <!-- <select name='role-selector' id='role-selector'></select> -->
+                <select name='loc-selector' id='loc-selector'></select>
+                <button id='role-loc-submit' type='select'>Submit</button>
+            </div>
+        </div>
+
+        <!-- 
+            logic for grouped toggle buttons (to use later for location choice):
+            <div class="switch-field">
+                <input type="radio" id="radio-one" name="switch-one" value="yes" checked="">
+                <label for="radio-one">Yes</label>
+                <input type="radio" id="radio-two" name="switch-one" value="no">
+                <label for="radio-two">No</label>
+                <input type="radio" id="radio-three" name="switch-one" value="yes" checked="">
+                <label for="radio-three">Yes</label>
+                <input type="radio" id="radio-four" name="switch-one" value="no">
+                <label for="radio-four">No</label>
+            </div>
+
+            The required CSS is already included, the JS would need to be written
+
+        -->
+
+        <div id='load-inventory-wrapper' class='flex-container special-form table-card' style='display:none'>
+            <p id='load-inventory-location'></p>
+            <div>
+                <label for='inventory-date-selector'>Load inventory from</label>
+                <input type='date' id='inventory-date-selector'>
+            </div>
+            <button id='load-inventory-submit' name='load-inventory-submit' type='button'>Submit</button>
+        </div> 
+
+        <div id='widget-container' class='flex-container special-form table-card' style='display:none'>
+            <div id='notes-container'>
+                <h2>Notes:</h2>
+                <p id='yesterday-notes'></p>
+            </div>
+        </div>
+
+        <div id='weather-container' class='special-form table-card' style='display:none'>
+            <h2>Weather:</h2>
+            <p id='weather-location'></p>
+            <div id='weather-hour-0-container'>
+                <p id='weather-hour-0-time'></p>
+                <p id='weather-hour-0-temperature'></p>
+                <p id='weather-hour-0-description'></p>
+                <img id='weather-hour-0-icon' src=''>
+            </div>
+            <div id='weather-hour-1-container'>
+                <p id='weather-hour-1-time'></p>
+                <p id='weather-hour-1-temperature'></p>
+                <p id='weather-hour-1-description'></p>
+                <img id='weather-hour-1-icon' src=''>
+            </div>
+            <div id='weather-hour-2-container'>
+                <p id='weather-hour-2-time'></p>
+                <p id='weather-hour-2-temperature'></p>
+                <p id='weather-hour-2-description'></p>
+                <img id='weather-hour-2-icon' src=''>
+            </div>
+            <div id='weather-hour-3-container'>
+                <p id='weather-hour-3-time'></p>
+                <p id='weather-hour-3-temperature'></p>
+                <p id='weather-hour-3-description'></p>
+                <img id='weather-hour-3-icon' src=''>
+            </div>
+            <div id='weather-hour-4-container'>
+                <p id='weather-hour-4-time'></p>
+                <p id='weather-hour-4-temperature'></p>
+                <p id='weather-hour-4-description'></p>
+                <img id='weather-hour-4-icon' src=''>
+            </div>
+            <div id='weather-hour-5-container'>
+                <p id='weather-hour-5-time'></p>
+                <p id='weather-hour-5-temperature'></p>
+                <p id='weather-hour-5-description'></p>
+                <img id='weather-hour-5-icon' src=''>
+            </div>
+            <div id='weather-hour-6-container'>
+                <p id='weather-hour-6-time'></p>
+                <p id='weather-hour-6-temperature'></p>
+                <p id='weather-hour-6-description'></p>
+                <img id='weather-hour-6-icon' src=''>
+            </div>
+            <div id='weather-hour-7-container'>
+                <p id='weather-hour-7-time'></p>
+                <p id='weather-hour-7-temperature'></p>
+                <p id='weather-hour-7-description'></p>
+                <img id='weather-hour-7-icon' src=''>
+            </div>
+            <div id='weather-hour-8-container'>
+                <p id='weather-hour-8-time'></p>
+                <p id='weather-hour-8-temperature'></p>
+                <p id='weather-hour-8-description'></p>
+                <img id='weather-hour-8-icon' src=''>
+            </div>
+            <!-- <div id='weather-hour-9-container'>
+                <p id='weather-hour-9-time'></p>
+                <p id='weather-hour-9-temperature'></p>
+                <p id='weather-hour-9-description'></p>
+                <img id='weather-hour-9-icon' src=''>
+            </div> -->
+        </div>
+        
+        <div id='sandwich-checklist' class='flex-container special-form table-card' style='display:none'> 
+            <div class='two-buttons-grid-div'>
+                <button id='inventory-from-sandwich-button' name='inventory-from-sandwich-button' type='button'>Inventory Form</button>
+                <button id='reload-inventory-from-sandwich-button' name='reload-inventory-from-sandwich-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
+            <div class='two-buttons-grid-div'>
+                <p style="text-align: center;" id='sandwich-predicted-revenue'></p>
+                <button id='change-revenue-from-sandwich-button' type='button' class='ghost-button'>Change Revenue</button>
+            </div>
+            <table id='sandwich-checklist-table'>
+                <caption></caption>
+                <thead>
+                    <tr>
+                        <th colspan="2">What you're bringing</th>
+                        <th>Inventory</th>
+                        <th>Max need</th>
+                    </tr>
+                </thead>
+                <tbody id='sandwich-checklist-tbody'>
+                </tbody>
+            </table>
+            <button id='sandwich-checklist-submit' name='sandwich-checklist-submit' type='button'>Submit</button>
+        </div>
+
+        <div id='item-checklist' class='flex-container special-form table-card' style='display:none' data-write=''>
+            <div class='two-buttons-grid-div'>
+                <button id='inventory-from-checklist-button' name='inventory-from-checklist-button' type='button'>Inventory Form</button>
+                <button id='reload-inventory-from-checklist-button' name='reload-inventory-from-checklist-button' type='button' class='ghost-button'>Reload Inventory</button>
+            </div>
+            <div class='two-buttons-grid-div'>
+                <p style="text-align: center;" id='item-predicted-revenue'></p>
+                <button id='change-revenue-from-item-button' type='button' class='ghost-button'>Change Revenue</button>
+            </div>
+            <button id='go-back-sandwich-button' name='go-back-sandwich-button' type='button'>Edit pre-prep amounts</button>
+            <table id='item-checklist-table'>
+                <caption></caption>
+                    <thead>
+                        <tr>
+                            <th></th><!-- checkbox column -->
+                            <th>What to bring</th>
+                            <th></th>
+                            <th></th>
+                            <th>Inventory</th>
+                            <!-- <th>Where to find</th> -->
+                        </tr>
+                    </thead>
+                    <tbody id='item-checklist-tbody'>
+                    
+                        <!-- Add other rows with JS -->
+                    <!--tr>
+                        <td><input type='checkbox'></td>
+                    </tr-->
+                </tbody>
+            </table>
+            <button id='item-checklist-submit' name='item-checklist-submit' type='button'>Submit</button>
+        </div>
+
+        <div id='inventory-form' class='flex-container special-form table-card' style='display:none'>
+            <button id='sandwich-from-inventory-button' name='sandwich-from-inventory-button' type='button'>Start of day checklist</button>
+            <table id='inventory-form-table'>
+                <caption></caption>
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Unit</th>
+                        <th>Item Name</th>
+                    </tr>
+                </thead>
+                <tbody id='inventory-form-tbody'>
+                </tbody>
+            </table>
+            <button type='button' id='inventory-form-submit'>Submit</button>
+        </div>
+
+        <div id='eod-cash-wrapper' class='flex-container special-form table-card' style='display:none'>
+            <p class='title'>Cash details</p>
+            <form action='' id='eod-cash-form'>
+                <p>
+                    <label for='cash-tips-input'>Cash tips collected</label>
+                    <input type='number' id='cash-tips-input' name='cash-tips-input'>
+                </p>
+                <p>
+                    <label for='cash-sales-input'>Cash sales in square</label>
+                    <input type='number' id='cash-sales-input' name='cash-sales-input'>
+                </p>
+                <p>
+                    <label for='cash-collected-input'>Cash collected</label>
+                    <input type='number' id='cash-collected-input' name='cash-collected-input'>
+                </p>
+                <p id='eod-cash-difference'></p>
+            
+                <button type='button' id='submit-cash-record-button' name='submit-cash-record-button'>Submit</button>
+            </form>
+        </div>
+
+        <div id='item-list-container' class='flex-container special-form' style='display:none'>
+            <table id='item-list-table'>
+                <tbody id='item-list-tbody'>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Item Name</th>
+                        <th>Storage Location</th>
+                        <th>Units per dollar</th>
+                        <th>In use?</th>
+                        <th></th>
+                    </tr>
+                        <!-- Add other rows with JS -->
+                
+                </tbody>
+            </table>
+            <div id='item-add-form-wrapper' >
+                <form action='' id='item-add-form'>
+                    <p>
+                        <label for='unit-input'>Unit</label>
+                        <input type='text' id='unit-input' name='unit-input'>
+                    </p>
+                    <p>
+                        <label for='name-input'>Name</label>
+                        <input type='text' id='name-input' name='name-input'>
+                    </p>
+                    <p>
+                        <label for='ratio-input'>Units per dollar ratio</label>
+                        <input type='number' id='ratio-input' name='ratio-input'>
+                    </p>
+                    <p>
+                        <label for='storage-input'>Storage Location</label>
+                        <input type='text' id='storage-input' name='storage-input'>
+                    </p>
+                    <p>
+                        <label for='type-input'>Type</label>
+                        <input type='text' id='type-input' name='type-input'>
+                    </p>
+                    <p>
+                        <label for='use-input'>Check if in use</label>
+                        <input type='checkbox' id='use-input' name='use-input'>
+                    </p>
+                    <button type='button' id='add-item-button' name='add-item-button'>Add</button>
+                    
+                </form>
+            </div>
+        </div>
+
+        <div id='sandwich-list-container' class='flex-container special-form' style='display:none'>
+            <table id='sandwich-list-table' style='display:none'>
+                <tbody id='sandwich-list-tbody'>
+                    <tr>
+                        <th>Sandwich</th>
+                        <th>Ingredient</th>
+                    </tr>
+                </tbody>
+            </table>
+            <div id='sandwich-add-form' class='flex-container'>
+                <div class='input-pair-wrapper'>
+                    <div class='single-input-wrapper'>
+                        <label for='sandwich-input'>Sandwich Name</label>
+                        <input type='text' id='sandwich-input' name='sandwich-input'>
+                    </div>
+                    <div class='single-input-wrapper'>
+                        <label for='dollarToQuant-input'>Sandwiches per dollar</label>
+                        <input type='text' id='dollarToQuant-input' name='dollarToQuant-input'>
+                    </div>
+                </div>
+                <p style='width:100%'>Ingredients:</p>
+                <div class='input-pair-wrapper' style='width:100%'>
+                    <input class="ingredient-input" type="text">
+                    <input class="ratio-input" type="text">
+                </div>
+            </div>
+            <button type='button' id='add-ingedient-button'>Add ingredient</button>
+            <button type='button' id='add-sandwich-button'>Submit sandwich</button>
+        </div>
+
+        <div id='revenue-input-container' class='flex-container special-form' style='display:none'>
+            <table id='revenue-input-table'>
+                <caption></caption>
+                <button type='button' id='revenue-input-next-week'>Next week</button>
+                <tbody id='revenue-input-tbody'>
+                    <tr>
+                        <th></th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='button' id='revenue-input-submit'>Submit</button> 
+        </div>
+        
+        <div id='altrevenue-input-container' class='flex-container special-form' style='display:none'>
+            <table id='altrevenue-input-table'>
+                <caption></caption>
+                <!-- <button type='button' id='altrevenue-input-next-week'>Next week</button> -->
+                <tbody id='altrevenue-input-tbody'>
+                    <tr id='altrevenue-input-header-row'>
+                        <th></th>
+                        <th id='altrevenue-start-day-header-1'></th>
+                        <th id='altrevenue-start-day-header'></th>
+                        <th id='altrevenue-start-day-header+1'></th>
+                        <th id='altrevenue-start-day-header+2'></th>
+                        <th id='altrevenue-start-day-header+3'></th>
+                        <th id='altrevenue-start-day-header+4'></th>
+                        <th id='altrevenue-start-day-header+5'></th>
+                        <th id='altrevenue-start-day-header+6'></th>
+                        <th id='altrevenue-start-day-header+7'></th>
+                    </tr>
+                </tbody>
+            </table>
+            <button type='button' id='altrevenue-input-submit'>Submit</button> 
+        </div>
+
+        <div id='prep-checklist' class='flex-container special-form table-card' style='display:none'>
+            <table id='prep-checklist-table'>
+                <thead>
+                    <tr>
+                        <input type='number' id='prep-revenue-input'>
+                    </tr>
+                    <tr>
+                        <th></th><!-- checkbox column -->
+                        <th>What to prep</th>
+                        <th></th>
+                        <th></th>
+                        <th>Inventory</th>
+                        <!-- <th>Where to find</th> -->
+                    </tr>
+                </thead>
+                <tbody id='prep-checklist-tbody'>
+                </tbody>
+            </table>
+            <button id='prep-checklist-submit' name='prep-checklist-submit' type='button'>Submit</button>
+        </div>
+
+    </div>
+
+
+
+
+    
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <!-- !!!!!May need to reinclude the next line!!!!! -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+    https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        var firebaseConfig = {
+        apiKey: "AIzaSyA7mqns9w_xdLF456EMtXyr-Kq0xe_6EAU",
+        authDomain: "makecheeselouise.firebaseapp.com",
+        projectId: "makecheeselouise",
+        storageBucket: "makecheeselouise.appspot.com",
+        messagingSenderId: "452821965281",
+        appId: "1:452821965281:web:171694237f36f5e0861aa0",
+        measurementId: "G-1MR2F55WB1"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
+    </script>
+
+    <script src='./js/app.js'></script>
+
+</body>
