@@ -1787,7 +1787,7 @@ async function weatherLoader(locationString = 'North Conway, NH, US', location =
         if(timeString === '0am') {
             timeString = '12 am';
         }
-        let tempString = data['hourly'][i]['temp'] + '\u00B0F';
+        let tempString = String(Math.round(Number(data['hourly'][i]['temp']))) + '\u00B0F';
         let weatherString = data['hourly'][i]['weather'][0]['description'];
         let iconURL = `https://openweathermap.org/img/wn/${data['hourly'][i]['weather'][0]['icon']}.png`;
         document.querySelector(`#weather-hour-${i}-time`).innerHTML = timeString;
