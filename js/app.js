@@ -992,11 +992,15 @@ async function sandwichChecklistSubmit() {
     var sandwichTBody = document.querySelector('#sandwich-checklist-tbody');
     var locSelector = userLocation;
     var today = getDateString();
+    var todayNumber = Date.parse(new Date());
     for(var i = 0, row; row = sandwichTBody.rows[i]; i++) {
         var todayCount = Number(row.childNodes[1].value);
         itemChecklist[locSelector]['sandwiches'][dashToSpace(row.id)]['bringing'] = Number(row.childNodes[1].value);
         await database.ref('/inventory-record/'+today+'/'+locSelector+'/sandwiches/'+dashToSpace(row.id)).update({
             bringing:  Number(row.childNodes[1].value),
+        });
+        await database.ref('/sod-inventory-record/'+today+'/'+locSelector+'/'+todayNumber+'/sandwiches/'+dashToSpace(row.id)).update({
+            SODinventory:  Number(row.childNodes[1].value),
         });
         var yesterdayCount = Number(row.childNodes[2].innerHTML);
         var sandwichName = dashToSpace(row.id);
@@ -1077,8 +1081,13 @@ function itemChecklistLoader() {
             var newName = document.createElement('td');
             newName.innerHTML = itemChecklist[locSelector][i]['name'];
             newRow.appendChild(newName);
-            var newQuantNeeded = document.createElement('td'); 
-            newQuantNeeded.innerHTML = quantNeeded;
+            var newQuantNeeded = document.createElement('input');
+            newQuantNeeded.type = "number";
+            newQuantNeeded.min = 0;
+            newQuantNeeded.max = 999;
+            newQuantNeeded.step = 0.1;
+            newQuantNeeded.style.maxWidth = '4em';
+            newQuantNeeded.value = quantNeeded;
             newRow.appendChild(newQuantNeeded);
             var newUnit = document.createElement('td');
             newUnit.innerHTML = itemChecklist[locSelector][i]['unit'] + (quantNeeded > 1 ? 's' : '');
@@ -1677,11 +1686,10 @@ function addSandwichSubmit() {
 function checklistSubmit() {
     var today = new Date();
     today = getDateString();
+    var todayNumber = Date.parse(new Date());
     var table = document.querySelector('#item-checklist-table');
     var locSelector = userLocation; //eventually pass as arg or get elsewhere...
-    var updateObj = {
-
-    }
+    var updateObj = {};
     for(var i = 1, row; row = table.rows[i]; i++) {
         updateObj[dashToSpace(row.id)] = false;
         if(row.children[0].checked === false) {
@@ -1702,6 +1710,9 @@ function checklistSubmit() {
         }
         database.ref('/inventory-record/'+today+'/'+locSelector+'/'+dashToSpace(row.id)).update({
              taken: updateObj[dashToSpace(row.id)]['taken'],
+        });
+        database.ref('/sod-inventory-record/'+today+'/'+locSelector+'/'+todayNumber+'/'+dashToSpace(row.id)).update({
+            SODinventory: row.children[2].value,
         });
     }
 }
