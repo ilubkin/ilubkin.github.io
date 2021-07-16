@@ -11,6 +11,7 @@
 
 td {
     user-select: none;
+    -webkit-user-select: none;
     padding-bottom: 0.75em;
 }
 
@@ -193,11 +194,13 @@ small {
 #weather-location {
     grid-column: 1/4;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 #weather-container h2 {
     grid-column: 1/4;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 #weather-container div {
@@ -208,6 +211,7 @@ small {
 
 #weather-container div p {
     user-select: none;
+    -webkit-user-select: none;
 }
 
 #weather-container div p:first-child {
@@ -244,6 +248,7 @@ small {
 
 .table-card * {
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .flex-container {
@@ -253,6 +258,7 @@ small {
 
 .no-select {
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .item-use-toggle {
