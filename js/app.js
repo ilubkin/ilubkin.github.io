@@ -1086,7 +1086,7 @@ function itemChecklistLoader() {
             newQuantNeeded.min = 0;
             newQuantNeeded.max = 999;
             newQuantNeeded.step = 0.1;
-            newQuantNeeded.style.maxWidth = '4em';
+            newQuantNeeded.style.maxWidth = '3em';
             newQuantNeeded.value = quantNeeded;
             newRow.appendChild(newQuantNeeded);
             var newUnit = document.createElement('td');
