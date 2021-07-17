@@ -1715,7 +1715,7 @@ function checklistSubmit() {
              taken: updateObj[dashToSpace(row.id)]['taken'],
         });
         database.ref('/sod-inventory-record/'+today+'/'+locSelector+'/'+todayNumber+'/'+dashToSpace(row.id)).update({
-            SODinventory: row.children[2].value,
+            SODinventory: row.children[2].value + Number(row.children[4].innerHTML),
         });
     }
 }

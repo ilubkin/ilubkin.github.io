@@ -246,7 +246,7 @@ small {
     margin-top: 1em;
 }
 
-.table-card * {
+.table-card p, .table-card h1, .table-card h2  {
     user-select: none;
     -webkit-user-select: none;
 }
