@@ -1276,6 +1276,7 @@ async function inventoryFormSubmit() {
     let invForm = document.querySelector('#inventory-form');
     let loadedMessage = document.createElement('p');
     loadedMessage.innerHTML='Inventory Submitted';
+    loadedMessage.style.fontWeight = 'bold';
     invForm.appendChild(loadedMessage);
     //show successful submit message
 }
@@ -1299,7 +1300,8 @@ async function cashRecordSubmit() {
     cashRecord[userLocation]['cash-tips'] = cashTips;
     cashRecord[userLocation]['difference'] = difference;
 
-    differenceOutput.innerHTML = 'Difference: ' + difference;
+    differenceOutput.innerHTML = 'Difference: ' + difference + '\n' + 'Cash details submitted';
+    differenceOutput.fontWeight = 'bold';
     await database.ref('/cash-record/'+todayString+'/'+userLocation).set(cashRecord[userLocation]);
     await database.ref('/cash-record/'+todayString+'/last-write').set(today);
 }
