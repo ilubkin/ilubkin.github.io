@@ -1221,7 +1221,7 @@ function inventoryFormLoader() {
 }
 
 async function inventoryFormSubmit() {
-    updateNotesRecordLocal();
+    await updateNotesRecordLocal();
     let todayNumber = Date.parse(new Date());
     let todayString= getDateString();
     let curTimeInt = Date.parse(new Date());
