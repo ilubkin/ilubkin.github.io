@@ -1,4 +1,12 @@
 
+/* logic for the item input and editing form */
+#item-edit-form-wrapper {
+    max-width: 500px; /* may need to be altered */
+}
+
+.single-field-wrapper {
+
+}
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */
 .switch-field {
