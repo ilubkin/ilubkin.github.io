@@ -1,3 +1,14 @@
+/* Global variables and styles */
+:root {
+    --primary-color: #ffa820;
+    --primary-color-light: #ffecce;
+    --secondary-color: #252e3d;
+    --tertiary-color: #f1e8bd;
+}
+
+* {
+    font-family: "Nunito", Arial, Helvetica, sans-serif;
+}
 
 /* logic for the item input and editing form */
 #item-edit-form-wrapper {
@@ -44,7 +55,7 @@
 .switch-field input:checked + label {
 	background-color: var(--primary-color);
 	box-shadow: none;
-    color: white
+    color: black;
 }
 
 .switch-field label:first-of-type {

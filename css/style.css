@@ -45,7 +45,7 @@ button {
     background-color: var(--primary-color);
     border: 1px solid var(--primary-color);
     border-radius: 4px;
-    color: white;
+    color: black;
     padding: 12px 28px;
     text-align: center;
     text-decoration: none;
@@ -218,6 +218,11 @@ small {
     font-weight: bold;
 }
 
+.one-button-grid-div {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
 .two-buttons-grid-div {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -225,8 +230,8 @@ small {
 
 .ghost-button {
     background-color: white;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 1px solid black;
+    color: black;
 }
 
 .single-input-wrapper label { display: block;
