@@ -10,13 +10,46 @@
     font-family: "Nunito", Arial, Helvetica, sans-serif;
 }
 
+button {
+    background-color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    color: black;
+    padding: 12px 28px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    align-self: center;
+    margin: 10px;
+}
+
+.small-button {
+    padding: 6px 14px;
+}
+
 /* logic for the item input and editing form */
+div#item-boolean-input-wrapper label {
+    min-width: 75px;
+}
+
 #item-edit-form-wrapper {
-    max-width: 500px; /* may need to be altered */
+    max-width: 350px; /* may need to be altered */
+    padding: 20px;
+}
+
+#item-boolean-input-wrapper {
+    padding: 25px 0px 0px 15px;
 }
 
 .single-field-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+}
 
+.double-field-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */

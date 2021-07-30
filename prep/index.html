@@ -13,6 +13,7 @@
     <!-- This form is the user interface for adding and removing items from the database -->
     <!-- !!! Go through and comment thoroughly !!! -->
     <div id='item-edit-form-wrapper'>
+        <h2 id='item-form-title'>Add Item - {location error}</h2>
         <div id='item-name-input-wrapper' class='single-field-wrapper'>
             <label for='item-name-input'>Name: </label>
             <input type='text' id='item-name-input'>
@@ -48,24 +49,32 @@
         <p id='item-other-units-text'>Other unit(s): </p>
         <div id='item-other-units-wrapper'>
             <div id='item-other-unit-input-wrapper-1' class='double-field-wrapper'>
-                <label for='secondary-unit-name-input-1'>Name: </label>
-                <input type='text' id='secondary-unit-name-input-1'>
-                <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
-                <input type='number' id='secondary-unit-ratio-input-1'> <!-- Add step size and max -->
+                <div class='single-field-wrapper'>
+                    <label for='secondary-unit-name-input-1'>Name: </label>
+                    <input type='text' id='secondary-unit-name-input-1'>
+                </div>
+                <div class='single-field-wrapper'>
+                    <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
+                    <input type='number' id='secondary-unit-ratio-input-1'> <!-- Add step size and max -->
+                </div>
             </div>
-            <button type='button' id='item-secondary-unit-add-button'>Add</button>
+            <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add</button>
         </div>
         <p id='item-ingredients-text'>Ingredients: </p>
         <div id='item-ingredients-wrapper'>
             <div id='item-ingredients-input-wrapper-1' class='double-field-wrapper'>
-                <label for='ingredient-name-input-1'>Name: </label>
-                <input type='text' id='ingredient-name-input-1'>
-                <label for='ingredient-ratio-input-1'>Use ratio: </label>
-                <input type='number' id='ingredient-ratio-input-1'> <!-- Add step size and max -->
+                <div class='single-field-wrapper'>
+                    <label for='ingredient-name-input-1'>Name: </label>
+                    <input type='text' id='ingredient-name-input-1'>
+                </div>
+                <div class='single-field-wrapper'>
+                    <label for='ingredient-ratio-input-1'>Use ratio: </label>
+                    <input type='number' id='ingredient-ratio-input-1'> <!-- Add step size and max -->
+                </div>
             </div>
-            <button type='button' id='item-ingredient-add-button'>Add</button>
+            <button type='button' id='item-ingredient-add-button' class='small-button'>Add</button>
         </div>
-
+        <button id='item-add-button'>Add Item</button>
     </div>
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->
