@@ -12,6 +12,7 @@
 
     <!-- This form is the user interface for adding and removing items from the database -->
     <!-- !!! Go through and comment thoroughly !!! -->
+    <!-- Final work to make this form aesthically ideal is needed -->
     <div id='item-edit-form-wrapper'>
         <h2 id='item-form-title'>Add Item - {location error}</h2>
         <div id='item-name-input-wrapper' class='single-field-wrapper'>
@@ -38,6 +39,10 @@
                 <label for="retired-radio">Retired</label>
             </div>
         </div>
+        <div id='item-special-catagory-input-wrapper' class='single-field-wrapper'>
+            <label for='item-special-catagory-input'>Special catagory: </label>
+            <input type='text' id='item-special-catagory-input'> <!-- Add step size and max -->
+        </div>
         <div id='item-use-ratio-input-wrapper' class='single-field-wrapper'>
             <label for='item-use-ratio-input'>Use ratio: </label>
             <input type='number' id='item-use-ratio-input'> <!-- Add step size and max -->
@@ -47,32 +52,28 @@
             <input type='text' id='item-main-unit-input'>
         </div>
         <p id='item-other-units-text'>Other unit(s): </p>
-        <div id='item-other-units-wrapper'>
-            <div id='item-other-unit-input-wrapper-1' class='double-field-wrapper'>
-                <div class='single-field-wrapper'>
-                    <label for='secondary-unit-name-input-1'>Name: </label>
-                    <input type='text' id='secondary-unit-name-input-1'>
-                </div>
-                <div class='single-field-wrapper'>
-                    <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
-                    <input type='number' id='secondary-unit-ratio-input-1'> <!-- Add step size and max -->
-                </div>
+        <div id='item-other-units-input-wrapper' class='double-field-wrapper'>
+            <div class='single-field-wrapper'>
+                <label for='secondary-unit-name-input-1'>Name: </label>
+                <input type='text' id='secondary-unit-name-input-1' class='name-input'>
             </div>
-            <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add</button>
+            <div class='single-field-wrapper'>
+                <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
+                <input type='number' id='secondary-unit-ratio-input-1' class='ratio-input'> <!-- Add step size and max -->
+            </div>
+            <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add unit</button>
         </div>
         <p id='item-ingredients-text'>Ingredients: </p>
-        <div id='item-ingredients-wrapper'>
-            <div id='item-ingredients-input-wrapper-1' class='double-field-wrapper'>
-                <div class='single-field-wrapper'>
-                    <label for='ingredient-name-input-1'>Name: </label>
-                    <input type='text' id='ingredient-name-input-1'>
-                </div>
-                <div class='single-field-wrapper'>
-                    <label for='ingredient-ratio-input-1'>Use ratio: </label>
-                    <input type='number' id='ingredient-ratio-input-1'> <!-- Add step size and max -->
-                </div>
+        <div id='item-ingredients-input-wrapper' class='double-field-wrapper'>
+            <div class='single-field-wrapper'>
+                <label for='ingredient-name-input-1'>Name: </label>
+                <input type='text' id='ingredient-name-input-1' class='name-input'>
             </div>
-            <button type='button' id='item-ingredient-add-button' class='small-button'>Add</button>
+            <div class='single-field-wrapper'>
+                <label for='ingredient-ratio-input-1'>Use ratio: </label>
+                <input type='number' id='ingredient-ratio-input-1' class='ratio-input'> <!-- Add step size and max -->
+            </div>
+            <button type='button' id='item-ingredient-add-button' class='small-button'>Add ingredient</button>
         </div>
         <button id='item-add-button'>Add Item</button>
     </div>
