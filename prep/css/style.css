@@ -22,10 +22,33 @@ button {
     font-size: 14px;
     align-self: center;
     margin: 10px;
+    transition: background .5s ease-in-out; /*to create hover animation*/
+}
+
+button:hover {
+    /* background:white;
+    color: var(--primary-color); */
+    
+    background: white;
+    border: 1px solid black;
+    color: black;
+    font-weight: bold;
 }
 
 .small-button {
     padding: 6px 14px;
+}
+
+.ghost-button {
+    background-color: white;
+    border: 1px solid black;
+    color: black;
+}
+
+.ghost-button:hover {
+    background: #777777;
+    border: 1px solid white;
+    color: white;
 }
 
 /* logic for the item input and editing form */
@@ -33,7 +56,7 @@ div#item-boolean-input-wrapper label {
     min-width: 75px;
 }
 
-#item-edit-form-wrapper {
+#item-edit-wrapper {
     max-width: 350px; /* may need to be altered */
     padding: 20px;
 }

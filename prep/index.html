@@ -9,11 +9,79 @@
 	<title>Cheese Time</title>
 </head>
 <body>
+    <header>
+        <button type='button' id='sign-out-button' style='display:none'>Sign Out</button>
+        <button type='button' id='welcome-button'>Change location</button>
+        <!-- Add navigation here, with a hambuger vibe & on click -->
+    </header>
 
-    <!-- This form is the user interface for adding and removing items from the database -->
+    <!--*** User authentication ***-->
+    <!-- Markup Description
+         Creation Date: 8/01/2021
+         Author: Ian Lubkin
+         Purpose: A form for users to create an account
+         Last Edit: 8/01/2021
+     -->
+     <div id="sign-up-form" style="display: none" class='spa-element'>
+        <h2>Sign Up</h2>
+        <div class="form-group">
+            <label for="user-first-name">First Name</label>
+            <input type="text" id="user-first-name" placeholder="First name">
+        </div>
+        <small id="user-first-name-error">This Field must be filled.</small>
+        <div class="form-group">
+            <label for="user-last-name">Last Name</label>
+            <input type="text" id="user-last-name" placeholder="Last name">
+        </div>
+        <small id="user-last-name-error">This Field must be filled.</small>
+        <div class="form-group">
+            <label for="user-email">Email address</label>
+            <input type="email" id="user-email" placeholder="mail@mail.com">
+        </div>
+        <small id="user-email-error">Please check your email address.</small>
+        <div class="form-group">
+            <label for="user-password">Password</label>
+            <input type="password" id="user-password" placeholder="**********">
+        </div>
+        <small id="user-password-error">Your password must be uppercase, lowercase and more than 10 characters.</small>
+        <button type="button" id="sign-up-button">Sign Up</button>
+        <p>Already a member? Sign in: <button class='no-select' id='user-sign-in'>Sign In</button></p>
+    </div>
+
+    <!-- Markup Description
+         Creation Date: 8/01/2021
+         Author: Ian Lubkin
+         Purpose: A form for users to sign in
+         Last Edit: 8/01/2021
+     -->
+     <div id='sign-in-form' style="display: none" class='spa-element'>
+        <h2>Sign In</h2>
+        <div>
+            <label for='user-si-email'>Email</label>
+            <input type="email" id="user-si-email" placeholder="mail@mail.com">
+        </div>
+        <small id="user-si-email-error">Please check your login information.</small>
+
+        <div>
+            <label for="user-si-password">Password</label>
+            <input type="password" id="user-si-password" placeholder="password">
+        </div>
+        <small id="user-si-password-error">Please check your password.</small>
+
+        <button type='button' id='sign-in-button'>Sign In</button>
+        <p>Not account yet? <button class='no-select' id='user-sign-up'>Sign Up</button></p>
+    </div>
+
+    <!--*** Item managing ***-->
+    <!-- Markup Description
+         Creation Date: 7/29/2021
+         Author: Ian Lubkin
+         Purpose: A form for the input and editing of items
+         Last Edit: 7/31/2021
+     -->
     <!-- !!! Go through and comment thoroughly !!! -->
     <!-- Final work to make this form aesthically ideal is needed -->
-    <div id='item-edit-form-wrapper'>
+    <div id='item-edit-wrapper' style="display: none" class='spa-element'>
         <h2 id='item-form-title'>Add Item - {location error}</h2>
         <div id='item-name-input-wrapper' class='single-field-wrapper'>
             <label for='item-name-input'>Name: </label>
@@ -41,11 +109,11 @@
         </div>
         <div id='item-special-catagory-input-wrapper' class='single-field-wrapper'>
             <label for='item-special-catagory-input'>Special catagory: </label>
-            <input type='text' id='item-special-catagory-input'> <!-- Add step size and max -->
+            <input type='text' id='item-special-catagory-input' placeholder='e.g., sandwich'> <!-- Add step size and max -->
         </div>
         <div id='item-use-ratio-input-wrapper' class='single-field-wrapper'>
-            <label for='item-use-ratio-input'>Use ratio: </label>
-            <input type='number' id='item-use-ratio-input'> <!-- Add step size and max -->
+            <label for='item-use-ratio-input'>Use to sales ratio: </label>
+            <input type='number' id='item-use-ratio-input' step='0.00001'> <!-- Add step size and max -->
         </div>
         <div id='item-main-unit-input-wrapper' class='single-field-wrapper'>
             <label for='item-main-unit-input'>Main unit: </label>
@@ -59,7 +127,7 @@
             </div>
             <div class='single-field-wrapper'>
                 <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
-                <input type='number' id='secondary-unit-ratio-input-1' class='ratio-input'> <!-- Add step size and max -->
+                <input type='number' id='secondary-unit-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
             </div>
             <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add unit</button>
         </div>
@@ -71,11 +139,14 @@
             </div>
             <div class='single-field-wrapper'>
                 <label for='ingredient-ratio-input-1'>Use ratio: </label>
-                <input type='number' id='ingredient-ratio-input-1' class='ratio-input'> <!-- Add step size and max -->
+                <input type='number' id='ingredient-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
             </div>
             <button type='button' id='item-ingredient-add-button' class='small-button'>Add ingredient</button>
         </div>
-        <button id='item-add-button'>Add Item</button>
+        <div class='double-field-wrapper'>
+            <button id='item-add-button'>Add Item</button>
+            <button id='item-clear-form-button' class='ghost-button'>Clear form</button>
+        </div>
     </div>
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -109,3 +180,10 @@
     <!-- Custom JS -->
     <script src='./js/app.js'></script>
 </body>
+
+    <!-- Markup Description
+         Creation Date: 
+         Author: Ian Lubkin
+         Purpose: 
+         Last Edit: 
+     -->
