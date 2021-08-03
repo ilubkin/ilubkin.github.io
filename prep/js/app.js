@@ -7,27 +7,6 @@
 let database = firebase.database(); //global variable for root of firebase database
 
 /*  Function Description
-    Creation Date: 7/21/2021
-    Author: Ian Lubkin
-    Purpose: Test access to firebase.
-    Last Edit: 7/21/2021
-*/
-async function updateHelloWorldLocal() {
-    let helloMessage = 'none-collected';
-    const dbRef = database.ref();
-
-    await dbRef.child('hello-world').get().then( (snapshot) => {
-        if(snapshot.exists()) {
-            helloMessage = String(snapshot.val());
-        }
-        else {
-            console.log("Error reading from firebase");
-        }
-    });
-    console.log(helloMessage);
-}
-
-/*  Function Description
     Creation Date: 8/01/2021
     Author: Ian Lubkin
     Purpose: Update local storage for permitted email list from firebase 
@@ -51,12 +30,44 @@ async function updateItemLocal() {
 
 }
 
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Update local storage object for user info.
+    Last Edit:8/03/2021
+*/
+function updateUserInfoLocal(uid) {
+    let primaryLocation = 'settlers-green';
+    const dbRef = firebase.database().ref();
+    dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            primaryLocation = snapshot.val();
+        } else {
+            console.log("Error reading from primaryLocation of user: No data available");
+        }
+    }).then( () => { 
+        return localStorage.setItem('userLocation', JSON.stringify(primaryLocation));
+    }).catch((error) => {
+        console.error(error);
+    });
+    dbRef.child("users").child(uid).get().then((snapshot) => {
+        if (snapshot.exists()) {
+            localStorage.setItem('users', JSON.stringify({uid: snapshot.val(),}));
+            localStorage.setItem('currentUID', JSON.stringify(uid));
+        } else {
+            console.log("Error reading from user: No data available");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
 /*** Functions to submit data to firebase ***/
 /*  Function Description
     Creation Date: 7/31/2021
     Author: Ian Lubkin
     Purpose: Save item data to firebase from the user via the input form.
-    Last Edit: 7/31/2021
+    Last Edit: 8/03/2021
 */
 async function submitItemForm(userLocation = 'settlers-green') { //later perhaps get userLocation from local storage
     let curDTInt = Date.parse(new Date()); //current date-time integer, created by parsing a new Date object
@@ -95,9 +106,10 @@ async function submitItemForm(userLocation = 'settlers-green') { //later perhaps
             item['ingredients'][prevName]['ratio-to-product'] = input.value;
         }
     });
-    console.log(userLocation);
+    submitItemLoaderOn();
     await database.ref('/item-list/' + userLocation + '/' + item['name']).update(item);
     await database.ref('/item-list/' + userLocation).update({ 'last write': curDTInt, });
+    submitItemLoaderOff(item['name']);
 }
 
 /*** Functions to handle user authentication with Firebase ***/
@@ -105,7 +117,7 @@ async function submitItemForm(userLocation = 'settlers-green') { //later perhaps
     Creation Date: 8/01/2021
     Author: Ian Lubkin
     Purpose: Handle user sign in with Firebase Authentication.
-    Last Edit: 8/01/2021
+    Last Edit: 8/03/2021
 */
 async function signIn() {
     let userSIEmail = document.getElementById("user-si-email").value;
@@ -121,9 +133,10 @@ async function signIn() {
     }else if(checkUserPasswordValid === null){
         return checkUserPassword(userSIPassword);
     }else{
+        signInLoaderOn();
         firebase.auth().signInWithEmailAndPassword(userSIEmail, userSIPassword).then((success) => {
             setTimeout(function() {
-                document.getElementById('sign-in-button').style.display = 'none';
+                document.getElementById('sign-in-form').style.display = 'none';
             }, 100);
             }).catch((error) => {
             // Handle Errors here.
@@ -131,6 +144,7 @@ async function signIn() {
             let errorMessage = error.message;
             alert(`Sign in error ${errorCode}: ${errorMessage}`)
         });
+        //sign-in-loader will turn off when the authstate changes
     }
 }
 
@@ -141,7 +155,7 @@ async function signIn() {
     Last Edit: 8/01/2021
 */
 function signOut() {
-    firebase.auth().signOut().then(function() {
+    return firebase.auth().signOut().then(function() {
         // Sign-out successful.
         //alert('Signed Out');
             setTimeout(function(){
@@ -158,7 +172,7 @@ function signOut() {
     Creation Date: 8/01/2021
     Author: Ian Lubkin
     Purpose: Handle user sign up with Firebase Authentication.
-    Last Edit: 8/01/2021
+    Last Edit: 8/03/2021
 */
 async function signUp() {
     await readPermittedEmailsFB();
@@ -194,6 +208,7 @@ async function signUp() {
         alert("Permissions not granted for this email")
         return false;
     }else{
+        signUpLoaderOn();
         firebase.auth().createUserWithEmailAndPassword(uEmail, uPassword).then((success) => {
             let user = firebase.auth().currentUser;
             let uid;
@@ -292,39 +307,23 @@ function checkUserLastName(uLastName){
     Creation Date: 8/01/2021
     Author: Ian Lubkin
     Purpose: Load correct view on user authentication state change.
-    Last Edit: 8/01/2021
+    Leans on userPageLoader.
+    Last Edit: 8/03/2021
 */
 firebase.auth().onAuthStateChanged( function(user) {
     if (user) {
-        // hideAllForms();
-        userPageLoader();
+
+        hideAllElements();
+        document.querySelector('#sign-out-button').style.display = 'grid';
         let uid = user.uid;
-        let primaryLocation = 'settlers-green';
-        const dbRef = firebase.database().ref();
-        dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
-            if (snapshot.exists()) {
-                primaryLocation = snapshot.val();
-            } else {
-                console.log("Error reading from primaryLocation of user: No data available");
-            }
-        }).catch((error) => {
-            console.error(error);
-        }).then( () => { return userLocation = primaryLocation; });
-        dbRef.child("users").child(uid).child('uFirstName').get().then((snapshot) => {
-            if (snapshot.exists()) {
-                curUserFirstName = snapshot.val();
-            } else {
-                console.log("Error reading from uFirstName of user: No data available");
-            }
-        }).catch((error) => {
-            console.error(error);
-        });
+        userPageLoader();
         
         //gives current user email
         //add logic for user dependent loading
         // User is signed in.
     } else {
-        // hideAllForms();
+        hideAllElements();
+        document.querySelector('#sign-in-form').style.display = 'grid';
         // No user is signed in.
     }
   });
@@ -332,7 +331,7 @@ firebase.auth().onAuthStateChanged( function(user) {
 //Primary goal: make an interface to add and edit items with ingredients and full set of information.
 //After this first step, extensive pseudocode and planning should be completed
 
-//DOM functions
+/****** DOM functions ******/
 window.onload = authStateDomHandler; //when the page loads, authStateDomHandler will be called
 
 /*  Function Description
@@ -344,6 +343,7 @@ window.onload = authStateDomHandler; //when the page loads, authStateDomHandler 
 */
 function authStateDomHandler() {
     if(firebase.auth().currentUser) {
+        document.querySelector('#sign-out-button').style.display = 'grid';
         userPageLoader();
     }
     else {
@@ -356,10 +356,20 @@ function authStateDomHandler() {
     Author: Ian Lubkin
     Purpose: Check the time of day and user information to serve
     the logged in user the appropriate interfaces.
-    Last Edit: 8/01/2021
+    Edit page info such as title according to user information.
+    Last Edit: 8/03/2021
 */
-function userPageLoader() {
+async function userPageLoader() {
+    //add logic to serve the correct page based on TOD and user prefferences/location
+    //set all titles to include location
+    //update all titles to have user location included
+    let uid = firebase.auth().currentUser.uid;
+    await updateUserInfoLocal(uid);
+    let userLocation = localStorage.getItem('userLocation');
+    document.querySelector('#item-form-title').innerHTML = `Add Item - ${JSON.parse(userLocation)}`; //should remove hyphens and capitalize
 
+
+    document.querySelector('#item-edit-wrapper').style.display = 'grid';
 }
 
 /*  Function Description
@@ -396,6 +406,69 @@ function loadItemList(userLocation = 'settlers-green') {
 
 }
 
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Hide all elements on the single page
+    Last Edit: 8/03/2021
+*/
+function hideAllElements() {
+    document.querySelectorAll('.spa-element').forEach( (element) => {
+        element.style.display = 'none';
+    });
+}
+
+/*** Loading display handlers ***/
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Display an appropriate loading message for user sign in.
+    Currently just the default message, could later give a more complicated message.
+    Last Edit: 8/03/2021
+*/
+function signInLoaderOn() {
+    document.querySelector('#sign-in-loading-message').style.display = 'grid';
+}
+
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Display an appropriate loading message for user sign up.
+    Currently just the default message, could later give a more complicated message.
+    Last Edit: 8/03/2021
+*/
+function signUpLoaderOn() {
+    document.querySelector('#sign-up-loading-message').style.display = 'grid';
+}
+
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Display an appropriate loading message for item submission.
+    Currently just the default message, could later give a more complicated message.
+    Last Edit: 8/03/2021
+*/
+function submitItemLoaderOn() {
+    document.querySelector('#item-submission-loading-message').style.display = 'grid';
+}
+
+/*  Function Description
+    Creation Date: 8/03/2021
+    Author: Ian Lubkin
+    Purpose: Display an appropriate message for completed item submission.
+    Currently just the default message, could later give a more complicated message.
+    Last Edit: 8/03/2021
+*/
+function submitItemLoaderOff(itemName) {
+    if(itemName === undefined) {
+        throw("An item name is a required variable for function submitItemLoaderOff");
+    }
+    document.querySelector('#item-submission-loading-message').style.display = 'none';
+    document.querySelector('#item-submitted-message').style.display = 'grid';
+    document.querySelector('#item-submitted-message-text').innerHTML = `${itemName.charAt(0).toUpperCase() + itemName.slice(1)/*capitalizes itemName*/} submitted successfuly &#10003`; 
+    window.setTimeout( () => { document.querySelector('#item-submitted-message').style.display = 'none'; }, 1000);
+}
+
 /****** Add event listeners ******/
 
 /*** Input form ***/
@@ -406,6 +479,11 @@ document.querySelector('#item-clear-form-button').addEventListener('click', () =
     document.querySelectorAll('#item-edit-wrapper input').forEach( (input) => { 
         input.value = '';
     });
+    document.querySelector('#secondary-unit-name-input-1').value = 'none';
+    document.querySelector('#ingredient-name-input-1').value = 'none';
+    document.querySelectorAll('#item-other-units-input-wrapper > input, #item-ingredients-input-wrapper > input').forEach( (input) => {
+        input.remove();
+    });
 });
 document.querySelector('#item-add-button').addEventListener('click', (event) => {
     submitItemForm();
@@ -413,7 +491,7 @@ document.querySelector('#item-add-button').addEventListener('click', (event) => 
      // the event as it's first variable, which will overwrite the userLocation.
 
 /*** Login form ***/
-document.getElementById('user-si-email').addEventListener('blur', (event) => {
+document.getElementById('user-si-email').addEventListener('input', (event) => {
     if(checkUserEmail(event.target.value)) { //event.target.value gives the value of the input which the blur happened on
         document.getElementById("user-si-email-error").style.display = "block";
     }
@@ -421,7 +499,7 @@ document.getElementById('user-si-email').addEventListener('blur', (event) => {
         document.getElementById("user-si-email-error").style.display = "none";
     }
 });
-document.getElementById('user-si-password').addEventListener('blur', (event) => {
+document.getElementById('user-si-password').addEventListener('input', (event) => {
     if(checkUserPassword(event.target.value)) { //event.target.value gives the value of the input which the blur happened on
         document.getElementById("user-si-password-error").style.display = "block";
     }
@@ -432,7 +510,7 @@ document.getElementById('user-si-password').addEventListener('blur', (event) => 
 document.getElementById('user-si-password').addEventListener('keypress', (e) => {
     if(e.key === 'Enter') {
         signIn().then( () => {
-            document.querySelector('#signOutButton').style.display = 'grid';
+            document.querySelector('#sign-out-button').style.display = 'grid';
         });
     }
 });
@@ -440,14 +518,14 @@ document.getElementById('user-sign-up').addEventListener('click', () => {
     document.getElementById('sign-in-form').style.display = 'none';
     document.getElementById('sign-up-form').style.display = 'grid';
 });
-document.getElementById('user-sign-up').addEventListener('click', () => {
+document.getElementById('sign-in-button').addEventListener('click', () => {
     signIn().then( () => {
         document.querySelector('#sign-out-button').style.display = 'grid';
     });
 });
 document.getElementById('sign-out-button').addEventListener('click', () => {
     signOut().then( () => {
-        document.querySelector('#signOutButton').style.display = 'none';
+        document.querySelector('#sign-out-button').style.display = 'none';
     });
 });
 document.querySelector('#user-first-name').addEventListener('blur', (event) => {

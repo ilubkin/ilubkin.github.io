@@ -11,7 +11,7 @@
 <body>
     <header>
         <button type='button' id='sign-out-button' style='display:none'>Sign Out</button>
-        <button type='button' id='welcome-button'>Change location</button>
+        <button type='button' id='welcome-button' class='spa-element'>Change location</button>
         <!-- Add navigation here, with a hambuger vibe & on click -->
     </header>
 
@@ -19,7 +19,7 @@
     <!-- Markup Description
          Creation Date: 8/01/2021
          Author: Ian Lubkin
-         Purpose: A form for users to create an account
+         Purpose: A form for users to create an account.
          Last Edit: 8/01/2021
      -->
      <div id="sign-up-form" style="display: none" class='spa-element'>
@@ -48,10 +48,15 @@
         <p>Already a member? Sign in: <button class='no-select' id='user-sign-in'>Sign In</button></p>
     </div>
 
+    <div id='sign-up-loading-message' style='display: none' class='spa-element overlay'>
+        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
+        <p class='overlay-loading-text'>Creating your account</p>
+    </div>
+
     <!-- Markup Description
          Creation Date: 8/01/2021
          Author: Ian Lubkin
-         Purpose: A form for users to sign in
+         Purpose: A form for users to sign in.
          Last Edit: 8/01/2021
      -->
      <div id='sign-in-form' style="display: none" class='spa-element'>
@@ -72,11 +77,16 @@
         <p>Not account yet? <button class='no-select' id='user-sign-up'>Sign Up</button></p>
     </div>
 
+    <div id='sign-in-loading-message' style='display: none' class='spa-element overlay'>
+        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
+        <p class='overlay-loading-text'>Signing you in</p>
+    </div>
+
     <!--*** Item managing ***-->
     <!-- Markup Description
          Creation Date: 7/29/2021
          Author: Ian Lubkin
-         Purpose: A form for the input and editing of items
+         Purpose: A form for the input and editing of items.
          Last Edit: 7/31/2021
      -->
     <!-- !!! Go through and comment thoroughly !!! -->
@@ -123,7 +133,7 @@
         <div id='item-other-units-input-wrapper' class='double-field-wrapper'>
             <div class='single-field-wrapper'>
                 <label for='secondary-unit-name-input-1'>Name: </label>
-                <input type='text' id='secondary-unit-name-input-1' class='name-input'>
+                <input type='text' id='secondary-unit-name-input-1' class='name-input' value='none'>
             </div>
             <div class='single-field-wrapper'>
                 <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
@@ -135,7 +145,7 @@
         <div id='item-ingredients-input-wrapper' class='double-field-wrapper'>
             <div class='single-field-wrapper'>
                 <label for='ingredient-name-input-1'>Name: </label>
-                <input type='text' id='ingredient-name-input-1' class='name-input'>
+                <input type='text' id='ingredient-name-input-1' class='name-input' value='none'>
             </div>
             <div class='single-field-wrapper'>
                 <label for='ingredient-ratio-input-1'>Use ratio: </label>
@@ -147,6 +157,20 @@
             <button id='item-add-button'>Add Item</button>
             <button id='item-clear-form-button' class='ghost-button'>Clear form</button>
         </div>
+    </div>
+
+    <div id='item-loading-message' style='display: none' class='spa-element overlay'>
+        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
+        <p class='overlay-loading-text'>Loading items</p>
+    </div>
+
+    <div id='item-submission-loading-message' style='display: none' class='spa-element overlay'>
+        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
+        <p class='overlay-loading-text'>Submitting item</p>
+    </div>
+
+    <div id='item-submitted-message' style='display: none' class='spa-element overlay'>
+        <p id='item-submitted-message-text'class='overlay-text'></p>
     </div>
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->
