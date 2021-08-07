@@ -13,6 +13,26 @@ function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+/*  Function Description
+    Creation Date: 8/07/2021
+    Author: Ian Lubkin
+    Purpose: 
+    Last Edit:8/07/2021
+*/
+function spaceToDash(instr) {
+    return instr.replace(/\s+/g, '-');
+}
+
+/*  Function Description
+    Creation Date: 8/07/2021
+    Author: Ian Lubkin
+    Purpose: 
+    Last Edit:8/07/2021
+*/
+function dashToSpace(instr) {
+    return instr.replace(/-/g, ' ');
+}
+
 /****** Functions to handle the interface with Firebase ******/
 
 /*** Functions to get data from firebase if the local storage data is out of date ***/
@@ -82,7 +102,8 @@ function updateUserInfoLocal(uid) {
     Purpose: Save item data to firebase from the user via the input form.
     Last Edit: 8/06/2021
 */
-async function submitItemForm(userLocation = 'settlers-green') { //later perhaps get userLocation from local storage
+async function submitItemForm() { //later perhaps get userLocation from local storage
+    let userLocation = localStorage.getItem('userLocation');
     let curDTInt = Date.parse(new Date()); //current date-time integer, created by parsing a new Date object
     let item = {}; //a blank base item object
     let prevName = ''; //holds value for unit and ingredient input gathering
@@ -391,8 +412,7 @@ async function userPageLoader() {
     let uid = firebase.auth().currentUser.uid;
     await updateUserInfoLocal(uid);
     let userLocation = localStorage.getItem('userLocation');
-    document.querySelector('#item-form-title').innerHTML = `Add Item - ${JSON.parse(userLocation)}`; //should remove hyphens and capitalize
-
+    document.querySelector('#item-form-title').innerHTML = `Add Item - ${dashToSpace(JSON.parse(userLocation))}`; //should remove hyphens and capitalize
 
     document.querySelector('#item-edit-overlay-wrapper').style.display = 'grid';
 }
