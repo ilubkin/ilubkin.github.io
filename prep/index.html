@@ -10,9 +10,26 @@
 </head>
 <body>
     <header>
-        <button type='button' id='sign-out-button' style='display:none'>Sign Out</button>
+        <!-- <button type='button' id='sign-out-button' style='display:none'>Sign Out</button> -->
         <button type='button' id='welcome-button' class='spa-element'>Change location</button>
         <!-- Add navigation here, with a hambuger vibe & on click -->
+        <div class="top-nav" id="top-nav">
+            <p id='home-nav'  class="active">Home</p>
+            <!-- <a id='-nav' href=""></a> -->
+            <!-- <a id='-nav' href=""></a> -->
+            <div class="dropdown">
+              <button class="drop-btn">User Tools 
+                <i class="fa fa-caret-down"></i>
+              </button>
+              <div class="dropdown-content">
+                <p id='link-1-nav' >Link 1</p>
+                <p id='link-2-nav' >Link 2</p>
+                <p id='link-3-nav' >Link 3</p>
+              </div>
+            </div> 
+            <p id='sign-out-button' >Sign Out</p>
+            <p style="font-size:15px;" class="icon" onclick="expandMobileNav()">&#9776;</p>
+          </div>
     </header>
 
     <!--*** User authentication ***-->

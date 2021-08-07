@@ -316,7 +316,7 @@ firebase.auth().onAuthStateChanged( function(user) {
     if (user) {
 
         hideAllElements();
-        document.querySelector('#sign-out-button').style.display = 'grid';
+        document.querySelector('#sign-out-button').style.display = '';
         let uid = user.uid;
         userPageLoader();
         
@@ -326,6 +326,7 @@ firebase.auth().onAuthStateChanged( function(user) {
     } else {
         hideAllElements();
         document.querySelector('#sign-in-form').style.display = 'grid';
+        document.querySelector('#sign-out-button').style.display = 'none';
         // No user is signed in.
     }
   });
@@ -345,7 +346,7 @@ window.onload = authStateDomHandler; //when the page loads, authStateDomHandler 
 */
 function authStateDomHandler() {
     if(firebase.auth().currentUser) {
-        document.querySelector('#sign-out-button').style.display = 'grid';
+        document.querySelector('#sign-out-button').style.display = '';
         userPageLoader();
     }
     else {
@@ -373,6 +374,21 @@ async function userPageLoader() {
 
     document.querySelector('#item-edit-wrapper').style.display = 'grid';
 }
+
+/*  Function Description
+    Creation Date: 8/06/2021
+    Author: Ian Lubkin
+    Description: Change navigation to hambuger for mobile use
+    Last Edit: 8/06/2021
+*/
+function expandMobileNav() {
+    var x = document.getElementById("top-nav");
+    if (x.className === "top-nav") {
+      x.className += " responsive";
+    } else {
+      x.className = "top-nav";
+    }
+  }
 
 /*  Function Description
     Creation Date: 7/31/2021
@@ -512,7 +528,7 @@ document.getElementById('user-si-password').addEventListener('input', (event) =>
 document.getElementById('user-si-password').addEventListener('keypress', (e) => {
     if(e.key === 'Enter') {
         signIn().then( () => {
-            document.querySelector('#sign-out-button').style.display = 'grid';
+            document.querySelector('#sign-out-button').style.display = '';
         });
     }
 });
@@ -522,7 +538,7 @@ document.getElementById('user-sign-up').addEventListener('click', () => {
 });
 document.getElementById('sign-in-button').addEventListener('click', () => {
     signIn().then( () => {
-        document.querySelector('#sign-out-button').style.display = 'grid';
+        document.querySelector('#sign-out-button').style.display = '';
     });
 });
 document.getElementById('sign-out-button').addEventListener('click', () => {
