@@ -1272,6 +1272,7 @@ async function inventoryFormSubmit() {
 
     updateObj['written'] = curTimeInt;
     await database.ref('/eod-inventory-record/'+todayString+'/'+locSelector+'/'+curTimeInt).set(updateObj);
+    alert("notes and inventory submitted successfully");
     table.style.display = 'none';
     let invForm = document.querySelector('#inventory-form');
     let loadedMessage = document.createElement('p');
