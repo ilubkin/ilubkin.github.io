@@ -1,5 +1,7 @@
 'use strict'
 
+/* idea 8/3: could condense loading messages into a single div with JS support */
+
 /****** Functions to handle the interface with Firebase ******/
 
 /*** Functions to get data from firebase if the local storage data is out of date ***/
