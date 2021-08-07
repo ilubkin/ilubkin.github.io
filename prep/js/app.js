@@ -2,6 +2,17 @@
 
 /* idea 8/3: could condense loading messages into a single div with JS support */
 
+/****** String editing functions ******/
+/*  Function Description
+    Creation Date: 8/06/2021
+    Author: Ian Lubkin
+    Purpose: Capitalize the first letter of a string.
+    Last Edit:8/06/2021
+*/
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 /****** Functions to handle the interface with Firebase ******/
 
 /*** Functions to get data from firebase if the local storage data is out of date ***/
@@ -69,7 +80,7 @@ function updateUserInfoLocal(uid) {
     Creation Date: 7/31/2021
     Author: Ian Lubkin
     Purpose: Save item data to firebase from the user via the input form.
-    Last Edit: 8/03/2021
+    Last Edit: 8/06/2021
 */
 async function submitItemForm(userLocation = 'settlers-green') { //later perhaps get userLocation from local storage
     let curDTInt = Date.parse(new Date()); //current date-time integer, created by parsing a new Date object
@@ -108,10 +119,19 @@ async function submitItemForm(userLocation = 'settlers-green') { //later perhaps
             item['ingredients'][prevName]['ratio-to-product'] = input.value;
         }
     });
-    submitItemLoaderOn();
+    loadingMessageOn('Submitting item');
     await database.ref('/item-list/' + userLocation + '/' + item['name']).update(item);
     await database.ref('/item-list/' + userLocation).update({ 'last write': curDTInt, });
-    submitItemLoaderOff(item['name']);
+    loadingMessageOff();
+    showSuccessMessage(`${item['name']} submitted successfuly`)
+    document.querySelectorAll('#item-edit-wrapper input').forEach( (input) => { 
+        input.value = '';
+    });
+    document.querySelector('#secondary-unit-name-input-1').value = 'none';
+    document.querySelector('#ingredient-name-input-1').value = 'none';
+    document.querySelectorAll('#item-other-units-input-wrapper > input, #item-ingredients-input-wrapper > input').forEach( (input) => {
+        input.remove();
+    });
 }
 
 /*** Functions to handle user authentication with Firebase ***/
@@ -135,8 +155,8 @@ async function signIn() {
     }else if(checkUserPasswordValid === null){
         return checkUserPassword(userSIPassword);
     }else{
-        signInLoaderOn();
-        firebase.auth().signInWithEmailAndPassword(userSIEmail, userSIPassword).then((success) => {
+        loadingMessageOn('Signing you in');
+        await firebase.auth().signInWithEmailAndPassword(userSIEmail, userSIPassword).then((success) => {
             setTimeout(function() {
                 document.getElementById('sign-in-form').style.display = 'none';
             }, 100);
@@ -146,6 +166,7 @@ async function signIn() {
             let errorMessage = error.message;
             alert(`Sign in error ${errorCode}: ${errorMessage}`)
         });
+        loadingMessageOff();
         //sign-in-loader will turn off when the authstate changes
     }
 }
@@ -210,8 +231,8 @@ async function signUp() {
         alert("Permissions not granted for this email")
         return false;
     }else{
-        signUpLoaderOn();
-        firebase.auth().createUserWithEmailAndPassword(uEmail, uPassword).then((success) => {
+        loadingMessageOn('Creating your account');
+        await firebase.auth().createUserWithEmailAndPassword(uEmail, uPassword).then((success) => {
             let user = firebase.auth().currentUser;
             let uid;
             if (user != null) {
@@ -234,6 +255,7 @@ async function signUp() {
             let errorMessage = error.message;
             alert(`error ${errorCode}: ${errorMessage}`)
         });
+        loadingMessageOff();
     }
 }
 
@@ -372,7 +394,7 @@ async function userPageLoader() {
     document.querySelector('#item-form-title').innerHTML = `Add Item - ${JSON.parse(userLocation)}`; //should remove hyphens and capitalize
 
 
-    document.querySelector('#item-edit-wrapper').style.display = 'grid';
+    document.querySelector('#item-edit-overlay-wrapper').style.display = 'grid';
 }
 
 /*  Function Description
@@ -438,60 +460,60 @@ function hideAllElements() {
 
 /*** Loading display handlers ***/
 /*  Function Description
-    Creation Date: 8/03/2021
+    Creation Date: 8/06/2021
     Author: Ian Lubkin
-    Purpose: Display an appropriate loading message for user sign in.
-    Currently just the default message, could later give a more complicated message.
-    Last Edit: 8/03/2021
+    Purpose: Display the passed loading message.
+    Last Edit: 8/06/2021
 */
-function signInLoaderOn() {
-    document.querySelector('#sign-in-loading-message').style.display = 'grid';
+function loadingMessageOn(msgText = 'Please wait') {
+    msgText = capitalizeFirstLetter(msgText);
+    document.querySelector('#loading-message-text').innerHTML = msgText;
+    document.querySelector('#loading-message').style.display = 'grid';
+
 }
 
 /*  Function Description
-    Creation Date: 8/03/2021
+    Creation Date: 8/06/2021
     Author: Ian Lubkin
-    Purpose: Display an appropriate loading message for user sign up.
-    Currently just the default message, could later give a more complicated message.
-    Last Edit: 8/03/2021
+    Purpose: Hide the passed loading message.
+    Last Edit: 8/06/2021
 */
-function signUpLoaderOn() {
-    document.querySelector('#sign-up-loading-message').style.display = 'grid';
+function loadingMessageOff() {
+    document.querySelector('#loading-message-text').innerHTML = 'Loading stuff';
+    document.querySelector('#loading-message').style.display = 'none';
 }
 
 /*  Function Description
-    Creation Date: 8/03/2021
+    Creation Date: 8/06/2021
     Author: Ian Lubkin
-    Purpose: Display an appropriate loading message for item submission.
-    Currently just the default message, could later give a more complicated message.
-    Last Edit: 8/03/2021
+    Purpose: Display the passed loading message.
+    Last Edit: 8/06/2021
 */
-function submitItemLoaderOn() {
-    document.querySelector('#item-submission-loading-message').style.display = 'grid';
+function showSuccessMessage(msgText = 'Success') {
+    msgText = capitalizeFirstLetter(msgText) + '&#10003;';
+    document.querySelector('#success-message-text').innerHTML = msgText;
+    document.querySelector('#success-message').style.display = 'grid';
+    window.setTimeout( () => { document.querySelector('#success-message').style.display = 'none'; }, 1000);
 }
 
-/*  Function Description
-    Creation Date: 8/03/2021
-    Author: Ian Lubkin
-    Purpose: Display an appropriate message for completed item submission.
-    Currently just the default message, could later give a more complicated message.
-    Last Edit: 8/03/2021
-*/
-function submitItemLoaderOff(itemName) {
-    if(itemName === undefined) {
-        throw("An item name is a required variable for function submitItemLoaderOff");
-    }
-    document.querySelector('#item-submission-loading-message').style.display = 'none';
-    document.querySelector('#item-submitted-message').style.display = 'grid';
-    document.querySelector('#item-submitted-message-text').innerHTML = `${itemName.charAt(0).toUpperCase() + itemName.slice(1)/*capitalizes itemName*/} submitted successfuly &#10003`; 
-    window.setTimeout( () => { document.querySelector('#item-submitted-message').style.display = 'none'; }, 1000);
-}
+
 
 /****** Add event listeners ******/
 
 /*** Input form ***/
 document.querySelectorAll('#item-secondary-unit-add-button, #item-ingredient-add-button').forEach( (button) => { 
     button.addEventListener('click', addTwoInputRow); 
+});
+document.querySelector('#item-cancel-add-button').addEventListener('click', () => {
+    document.querySelector('#item-edit-overlay-wrapper').style.display = 'none';
+    document.querySelectorAll('#item-edit-wrapper input').forEach( (input) => { 
+        input.value = '';
+    });
+    document.querySelector('#secondary-unit-name-input-1').value = 'none';
+    document.querySelector('#ingredient-name-input-1').value = 'none';
+    document.querySelectorAll('#item-other-units-input-wrapper > input, #item-ingredients-input-wrapper > input').forEach( (input) => {
+        input.remove();
+    });
 });
 document.querySelector('#item-clear-form-button').addEventListener('click', () => {
     document.querySelectorAll('#item-edit-wrapper input').forEach( (input) => { 
@@ -504,7 +526,9 @@ document.querySelector('#item-clear-form-button').addEventListener('click', () =
     });
 });
 document.querySelector('#item-add-button').addEventListener('click', (event) => {
-    submitItemForm();
+    if(document.querySelector('#item-name-input').value !== "") { //later add more complex logic
+        submitItemForm();
+    }
 } ); //if the function submitItemForm is passed as the event handler it will recieve 
      // the event as it's first variable, which will overwrite the userLocation.
 
@@ -585,6 +609,13 @@ document.getElementById('user-sign-in').addEventListener('click',  () => {
     document.getElementById('sign-up-form').style.display = 'none';
     document.getElementById('sign-in-form').style.display = 'grid';
 });
+
+/*** Navigation Bar ***/ 
+//next block is to be moved to item view/edit page when it is created, and replaced by nav to that page
+document.querySelector('#item-add-loader-button').addEventListener('click', () => {
+    document.querySelector('#item-edit-overlay-wrapper').style.display = 'grid';
+})
+
 
 /*  Function Description
     Creation Date: 

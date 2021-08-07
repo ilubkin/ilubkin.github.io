@@ -27,10 +27,27 @@
                 <p id='link-3-nav' >Link 3</p>
               </div>
             </div> 
+            <div class="dropdown">
+                <button class="drop-btn">Admin Tools 
+                  <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                  <p id='item-add-loader-button'>Add Item</p> <!-- to be: View Items -->
+                </div>
+              </div> 
             <p id='sign-out-button' >Sign Out</p>
             <p style="font-size:15px;" class="icon" onclick="expandMobileNav()">&#9776;</p>
           </div>
     </header>
+
+    <div id='loading-message' style='display: none' class='spa-element overlay'>
+        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
+        <p id='loading-message-text' class='overlay-loading-text'>Loading stuff</p>
+    </div>
+
+    <div id='success-message' style='display: none' class='spa-element overlay'>
+        <p id='success-message-text'class='overlay-text'>Success!</p>
+    </div>
 
     <!--*** User authentication ***-->
     <!-- Markup Description
@@ -65,11 +82,6 @@
         <p>Already a member? Sign in: <button class='no-select' id='user-sign-in'>Sign In</button></p>
     </div>
 
-    <div id='sign-up-loading-message' style='display: none' class='spa-element overlay'>
-        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
-        <p class='overlay-loading-text'>Creating your account</p>
-    </div>
-
     <!-- Markup Description
          Creation Date: 8/01/2021
          Author: Ian Lubkin
@@ -94,11 +106,6 @@
         <p>Not account yet? <button class='no-select' id='user-sign-up'>Sign Up</button></p>
     </div>
 
-    <div id='sign-in-loading-message' style='display: none' class='spa-element overlay'>
-        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
-        <p class='overlay-loading-text'>Signing you in</p>
-    </div>
-
     <!--*** Item managing ***-->
     <!-- Markup Description
          Creation Date: 7/29/2021
@@ -108,86 +115,78 @@
      -->
     <!-- !!! Go through and comment thoroughly !!! -->
     <!-- Final work to make this form aesthically ideal is needed -->
-    <div id='item-edit-wrapper' style="display: none" class='spa-element'>
-        <h2 id='item-form-title'>Add Item - {location error}</h2>
-        <div id='item-name-input-wrapper' class='single-field-wrapper'>
-            <label for='item-name-input'>Name: </label>
-            <input type='text' id='item-name-input'>
-        </div>
-        <div id='item-boolean-input-wrapper' class='triple-toggle-field-wrapper'>
-            <div id='item-prepared-ordered-boolean' class="switch-field">
-                <input type="radio" id="prepared-radio" name="prepared-ordered-switch" value="true" checked="">
-                <label for="prepared-radio">Prepared</label>
-                <input type="radio" id="ordered-radio" name="prepared-ordered-switch" value="false">
-                <label for="ordered-radio">Ordered</label>
+    <div id='item-edit-overlay-wrapper' style='display: none;' class='spa-element'>
+        <div id='item-edit-overlay' class='form-overlay'></div>
+        <div id='item-edit-wrapper' class='overlay-form'>
+            <h2 id='item-form-title'>Add Item - {location error}</h2>
+            <div id='item-name-input-wrapper' class='single-field-wrapper'>
+                <label for='item-name-input'>Name: </label>
+                <input type='text' id='item-name-input'>
             </div>
-            <div id='item-ingredient-product-boolean' class="switch-field">
-                <input type="radio" id="ingredient-radio" name="ingredient-product-switch" value="true" checked="">
-                <label for="ingredient-radio">Ingredient</label>
-                <input type="radio" id="product-radio" name="ingredient-product-switch" value="false">
-                <label for="product-radio">Product</label>
+            <div id='item-boolean-input-wrapper' class='triple-toggle-field-wrapper'>
+                <div id='item-prepared-ordered-boolean' class="switch-field">
+                    <input type="radio" id="prepared-radio" name="prepared-ordered-switch" value="true" checked="">
+                    <label for="prepared-radio">Prepared</label>
+                    <input type="radio" id="ordered-radio" name="prepared-ordered-switch" value="false">
+                    <label for="ordered-radio">Ordered</label>
+                </div>
+                <div id='item-ingredient-product-boolean' class="switch-field">
+                    <input type="radio" id="ingredient-radio" name="ingredient-product-switch" value="true" checked="">
+                    <label for="ingredient-radio">Ingredient</label>
+                    <input type="radio" id="product-radio" name="ingredient-product-switch" value="false">
+                    <label for="product-radio">Product</label>
+                </div>
+                <div id='item-use-retired-boolean' class="switch-field">
+                    <input type="radio" id="in-use-radio" name="in-use-retired-switch" value="true" checked="">
+                    <label for="in-use-radio">In use</label>
+                    <input type="radio" id="retired-radio" name="in-use-retired-switch" value="false">
+                    <label for="retired-radio">Retired</label>
+                </div>
             </div>
-            <div id='item-use-retired-boolean' class="switch-field">
-                <input type="radio" id="in-use-radio" name="in-use-retired-switch" value="true" checked="">
-                <label for="in-use-radio">In use</label>
-                <input type="radio" id="retired-radio" name="in-use-retired-switch" value="false">
-                <label for="retired-radio">Retired</label>
+            <div id='item-special-catagory-input-wrapper' class='single-field-wrapper'>
+                <label for='item-special-catagory-input'>Special catagory: </label>
+                <input type='text' id='item-special-catagory-input' placeholder='e.g., sandwich'> <!-- Add step size and max -->
             </div>
-        </div>
-        <div id='item-special-catagory-input-wrapper' class='single-field-wrapper'>
-            <label for='item-special-catagory-input'>Special catagory: </label>
-            <input type='text' id='item-special-catagory-input' placeholder='e.g., sandwich'> <!-- Add step size and max -->
-        </div>
-        <div id='item-use-ratio-input-wrapper' class='single-field-wrapper'>
-            <label for='item-use-ratio-input'>Use to sales ratio: </label>
-            <input type='number' id='item-use-ratio-input' step='0.00001'> <!-- Add step size and max -->
-        </div>
-        <div id='item-main-unit-input-wrapper' class='single-field-wrapper'>
-            <label for='item-main-unit-input'>Main unit: </label>
-            <input type='text' id='item-main-unit-input'>
-        </div>
-        <p id='item-other-units-text'>Other unit(s): </p>
-        <div id='item-other-units-input-wrapper' class='double-field-wrapper'>
+            <div id='item-use-ratio-input-wrapper' class='single-field-wrapper'>
+                <label for='item-use-ratio-input'>Use to sales ratio: </label>
+                <input type='number' id='item-use-ratio-input' step='0.00001'> <!-- Add step size and max -->
+            </div>
+            <div id='item-main-unit-input-wrapper' class='single-field-wrapper'>
+                <label for='item-main-unit-input'>Main unit: </label>
+                <input type='text' id='item-main-unit-input'>
+            </div>
+            <p id='item-other-units-text'>Other unit(s): </p>
+            <div id='item-other-units-input-wrapper' class='double-field-wrapper'>
+                <div class='single-field-wrapper'>
+                    <label for='secondary-unit-name-input-1'>Name: </label>
+                    <input type='text' id='secondary-unit-name-input-1' class='name-input' value='none'>
+                </div>
+                <div class='single-field-wrapper'>
+                    <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
+                    <input type='number' id='secondary-unit-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
+                </div>
+                <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add unit</button>
+            </div>
+            <p id='item-ingredients-text'>Ingredients: </p>
+            <div id='item-ingredients-input-wrapper' class='double-field-wrapper'>
+                <div class='single-field-wrapper'>
+                    <label for='ingredient-name-input-1'>Name: </label>
+                    <input type='text' id='ingredient-name-input-1' class='name-input' value='none'>
+                </div>
+                <div class='single-field-wrapper'>
+                    <label for='ingredient-ratio-input-1'>Use ratio: </label>
+                    <input type='number' id='ingredient-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
+                </div>
+                <button type='button' id='item-ingredient-add-button' class='small-button'>Add ingredient</button>
+            </div>
             <div class='single-field-wrapper'>
-                <label for='secondary-unit-name-input-1'>Name: </label>
-                <input type='text' id='secondary-unit-name-input-1' class='name-input' value='none'>
+                <button id='item-add-button'>Add Item</button>
             </div>
-            <div class='single-field-wrapper'>
-                <label for='secondary-unit-ratio-input-1'>Ratio to main: </label>
-                <input type='number' id='secondary-unit-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
+            <div class='double-field-wrapper'>
+                <button id='item-cancel-add-button' class='ghost-button'>Cancel</button>
+                <button id='item-clear-form-button' class='ghost-button'>Clear form</button>
             </div>
-            <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add unit</button>
         </div>
-        <p id='item-ingredients-text'>Ingredients: </p>
-        <div id='item-ingredients-input-wrapper' class='double-field-wrapper'>
-            <div class='single-field-wrapper'>
-                <label for='ingredient-name-input-1'>Name: </label>
-                <input type='text' id='ingredient-name-input-1' class='name-input' value='none'>
-            </div>
-            <div class='single-field-wrapper'>
-                <label for='ingredient-ratio-input-1'>Use ratio: </label>
-                <input type='number' id='ingredient-ratio-input-1' class='ratio-input' step='0.00001'> <!-- Add step size and max -->
-            </div>
-            <button type='button' id='item-ingredient-add-button' class='small-button'>Add ingredient</button>
-        </div>
-        <div class='double-field-wrapper'>
-            <button id='item-add-button'>Add Item</button>
-            <button id='item-clear-form-button' class='ghost-button'>Clear form</button>
-        </div>
-    </div>
-
-    <div id='item-loading-message' style='display: none' class='spa-element overlay'>
-        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
-        <p class='overlay-loading-text'>Loading items</p>
-    </div>
-
-    <div id='item-submission-loading-message' style='display: none' class='spa-element overlay'>
-        <p class='overlay-text'>Hold tight, fearless cheeser!</p>
-        <p class='overlay-loading-text'>Submitting item</p>
-    </div>
-
-    <div id='item-submitted-message' style='display: none' class='spa-element overlay'>
-        <p id='item-submitted-message-text'class='overlay-text'></p>
     </div>
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->

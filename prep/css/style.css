@@ -4,6 +4,7 @@
 :root {
     --primary-color: #ffa820;
     --primary-color-light: #ffecce;
+    --primary-color-dark: #f09400;
     --secondary-color: #252e3d;
     --tertiary-color: #f1e8bd;
 }
@@ -24,17 +25,15 @@ button {
     font-size: 14px;
     align-self: center;
     margin: 10px;
-    transition: background .5s ease-in-out; /*to create hover animation*/
+    transition: all .3s ease-in-out; /*to create hover animation*/
 }
 
 button:hover {
     /* background:white;
     color: var(--primary-color); */
     
-    background: white;
-    border: 1px solid black;
+    background: var(--primary-color-dark);
     color: black;
-    font-weight: bold;
 }
 
 .small-button {
@@ -48,9 +47,7 @@ button:hover {
 }
 
 .ghost-button:hover {
-    background: #777777;
-    border: 1px solid white;
-    color: white;
+    background: var(--primary-color-light);
 }
 
 /* logic for the item input and editing form */
@@ -61,6 +58,13 @@ div#item-boolean-input-wrapper label {
 #item-edit-wrapper {
     max-width: 350px; /* may need to be altered */
     padding: 20px;
+}
+
+@media screen and (max-width: 400px) {
+    #item-edit-wrapper {
+        max-width: 85vw; /* may need to be altered */
+        padding: 20px;
+    }
 }
 
 #item-boolean-input-wrapper {
@@ -135,7 +139,7 @@ div#item-boolean-input-wrapper label {
     right: 0;
     bottom: 0;
     background-color: rgba(0,0,0,0.5);
-    z-index: 2;
+    z-index: 10;
     cursor: pointer;
     align-content: center;
     justify-content: center;
@@ -178,6 +182,39 @@ div#item-boolean-input-wrapper label {
         text-shadow:
         .25em 0 0 white,
         .5em 0 0 white;
+    }
+}
+
+.form-overlay {
+    position: fixed;
+    /* display: none; */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.3);
+    z-index: 1;
+    cursor: pointer;
+    align-content: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.overlay-form {
+    background: white;
+    z-index: 2;
+    position: relative;
+    border-radius: 10px;
+    margin: 10px auto;
+    box-shadow: 10px 15px 10px rgb(0 0 0 / 50%);
+}
+
+@media screen and (max-width: 400px) {
+    .overlay-form {
+        max-width: 85vw; /* may need to be altered */
+        margin: 5px 0px;
     }
 }
 
