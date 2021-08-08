@@ -79,6 +79,15 @@ div#item-boolean-input-wrapper label {
     display: grid;
 }
 
+#item-display-wrapper div{
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+}
+
+#item-display-wrapper div:first-of-type{
+    font-weight: bold;
+}
+
 .single-field-wrapper {
     display: grid;
     grid-template-columns: 1fr;

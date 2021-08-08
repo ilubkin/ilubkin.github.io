@@ -1,6 +1,11 @@
 'use strict'
 
-/* idea 8/3: could condense loading messages into a single div with JS support */
+/*big potential bug discovery 8/7: because localStorage persists
+    and exists throughout a device, a user could have the same object
+    name stored on their device from another application, causing
+    errors. Initial fix idea: have a set of keys, one as the name
+    and one as the value in the JSON object stored, and check that
+    the correct key resides as at the given name. */
 
 /****** String editing functions ******/
 /*  Function Description
@@ -46,8 +51,8 @@ let database = firebase.database(); //global variable for root of firebase datab
     if local storage is out of date.
     Last Edit:8/01/2021
 */
-async function readPermittedEmailsFB() {
-    await database.ref().child('permitted-emails').once('value', (snapshot) => {
+async function updatePermittedEmailsLocal() {
+    await database.ref().child('permitted emails').once('value', (snapshot) => {
         localStorage.setItem('permittedEmails', JSON.stringify(snapshot.val()));
     });
 }
@@ -60,7 +65,37 @@ async function readPermittedEmailsFB() {
     Last Edit:7/31/2021
 */
 async function updateItemLocal() {
-
+    let lastRead = 0;
+    let lastWrite = 0;
+    if(JSON.parse(localStorage.getItem('itemLists')) !== null) {
+        if(JSON.parse(localStorage.getItem('itemLists'))['D8H9NmFStHEksFQZ'] === null) {
+            localStorage.removeItem('itemLists');
+        }
+        else {
+            lastRead = Number(JSON.parse(localStorage.getItem('itemLists'))['last write']);
+        }
+    }
+    const dbRef = firebase.database().ref();
+    await dbRef.child("item list").child('last write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            console.log("Error reading from item list: No data available");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastRead !== lastWrite) {
+        await dbRef.child("item list").get().then((snapshot) => {
+            if (snapshot.exists()) {
+                localStorage.setItem('itemLists', JSON.stringify(snapshot.val()));
+            } else {
+                console.log("Error reading from item list: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
 }
 
 /*  Function Description
@@ -112,7 +147,7 @@ async function submitItemForm() { //later perhaps get userLocation from local st
     item['prepared-bool'] = document.querySelector('#prepared-radio').checked;
     item['ingredient-bool'] = document.querySelector('#ingredient-radio').checked;
     item['in-use-bool'] = document.querySelector('#in-use-radio').checked;
-    item['special-catagory'] = document.querySelector('#item-special-catagory-input').value;
+    item['special-category'] = document.querySelector('#item-special-category-input').value;
     item['use-to-sales-ratio'] = document.querySelector('#item-use-ratio-input').value;
     item['main-unit'] = document.querySelector('#item-main-unit-input').value;
     item['other-units'] = {}; //base for alternative units object
@@ -141,8 +176,9 @@ async function submitItemForm() { //later perhaps get userLocation from local st
         }
     });
     loadingMessageOn('Submitting item');
-    await database.ref('/item-list/' + userLocation + '/' + item['name']).update(item);
-    await database.ref('/item-list/' + userLocation).update({ 'last write': curDTInt, });
+    await database.ref('/item list/' + userLocation + '/' + item['name']).update(item);
+    await database.ref('/item list/' + userLocation).update({ 'last write': curDTInt, });
+    await database.ref('/item list').update({ 'last write': curDTInt, });
     loadingMessageOff();
     showSuccessMessage(`${item['name']} submitted successfuly`)
     document.querySelectorAll('#item-edit-wrapper input').forEach( (input) => { 
@@ -219,7 +255,7 @@ function signOut() {
     Last Edit: 8/03/2021
 */
 async function signUp() {
-    await readPermittedEmailsFB();
+    await updatePermittedEmailsLocal();
     let permittedEmails = JSON.parse(localStorage.getItem('permittedEmails'));
     let uFirstName = document.getElementById("user-first-name").value;
     let uLastName = document.getElementById("user-last-name").value;
@@ -460,9 +496,39 @@ function addTwoInputRow() {
     Creation Date: 7/31/2021
     Author: Ian Lubkin
     Purpose: Load the item list display for the user from local storage.
-    Last Edit:7/31/2021
+    Last Edit:8/07/2021
 */
-function loadItemList(userLocation = 'settlers-green') {
+async function loadItemList() {
+    let userLocation = JSON.parse(localStorage.getItem('userLocation'));
+    await updateItemLocal();
+    let itemList = JSON.parse(localStorage.getItem('itemLists'))[userLocation];
+
+    let itemDisplay = document.querySelector('#item-display-wrapper');
+    document.querySelector('#item-display-title').innerHTML = `Items - ${userLocation}`;
+    for(let item in itemList) {
+        let name = document.createElement('p');
+        name.classList.add('item-display-name');
+        name.innerHTML = itemList[item]['name'];
+        let unit = document.createElement('p');
+        unit.classList.add('item-display-unit');
+        unit.innerHTML = itemList[item]['main-unit'];
+        let source = document.createElement('p');
+        source.classList.add('item-display-source');
+        source.innerHTML = (itemList[item]['prepared-bool'] === true ? 'prepared' : 'ordered');
+        let category = document.createElement('p');
+        category.classList.add('item-display-category');
+        category.innerHTML = itemList[item]['special-category'];
+        let options = document.createElement('p');
+        options.classList.add('item-display-options');
+        options.innerHTML = '&#183; &#183; &#183;'
+        let row = document.createElement('div');
+        row.appendChild(name);
+        row.appendChild(unit);
+        row.appendChild(source);
+        row.appendChild(category);
+        row.appendChild(options);
+        itemDisplay.appendChild(row);
+    }
 
 }
 
