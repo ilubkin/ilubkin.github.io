@@ -55,6 +55,11 @@ div#item-boolean-input-wrapper label {
     min-width: 75px;
 }
 
+#item-edit-overlay-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
 #item-edit-wrapper {
     max-width: 350px; /* may need to be altered */
     padding: 20px;
@@ -79,14 +84,38 @@ div#item-boolean-input-wrapper label {
     display: grid;
 }
 
-#item-display-wrapper div{
+#item-display-wrapper > div{
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
 }
 
-#item-display-wrapper div:first-of-type{
+#item-display-header p {
+    border-bottom: solid 1px black;
     font-weight: bold;
+    margin: 16px 0px 8px 0px;
 }
+
+.item-display-options {
+    font-weight: bold;
+    user-select: none;
+    padding: 0px 0px 0px 10px;
+}
+
+.item-display-row {
+    border-bottom: lightgray 1px solid;
+}
+
+@media only screen and (max-width: 650px) {
+    #item-display-wrapper div{
+        grid-template-columns: 2fr 2fr 1fr 0.5fr;
+    }
+    .item-display-category {
+      display: none;
+    }
+    .item-display-source {
+        display: none;
+      }
+  }
 
 .single-field-wrapper {
     display: grid;
@@ -222,7 +251,7 @@ div#item-boolean-input-wrapper label {
 .overlay-form {
     background: white;
     z-index: 2;
-    position: relative;
+    position: absolute;
     border-radius: 10px;
     margin: 10px auto;
     box-shadow: 10px 15px 10px rgb(0 0 0 / 50%);
@@ -297,6 +326,7 @@ div#item-boolean-input-wrapper label {
     text-decoration: none;
     display: block;
     text-align: left;
+    user-select: none;
 }
 
 .top-nav p:hover, .dropdown:hover .drop-btn {

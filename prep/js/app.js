@@ -40,10 +40,10 @@ function dashToSpace(instr) {
 
 /****** Functions to handle the interface with Firebase ******/
 
-/*** Functions to get data from firebase if the local storage data is out of date ***/
 //  These functions should be very fast if the data is up to date
 let database = firebase.database(); //global variable for root of firebase database
 
+/*** Functions to get data from firebase if the local storage data is out of date ***/
 /*  Function Description
     Creation Date: 8/01/2021
     Author: Ian Lubkin
@@ -190,6 +190,12 @@ async function submitItemForm() { //later perhaps get userLocation from local st
         input.remove();
     });
 }
+
+/*** Blocks to listen to data in firebase and update local data accordingly ***/
+const itemListsRef = firebase.database().ref('item list');
+itemListsRef.on('value', (snapshot) => {
+    updateItemLocal();
+});
 
 /*** Functions to handle user authentication with Firebase ***/
 /*  Function Description
@@ -449,8 +455,9 @@ async function userPageLoader() {
     await updateUserInfoLocal(uid);
     let userLocation = localStorage.getItem('userLocation');
     document.querySelector('#item-form-title').innerHTML = `Add Item - ${dashToSpace(JSON.parse(userLocation))}`; //should remove hyphens and capitalize
-
-    document.querySelector('#item-edit-overlay-wrapper').style.display = 'grid';
+    
+    loadItemList();
+    document.querySelector('#item-display-wrapper').style.display = 'grid';
 }
 
 /*  Function Description
@@ -499,37 +506,135 @@ function addTwoInputRow() {
     Last Edit:8/07/2021
 */
 async function loadItemList() {
+    loadingMessageOn('Loading item interface');
     let userLocation = JSON.parse(localStorage.getItem('userLocation'));
     await updateItemLocal();
     let itemList = JSON.parse(localStorage.getItem('itemLists'))[userLocation];
 
     let itemDisplay = document.querySelector('#item-display-wrapper');
-    document.querySelector('#item-display-title').innerHTML = `Items - ${userLocation}`;
+    let itemAddBtn = document.querySelector('#item-add-form-button');
+    document.querySelector('#item-display-title').innerHTML = `Items - ${spaceToDash(userLocation)}`;
     for(let item in itemList) {
+        if(typeof(itemList[item]) !== 'object') {
+            continue;
+        }
         let name = document.createElement('p');
         name.classList.add('item-display-name');
         name.innerHTML = itemList[item]['name'];
         let unit = document.createElement('p');
         unit.classList.add('item-display-unit');
         unit.innerHTML = itemList[item]['main-unit'];
+        let ratio = document.createElement('p');
+        ratio.classList.add('item-display-use-ratio');
+        ratio.innerHTML = Number(itemList[item]['use-to-sales-ratio']).toFixed(5);
         let source = document.createElement('p');
         source.classList.add('item-display-source');
         source.innerHTML = (itemList[item]['prepared-bool'] === true ? 'prepared' : 'ordered');
         let category = document.createElement('p');
         category.classList.add('item-display-category');
         category.innerHTML = itemList[item]['special-category'];
+        //make dropdown for options
+        let optionsWrap = document.createElement('div');
+        optionsWrap.classList.add('dropdown');
         let options = document.createElement('p');
         options.classList.add('item-display-options');
         options.innerHTML = '&#183; &#183; &#183;'
+        optionsWrap.appendChild(options);
+        let dropWrap = document.createElement('div');
+        dropWrap.classList.add('dropdown-content');
+        let edit = document.createElement('p');
+        edit.classList.add('item-display-options-edit');
+        edit.innerHTML = 'edit';
+        let active = document.createElement('p');
+        active.classList.add('item-display-options-toggle');
+        active.innerHTML = 'deactivate';
+        dropWrap.appendChild(edit);
+        dropWrap.appendChild(active);
+        optionsWrap.appendChild(dropWrap);
+
         let row = document.createElement('div');
+        row.classList.add('item-display-row');
         row.appendChild(name);
         row.appendChild(unit);
+        row.appendChild(ratio);
         row.appendChild(source);
         row.appendChild(category);
-        row.appendChild(options);
-        itemDisplay.appendChild(row);
+        // row.appendChild(options);
+        row.appendChild(optionsWrap);
+        itemDisplay.insertBefore(row, itemAddBtn);
     }
+    document.querySelectorAll('.item-display-options-edit').forEach( (p) => {
+        p.addEventListener('click', (e) => {
+            let item = itemList[e.target.parentElement.parentElement.parentElement.children[0].innerHTML];
+            document.querySelector('#item-name-input').value = item['name'];
+            document.querySelector('#prepared-radio').checked = item['prepared-bool'];
+            document.querySelector('#ingredient-radio').checked = item['ingredient-bool'];
+            document.querySelector('#in-use-radio').checked = item['in-use-bool'];
+            document.querySelector('#item-special-category-input').value = item['special-category'];
+            document.querySelector('#item-use-ratio-input').value = item['use-to-sales-ratio'];
+            document.querySelector('#item-main-unit-input').value = item['main-unit'];
+            for(let unit in item['other-units']) {
+                let parentDiv = document.querySelector('#item-other-units-input-wrapper');
+                let button = document.querySelector('#item-secondary-unit-add-button');
 
+                let newInputName;
+                if(document.querySelector('#secondary-unit-name-input-1').value === 'none') {
+                    newInputName = document.querySelector('#secondary-unit-name-input-1');
+                }
+                else {
+                    newInputName = document.createElement('input');
+                    newInputName.type = 'text';
+                    newInputName.classList.add('name-input');
+                    parentDiv.insertBefore(newInputName, button);
+                } 
+                newInputName.value = item['other-units'][unit]['name'];
+
+                let newInputRatio; 
+                if(document.querySelector('#secondary-unit-ratio-input-1').value === '') {
+                    newInputRatio = document.querySelector('#secondary-unit-ratio-input-1');
+                }
+                else {
+                    newInputRatio = document.createElement('input');
+                    newInputRatio.type = 'number';
+                    newInputRatio.classList.add('ratio-input');
+                    parentDiv.insertBefore(newInputRatio, button);
+                }
+                newInputRatio.value = item['other-units'][unit]['ratio-to-main-unit'];
+
+            }
+            for(let ing in item['ingredients']) {
+                let parentDiv = document.querySelector('#item-ingredients-input-wrapper');
+                let button = document.querySelector('#item-ingredient-add-button');
+
+                let newInputName;
+                if(document.querySelector('#ingredient-name-input-1').value === 'none') {
+                    newInputName = document.querySelector('#ingredient-name-input-1');
+                }
+                else {
+                    newInputName = document.createElement('input');
+                    newInputName.type = 'text';
+                    newInputName.classList.add('name-input');
+                    parentDiv.insertBefore(newInputName, button);
+                } 
+                newInputName.value = item['ingredients'][ing]['name'];
+
+                let newInputRatio; 
+                if(document.querySelector('#ingredient-ratio-input-1').value === '') {
+                    newInputRatio = document.querySelector('#ingredient-ratio-input-1');
+                }
+                else {
+                    newInputRatio = document.createElement('input');
+                    newInputRatio.type = 'number';
+                    newInputRatio.classList.add('ratio-input');
+                    parentDiv.insertBefore(newInputRatio, button);
+                }
+                newInputRatio.value = item['ingredients'][ing]['ratio-to-product'];
+            }
+            document.querySelector('#item-edit-overlay-wrapper').style.display = 'flex';
+        }); 
+    });
+    
+    loadingMessageOff();
 }
 
 /*  Function Description
@@ -698,10 +803,21 @@ document.getElementById('user-sign-in').addEventListener('click',  () => {
 
 /*** Navigation Bar ***/ 
 //next block is to be moved to item view/edit page when it is created, and replaced by nav to that page
-document.querySelector('#item-add-loader-button').addEventListener('click', () => {
-    document.querySelector('#item-edit-overlay-wrapper').style.display = 'grid';
-})
+document.querySelector('#item-display-loader-button').addEventListener('click', () => {
+    document.querySelectorAll('.item-display-row').forEach( (row) => { /*Clear all the old rows*/
+        row.remove();
+    });
+    document.querySelector('#item-display-wrapper').style.display = 'grid';
+    loadItemList();
+});
 
+/*** Item display ***/
+document.querySelector('#item-add-form-button').addEventListener('click', () => {
+    document.querySelector('#item-edit-overlay-wrapper').style.display = 'flex';
+});
+document.querySelectorAll('.item-display-row > .item-display-options').forEach( (p) => { 
+    console.log(p); 
+});
 
 /*  Function Description
     Creation Date: 
