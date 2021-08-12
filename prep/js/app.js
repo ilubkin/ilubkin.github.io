@@ -452,6 +452,7 @@ async function signUp() {
     let uLastName = document.getElementById("user-last-name").value;
     let uEmail = document.getElementById("user-email").value;
     let uPassword = document.getElementById("user-password").value;
+    let uLocation = document.getElementById("user-location").value;
     let flag = false;
     for(let email in permittedEmails) {
         if(permittedEmails[email] === uEmail) {
@@ -466,6 +467,7 @@ async function signUp() {
     let checkUserLastNameValid = uLastName.match(userNameFormat);
     let checkUserEmailValid = uEmail.match(userEmailFormat);
     let checkUserPasswordValid = uPassword.match(userPasswordFormat);
+    let uLocation = uLocation.toLowerCase();
 
     if(checkUserFirstNameValid === null){
         return checkUserFirstName(uFirstName);
@@ -491,6 +493,7 @@ async function signUp() {
                 uFirstName: uFirstName,
                 uLastName: uLastName,
                 uEmail: uEmail,
+                primaryLocation: uLocation,
             }
             firebaseRef.child('users').child(uid).set(userData);
             alert('Account Created','Your account was created successfully, you are logged in now.',)
