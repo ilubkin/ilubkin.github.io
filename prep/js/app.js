@@ -7,6 +7,12 @@
     and one as the value in the JSON object stored, and check that
     the correct key resides as at the given name. */
 
+/*Idea 8/10: exchange JSON.parse(localstorage.getItem(...)) calls for functions that are more descriptive */
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /****** String editing functions ******/
 /*  Function Description
     Creation Date: 8/06/2021
@@ -21,7 +27,7 @@ function capitalizeFirstLetter(string) {
 /*  Function Description
     Creation Date: 8/07/2021
     Author: Ian Lubkin
-    Purpose: 
+    Purpose: Remove spaces from a string and return it with spaces in place of dashes.
     Last Edit:8/07/2021
 */
 function spaceToDash(instr) {
@@ -31,11 +37,54 @@ function spaceToDash(instr) {
 /*  Function Description
     Creation Date: 8/07/2021
     Author: Ian Lubkin
-    Purpose: 
+    Purpose: Remove dashes from a string and return it with dashes in place of spaces.
     Last Edit:8/07/2021
 */
 function dashToSpace(instr) {
     return instr.replace(/-/g, ' ');
+}
+
+/*  Function Description
+    Creation Date: 8/10/2021
+    Author: Ian Lubkin
+    Purpose: Return the date as a mm-dd-yyyy string
+    Last Edit:8/10/2021
+*/
+function getDateString(offset = 0, option = 0) {
+    let today = new Date();
+    let ddnum = today.getDate() + offset;
+    let mmnum = today.getMonth() + 1;
+    let yyyynum = today.getFullYear();
+    if(ddnum > daysInMonth(mmnum, yyyynum)) {
+        ddnum -= daysInMonth(mmnum, yyyynum);
+        mmnum++;
+    }
+    if(ddnum < 1) {
+        mmnum--;
+        ddnum = daysInMonth(mmnum, yyyynum) + ddnum;
+    }
+    let dd = String(ddnum).padStart(2, '0');
+    let mm = String(mmnum).padStart(2, '0'); //January is 0!
+    let yyyy = today.getFullYear();
+    if(option === 0) {
+        return mm + '-' + dd + '-' + yyyy;
+    }
+    if(option === 1) {
+        return mm + '-' + dd;
+    }
+    else {
+        throw new Error("Incorrect parameters passed to getDateString");
+    }
+}
+
+/*  Function Description
+    Creation Date: 8/10/2021
+    Author: Ian Lubkin
+    Purpose: Return the number of days in a given month
+    Last Edit:8/10/2021
+*/
+function daysInMonth(month, year) {
+    return new Date(year, month, 0).getDate();
 }
 
 /****** Functions to handle the interface with Firebase ******/
@@ -104,10 +153,10 @@ async function updateItemLocal() {
     Purpose: Update local storage object for user info.
     Last Edit:8/03/2021
 */
-function updateUserInfoLocal(uid) {
+async function updateUserInfoLocal(uid) {
     let primaryLocation = 'settlers-green';
     const dbRef = firebase.database().ref();
-    dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
+    await dbRef.child("users").child(uid).child('primaryLocation').get().then((snapshot) => {
         if (snapshot.exists()) {
             primaryLocation = snapshot.val();
         } else {
@@ -118,7 +167,7 @@ function updateUserInfoLocal(uid) {
     }).catch((error) => {
         console.error(error);
     });
-    dbRef.child("users").child(uid).get().then((snapshot) => {
+    await dbRef.child("users").child(uid).get().then((snapshot) => {
         if (snapshot.exists()) {
             localStorage.setItem('users', JSON.stringify({uid: snapshot.val(),}));
             localStorage.setItem('currentUID', JSON.stringify(uid));
@@ -130,6 +179,111 @@ function updateUserInfoLocal(uid) {
     });
 }
 
+/*  Function Description
+    Creation Date: 8/10/2021
+    Author: Ian Lubkin
+    Purpose: Update local storage object "locations" to reflect firebase data.
+    Last Edit:8/10/2021
+*/
+async function updateLocationsLocal() {
+    let lastRead = 0;
+    let lastWrite = 0;
+    if(JSON.parse(localStorage.getItem('locationList')) !== null) {
+        if(JSON.parse(localStorage.getItem('locationList'))['D8H9NmFStHEksFQZ'] === null) {
+            localStorage.removeItem('locationList');
+        }
+        else {
+            lastRead = Number(JSON.parse(localStorage.getItem('locationList'))['last write']);
+        }
+    }
+    const dbRef = firebase.database().ref();
+    await dbRef.child('locations').child('last write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            console.log("Error reading from locations: No data available");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastRead !== lastWrite) {
+        await dbRef.child("locations").get().then((snapshot) => {
+            if (snapshot.exists()) {
+                localStorage.setItem('locationList', JSON.stringify(snapshot.val()));
+            } else {
+                console.log("Error reading from locations: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+}
+
+/*  Function Description
+    Creation Date: 8/10/2021
+    Author: Ian Lubkin
+    Purpose: Update local storage object revenuePredictions to reflect firebase data.
+    Last Edit:8/11/2021
+*/
+async function updateRevenuePredictionsLocal(offset = 0) {
+    await updateLocationsLocal();
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    let lastRead = 0;
+    let lastWrite = 0;
+    let dateString = getDateString(offset);
+    let dateNumber = Date.parse(new Date(dateString));
+    if(JSON.parse(localStorage.getItem('revenuePredictions')) !== null) {
+        if(JSON.parse(localStorage.getItem('revenuePredictions'))[dateString] !== null) {
+            if(JSON.parse(localStorage.getItem('revenuePredictions'))['D8H9NmFStHEksFQZ'] === null) {
+                localStorage.removeItem('revenuePredictions');
+            }
+            else {
+                lastRead = Number(JSON.parse(localStorage.getItem('revenuePredictions'))['last write']);
+            }
+        }
+    }
+    const dbRef = firebase.database().ref();
+    await dbRef.child('revenue predictions').child(dateString).child('last write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            lastWrite = 0;
+            let revenuePredictions = {};
+            if(JSON.parse(localStorage.getItem('revenuePredictions')) !== null) {
+                revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
+            }
+            revenuePredictions[dateString] = {
+                "last-write": dateNumber,
+            };
+            for(let loc in locations) {
+                revenuePredictions[dateString][loc] = 0;
+            }
+
+            database.ref('/revenue predictions/' + dateString).set(revenuePredictions[dateString]);
+            localStorage.setItem('revenuePredictions', JSON.stringify(revenuePredictions));
+            console.log("Error reading from revenue predictions: No data available. New data written.");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastRead !== lastWrite) {
+        await dbRef.child('revenue predictions').child(dateString).get().then((snapshot) => {
+            if (snapshot.exists()) {
+                let revenuePredictions = {};
+                if(JSON.parse(localStorage.getItem('revenuePredictions')) !== null) {
+                    revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
+                }
+                revenuePredictions[dateString] = snapshot.val();
+                localStorage.setItem('revenuePredictions', JSON.stringify(revenuePredictions));
+            } else {
+                console.log("Error reading from revenue predictions: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+}
+
 /*** Functions to submit data to firebase ***/
 /*  Function Description
     Creation Date: 7/31/2021
@@ -138,7 +292,7 @@ function updateUserInfoLocal(uid) {
     Last Edit: 8/06/2021
 */
 async function submitItemForm() { //later perhaps get userLocation from local storage
-    let userLocation = localStorage.getItem('userLocation');
+    let userLocation = JSON.parse(localStorage.getItem('userLocation'));
     let curDTInt = Date.parse(new Date()); //current date-time integer, created by parsing a new Date object
     let item = {}; //a blank base item object
     let prevName = ''; //holds value for unit and ingredient input gathering
@@ -189,6 +343,37 @@ async function submitItemForm() { //later perhaps get userLocation from local st
     document.querySelectorAll('#item-other-units-input-wrapper > input, #item-ingredients-input-wrapper > input').forEach( (input) => {
         input.remove();
     });
+}
+
+/*  Function Description
+    Creation Date: 8/11/2021
+    Author: Ian Lubkin
+    Purpose: Handle user sign in with Firebase Authentication.
+    Last Edit: 8/11/2021
+*/
+async function submitRevenueInterface() {
+    let dateTmp = '';
+    let locTmp = '';
+    let curDTInt = Date.parse(new Date());
+    let updateObj = { 'last write': curDTInt};
+
+    document.querySelectorAll('.revenue-interface-location-row input').forEach( (input) => {
+        dateTmp = input.dataset.date;
+        locTmp = input.dataset.location;
+        if(updateObj[dateTmp] === undefined) {
+            updateObj[dateTmp] = {};
+        }
+        updateObj[dateTmp][locTmp] = Number(input.value);
+    });
+    loadingMessageOn('Updating revenue predictions');
+    for(let day in updateObj) {
+        if(typeof(updateObj[day]) === 'object') {
+            await database.ref('/revenue predictions').update({ 'last write': curDTInt, });
+            await database.ref('/revenue predictions/' + day).update(updateObj[day]);
+        }
+    }
+    loadingMessageOff();
+    showSuccessMessage('Revenue updated sucessfully');
 }
 
 /*** Blocks to listen to data in firebase and update local data accordingly ***/
@@ -503,10 +688,14 @@ function addTwoInputRow() {
     Creation Date: 7/31/2021
     Author: Ian Lubkin
     Purpose: Load the item list display for the user from local storage.
+    Add event listeners to edit buttons for the editing of items.
     Last Edit:8/07/2021
 */
 async function loadItemList() {
     loadingMessageOn('Loading item interface');
+    document.querySelectorAll('.item-display-row').forEach( (row) => { /*Clear all the old rows*/
+        row.remove();
+    });
     let userLocation = JSON.parse(localStorage.getItem('userLocation'));
     await updateItemLocal();
     let itemList = JSON.parse(localStorage.getItem('itemLists'))[userLocation];
@@ -563,6 +752,7 @@ async function loadItemList() {
         row.appendChild(optionsWrap);
         itemDisplay.insertBefore(row, itemAddBtn);
     }
+    //Logic for editing an item. May be worth moving to a seperate function.
     document.querySelectorAll('.item-display-options-edit').forEach( (p) => {
         p.addEventListener('click', (e) => {
             let item = itemList[e.target.parentElement.parentElement.parentElement.children[0].innerHTML];
@@ -649,6 +839,108 @@ function hideAllElements() {
     });
 }
 
+/*  Function Description
+    Creation Date: 8/10/2021
+    Author: Ian Lubkin
+    Purpose: Generate and populate the revenue input/display page.
+    Last Edit: 8/11/2021
+*/
+async function loadRevenueInterface(offset = 0) {
+    document.querySelectorAll('.revenue-interface-location-row').forEach( (p) => {
+        p.remove();
+    });
+    await updateLocationsLocal();
+    const locations = JSON.parse(localStorage.getItem('locationList'));
+    let todayString = getDateString();
+    let dateString;
+    let pOffset;
+    let updateBtn = document.querySelector('#update-revenue-interface-button');
+    let revenueIntWrapper = document.querySelector('#revenue-interface-wrapper');
+    //create location rows
+    //update all header HTML
+    document.querySelectorAll('#revenue-interface-header > p').forEach( (p) => {
+        pOffset = Number(p.dataset.offset);
+        dateString = getDateString(pOffset + offset);
+        if(dateString === todayString) {
+            p.innerHTML = 'Today';
+        }
+        else {
+            p.innerHTML = getDateString(pOffset + offset, 1);
+        }
+        updateRevenuePredictionsLocal(pOffset + offset); 
+    });
+    await sleep(200);
+    let revenues = JSON.parse(localStorage.getItem('revenuePredictions'));
+    let region = locations[JSON.parse(localStorage.getItem('userLocation'))]['region'];
+    for(let loc in locations) {
+        if(typeof(locations[loc]) !== 'object') {
+            continue;
+        }
+        if(locations[loc]['region'] === region) {
+            let row = document.createElement('div');
+            row.classList.add('revenue-interface-location-row');
+            row.dataset.location = loc;
+            let label = document.createElement('p');
+            label.innerHTML = loc;
+            row.appendChild(label);
+            for(let i = 0; i < 8; i++) {
+                let input = document.createElement('input');
+                input.classList.add('revenue-interface-' + i);
+                input.type = 'number';
+                input.dataset.location = loc;
+                input.dataset.date = getDateString(-1 + i + offset);
+                input.value = revenues[getDateString(-1 + i + offset)][loc];
+                input.step = 100;
+                row.appendChild(input);
+            }
+            revenueIntWrapper.insertBefore(row, updateBtn);
+        }
+    }
+    //Add sum row
+    let row = document.createElement('div');
+    row.classList.add('revenue-interface-sum-row');
+    let label = document.createElement('p');
+    label.innerHTML = "Sum: ";
+    row.appendChild(label);
+    for(let i = 0; i < 8; i++) {
+        let sum = document.createElement('p');
+        sum.classList.add('revenue-interface-' + i);
+        sum.dataset.date = getDateString(-1 + 1 + offset);
+        sum.innerHTML = getRevenueDaySum(i);
+        row.appendChild(sum);
+    }
+    revenueIntWrapper.insertBefore(row, updateBtn);
+
+    //add event listeners
+    document.querySelectorAll('.revenue-interface-location-row input').forEach( (input) => {
+        input.addEventListener('blur', () => {
+            let col = Number(input.classList[0].charAt((input.classList[0]).length-1));
+            document.querySelector('.revenue-interface-sum-row .revenue-interface-' + col).innerHTML = getRevenueDaySum(col);
+        });
+    });
+}
+
+/*  Function Description
+    Creation Date: 8/11/2021
+    Author: Ian Lubkin
+    Purpose: Calculate and return the sum of a revenue prediction column.
+    Last Edit: 8/11/2021
+*/
+function getRevenueDaySum(rowNum) {
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    let sum = 0;
+
+    document.querySelectorAll('.revenue-interface-location-row .revenue-interface-' + rowNum).forEach( (row) => {
+        if(locations[row.dataset.location]['type'] === 'kitchen') {
+            return; //skip
+        }
+        sum += Number(row.value);
+    });
+    
+    return sum;
+}
+
+
 /*** Loading display handlers ***/
 /*  Function Description
     Creation Date: 8/06/2021
@@ -684,7 +976,7 @@ function showSuccessMessage(msgText = 'Success') {
     msgText = capitalizeFirstLetter(msgText) + '&#10003;';
     document.querySelector('#success-message-text').innerHTML = msgText;
     document.querySelector('#success-message').style.display = 'grid';
-    window.setTimeout( () => { document.querySelector('#success-message').style.display = 'none'; }, 1000);
+    window.setTimeout( () => { document.querySelector('#success-message').style.display = 'none'; }, 1500);
 }
 
 
@@ -718,7 +1010,7 @@ document.querySelector('#item-clear-form-button').addEventListener('click', () =
 });
 document.querySelector('#item-add-button').addEventListener('click', (event) => {
     if(document.querySelector('#item-name-input').value !== "") { //later add more complex logic
-        submitItemForm();
+        submitItemForm().then(loadItemList);
     }
 } ); //if the function submitItemForm is passed as the event handler it will recieve 
      // the event as it's first variable, which will overwrite the userLocation.
@@ -804,11 +1096,14 @@ document.getElementById('user-sign-in').addEventListener('click',  () => {
 /*** Navigation Bar ***/ 
 //next block is to be moved to item view/edit page when it is created, and replaced by nav to that page
 document.querySelector('#item-display-loader-button').addEventListener('click', () => {
-    document.querySelectorAll('.item-display-row').forEach( (row) => { /*Clear all the old rows*/
-        row.remove();
-    });
+    hideAllElements();
     document.querySelector('#item-display-wrapper').style.display = 'grid';
     loadItemList();
+});
+document.querySelector('#revenue-predictions-nav').addEventListener('click', () => {
+    hideAllElements();
+    loadRevenueInterface();
+    document.querySelector('#revenue-interface-wrapper').style.display = 'grid';
 });
 
 /*** Item display ***/
@@ -818,6 +1113,9 @@ document.querySelector('#item-add-form-button').addEventListener('click', () => 
 document.querySelectorAll('.item-display-row > .item-display-options').forEach( (p) => { 
     console.log(p); 
 });
+
+/*** Revenue interface ***/
+document.querySelector('#update-revenue-interface-button').addEventListener('click', submitRevenueInterface);
 
 /*  Function Description
     Creation Date: 

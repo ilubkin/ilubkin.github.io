@@ -110,12 +110,12 @@ div#item-boolean-input-wrapper label {
         grid-template-columns: 2fr 2fr 1fr 0.5fr;
     }
     .item-display-category {
-      display: none;
+        display: none;
     }
     .item-display-source {
         display: none;
-      }
-  }
+    }
+}
 
 .single-field-wrapper {
     display: grid;
@@ -125,6 +125,82 @@ div#item-boolean-input-wrapper label {
 .double-field-wrapper {
     display: grid;
     grid-template-columns: 1fr 1fr;
+}
+
+/* Logic for revenue interface */
+#revenue-interface-wrapper {
+    display: grid;
+    max-width: 1000px;
+}
+
+#revenue-interface-wrapper input {
+    max-height: 1.5em;
+    max-width: 6em;
+    justify-self: start;
+}
+
+#revenue-interface-wrapper p {
+    margin: 0; 
+}
+
+
+#revenue-interface-wrapper > div {
+    display: grid;
+    margin: 0px;
+    padding: 5px 0px;
+    border-bottom: 1px solid lightgrey;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+@media only screen and (max-width: 1000px) {
+    #revenue-interface-wrapper > div {
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    }
+    .revenue-interface-6 {
+      display: none;
+    }
+    .revenue-interface-7 {
+        display: none;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    #revenue-interface-wrapper > div {
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    }
+    .revenue-interface-0 {
+      display: none;
+    }
+    .revenue-interface-5 {
+        display: none;
+    }
+    .revenue-interface-6 {
+      display: none;
+    }
+    .revenue-interface-7 {
+        display: none;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #revenue-interface-wrapper > div {
+        grid-template-columns: 2.5fr 1fr 1fr 1fr;
+    }
+    .revenue-interface-0 {
+        display: none;
+    }
+    .revenue-interface-4 {
+        display: none;
+    }
+    .revenue-interface-5 {
+        display: none;
+    }
+    .revenue-interface-6 {
+        display: none;
+    }
+    .revenue-interface-7 {
+        display: none;
+    }
 }
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */
