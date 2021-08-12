@@ -169,6 +169,17 @@
                 </div>
                 <button type='button' id='item-secondary-unit-add-button' class='small-button'>Add unit</button>
             </div>
+            <p id='item-pre-info-text'>Prep info: </p>
+            <div id='item-prep-time-input-wrapper' class='double-field-wrapper'>
+                <div class='single-field-wrapper'>
+                    <label for='item-prep-time-input'>Prep time (minutes): </label>
+                    <input type='number' id='item-prep-time-input' value='none' step='1'>
+                </div>
+                <div class='single-field-wrapper'>
+                    <label for='item-batch-size-input'>Batch size: </label>
+                    <input type='number' id='item-batch-size-input' step='0.1' placeholder='In main units'> <!-- Add step size and max -->
+                </div>
+            </div>
             <p id='item-ingredients-text'>Ingredients: </p>
             <div id='item-ingredients-input-wrapper' class='double-field-wrapper'>
                 <div class='single-field-wrapper'>
@@ -209,11 +220,11 @@
         </div>
         <button id='item-add-form-button'>Add Item</button>
     </div>
-
+    <!--** Revenue managing **-->
     <!-- Markup Description
          Creation Date: 8/07/2021
          Author: Ian Lubkin
-         Purpose: Framework for the display and of revenue predictions.
+         Purpose: Framework for the display and submission of revenue predictions.
          Last Edit: 8/07/2021
      -->
      <div id='revenue-interface-wrapper' style='display: none;' class='spa-element'>
@@ -231,6 +242,29 @@
         </div>
         <button id='update-revenue-interface-button'>Update Revenue</button>
     </div>
+
+    <!--** Checklist managment **-->
+    <!-- Markup Description
+         Creation Date: 8/12/2021
+         Author: Ian Lubkin
+         Purpose: Framework for prep lists.
+         Last Edit: 8/12/2021
+     -->
+     <div id='prep-checklist-wrapper' style='display: none;' class='spa-element'>
+        <h2 id='prep-checklist-title'>Prep checklist</h2>
+        <div id='prep-checklist-header'>
+
+        </div>
+    </div>
+
+
+     <!-- Markup Description
+         Creation Date: 8/12/2021
+         Author: Ian Lubkin
+         Purpose: Framework for order lists.
+         Last Edit: 8/12/2021
+     -->
+
 
     <!-- The core Firebase JS SDK is always required and must be listed first -->
     <script src="https://www.gstatic.com/firebasejs/8.8.0/firebase-app.js"></script>

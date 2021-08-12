@@ -317,6 +317,9 @@ async function submitItemForm() { //later perhaps get userLocation from local st
             item['other-units'][prevName]['ratio-to-main-unit'] = input.value;
         }
     });
+    item['prep-info'] = {};
+    item['prep-info']['prep-time'] = document.querySelector('#item-prep-time-input').value;
+    item['prep-info']['batch-size'] = document.querySelector('#item-batch-size-input').value;
     item['ingredients'] = {}; //base for ingredients object
     //the next block gathers ingredients and their ratio to the main item from the form
     document.querySelectorAll('#item-ingredients-input-wrapper .name-input, #item-ingredients-input-wrapper .ratio-input').forEach( (input) => {
@@ -467,7 +470,7 @@ async function signUp() {
     let checkUserLastNameValid = uLastName.match(userNameFormat);
     let checkUserEmailValid = uEmail.match(userEmailFormat);
     let checkUserPasswordValid = uPassword.match(userPasswordFormat);
-    let uLocation = uLocation.toLowerCase();
+    uLocation = uLocation.toLowerCase();
 
     if(checkUserFirstNameValid === null){
         return checkUserFirstName(uFirstName);
@@ -795,6 +798,14 @@ async function loadItemList() {
                 newInputRatio.value = item['other-units'][unit]['ratio-to-main-unit'];
 
             }
+            if(item['prep-info'] === undefined) {
+                item['prep-info'] = {
+                    'prep-time': 0,
+                    'batch-size': 0,
+                };
+            }
+            document.querySelector('#item-prep-time-input').value = item['prep-info']['prep-time'];
+            document.querySelector('#item-batch-size-input').value = item['prep-info']['batch-size'];
             for(let ing in item['ingredients']) {
                 let parentDiv = document.querySelector('#item-ingredients-input-wrapper');
                 let button = document.querySelector('#item-ingredient-add-button');
@@ -979,7 +990,7 @@ function showSuccessMessage(msgText = 'Success') {
     msgText = capitalizeFirstLetter(msgText) + '&#10003;';
     document.querySelector('#success-message-text').innerHTML = msgText;
     document.querySelector('#success-message').style.display = 'grid';
-    window.setTimeout( () => { document.querySelector('#success-message').style.display = 'none'; }, 1500);
+    window.setTimeout( () => { document.querySelector('#success-message').style.display = 'none'; }, 1200);
 }
 
 
