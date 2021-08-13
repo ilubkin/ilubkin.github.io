@@ -9,6 +9,23 @@
 
 /*Idea 8/10: exchange JSON.parse(localstorage.getItem(...)) calls for functions that are more descriptive */
 
+/*Idea 8/13: reduce fetching from firebase by the following steps: 
+                1) on initial load, set session start time as a local variable
+                2) add event listeners for each locally stored object which update
+                    those objects whenever a value is changed
+                3) change local storage update functions to first check whether the
+                    local storage last update is before or after the sesion start time.
+                    If it is after the session start time then there is no need to query 
+                    firebase.
+                    Alternatively, when the session is first started each local storage
+                    variable could be updated once, gauranteeing that the rest of the session
+                    is much faster.
+*/
+
+/* Potential problem discovered 8/13: Date.parse() is not recomended as the implimentation of string parsing
+    is variable accross platforms. To resolve this problem, I should create my own date parsing functions at
+    some point and replace all Date.parse calls with them.
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -47,7 +64,7 @@ function dashToSpace(instr) {
 /*  Function Description
     Creation Date: 8/10/2021
     Author: Ian Lubkin
-    Purpose: Return the date as a mm-dd-yyyy string
+    Purpose: Return the date as a mm-dd-yyyy string, a mm-dd string, or a yyyy-mm-dd string
     Last Edit:8/10/2021
 */
 function getDateString(offset = 0, option = 0) {
@@ -72,10 +89,14 @@ function getDateString(offset = 0, option = 0) {
     if(option === 1) {
         return mm + '-' + dd;
     }
+    if(option === 2) {
+        return yyyy + '-' + mm + '-' + dd;
+    }
     else {
         throw new Error("Incorrect parameters passed to getDateString");
     }
 }
+
 
 /*  Function Description
     Creation Date: 8/10/2021
@@ -1028,7 +1049,7 @@ function getRevenueDaySum(rowNum) {
     the projected revenues for the next <7 days and 7 days.
     Last Edit: 8/12/2021
 */
-async function loadPrepChecklist(offset = 0) {
+async function loadPrepChecklist(daysOut = 0) {
     loadingMessageOn('Fetching data for calculations');
     await updateLocationsLocal();
     let locations = JSON.parse(localStorage.getItem('locationList'));
@@ -1042,6 +1063,7 @@ async function loadPrepChecklist(offset = 0) {
             await updateInventoryRecordLocal(-1, loc);
         }
     }
+    let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
     /* Get revenue for each location (except kitchen) for the next 7 days */
     for(let i = 0; i < 8; i++) { 
         await updateRevenuePredictionsLocal(i);
@@ -1049,9 +1071,37 @@ async function loadPrepChecklist(offset = 0) {
     loadingMessageOff();
     loadingMessageOn('Generating prep checklist');
     // set date selector to given day and use that date. Add an event listener further down that refires this function with a new date.
+    document.querySelector('#minimum-prep-date-input').value = getDateString(daysOut, 2);
+    
 
     //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and the week
     //Use the above calculation to generate a checklist 
+    let minPrepObj = {};
+    let weekPrepObj = {};
+    for(let i = 0; i < 8; i++) {
+        for(let loc in items) {
+            if(typeof(locations[loc]) !== 'object' || locations[loc]['region'] !== region) {
+                continue;
+            }
+            for(let item in items[loc]) {
+                if(i === 0) {
+                    minPrepObj[item] = 0;
+                    weekPrepObj[item] = 0;
+                }
+                if(typeof(items[loc][item]) !== 'object' || item['prepared-bool'] === false) {
+                    continue;
+                }
+                if(i <= daysOut) {
+                    minPrepObj[item] += Math.ceil(Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
+                }
+                weekPrepObj[item] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
+                //left off 8/13: the above line still produces NaN while line 1095 works fine... unclear why
+            }
+        }
+
+    }
+    console.log(minPrepObj);
+    console.log(weekPrepObj);
     loadingMessageOff();
 }
 
