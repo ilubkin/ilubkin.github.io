@@ -1070,7 +1070,19 @@ function itemChecklistLoader() {
                 (locSelector === 'commissary' ? quantNeeded = 500-EODinventory : quantNeeded = 100-EODinventory);
             }
             if(i === '5 dollar') {
-                (locSelector === 'commissary' ? quantNeeded = 100-EODinventory : quantNeeded = 20-EODinventory);
+                (locSelector === 'settlers' ? quantNeeded = 20-EODinventory : quantNeeded = 100-EODinventory);
+            }
+            if(i === 'quarters') {
+                (locSelector === 'commissary' ? quantNeeded = 10-EODinventory : quantNeeded = 2-EODinventory);
+            }
+            if(i === 'dimes') {
+                (locSelector === 'commissary' ? quantNeeded = 10-EODinventory : quantNeeded = 2-EODinventory);
+            }
+            if(i === 'nickles') {
+                (locSelector === 'commissary' ? quantNeeded = 10-EODinventory : quantNeeded = 2-EODinventory);
+            }
+            if(i === 'pennies') {
+                (locSelector === 'commissary' ? quantNeeded = 10-EODinventory : quantNeeded = 2-EODinventory);
             }
             let newRow = document.createElement('tr');
             let newCheckbox = document.createElement('input');

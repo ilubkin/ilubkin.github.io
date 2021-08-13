@@ -203,6 +203,71 @@ div#item-boolean-input-wrapper label {
     }
 }
 
+/* Logic for prep checklist */
+
+#prep-checklist-wrapper {
+    display: grid;
+}
+
+#prep-checklist-wrapper > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 5px 0px 5px 0px;
+    border-bottom: 1px solid lightgrey;
+}
+
+#prep-checklist-wrapper p {
+    margin: 0px 5px 0px 0px;
+    padding: 0px;
+}
+#prep-checklist-wrapper h3 {
+    margin: 0px;
+    padding: 0px;
+}
+
+#prep-checklist-wrapper input {
+    margin: 0px;
+    padding: 0px;
+    max-width: 10em;
+    max-height: 1.5em;
+}
+
+#prep-checklist-revenues {
+    display: grid;
+}
+
+#preplist-checkmark-gap {
+    grid-column: 1/2;
+}
+
+#prep-checklist-day-revenue {
+    grid-column: 2/5;
+}
+
+#prep-checklist-week-revenue {
+    grid-column: 5/8;
+}
+
+#prep-checklist-header {
+    display: grid;
+}
+
+#minimum-prep-date-wrapper {
+    grid-column: 2/5;
+    display: flex;
+}
+
+#preplist-week-header {
+    grid-column: 5/8;
+}
+
+.left-justify {
+    justify-self: left;
+}
+
+
+
+
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */
 .switch-field {
 	display: flex;

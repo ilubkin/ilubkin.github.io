@@ -253,10 +253,12 @@ async function updateRevenuePredictionsLocal(offset = 0) {
                 revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
             }
             revenuePredictions[dateString] = {
-                "last-write": dateNumber,
+                "last write": dateNumber,
             };
             for(let loc in locations) {
-                revenuePredictions[dateString][loc] = 0;
+                if(typeof(loc) === 'object') {
+                    revenuePredictions[dateString][loc] = 0;
+                }
             }
 
             database.ref('/revenue predictions/' + dateString).set(revenuePredictions[dateString]);
@@ -277,6 +279,71 @@ async function updateRevenuePredictionsLocal(offset = 0) {
                 localStorage.setItem('revenuePredictions', JSON.stringify(revenuePredictions));
             } else {
                 console.log("Error reading from revenue predictions: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+}
+
+async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localStorage.getItem('userLocation'))) {
+    await updateItemLocal();
+    let items = JSON.parse(localStorage.getItem('itemLists'))[iLoc];
+    let lastRead = 0;
+    let lastWrite = 0;
+    let dateString = getDateString(offset);
+    let dateNumber = Date.parse(new Date(dateString));
+    if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+        if(JSON.parse(localStorage.getItem('inventoryRecord'))[dateString] !== null) {
+            if(JSON.parse(localStorage.getItem('inventoryRecord'))['D8H9NmFStHEksFQZ'] === null) {
+                localStorage.removeItem('inventoryRecord');
+            }
+            else {
+                lastRead = Number(JSON.parse(localStorage.getItem('inventoryRecord'))['last write']);
+            }
+        }
+    }
+    const dbRef = firebase.database().ref();
+    await dbRef.child('inventory record').child(dateString).child(iLoc).child('last write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            lastWrite = 0;
+            let inventoryRecord = {};
+            if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+                inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
+            }
+            inventoryRecord[dateString] = {
+                "last write": dateNumber,
+            };
+            inventoryRecord[dateString][iLoc] = {
+                "last write": dateNumber,
+                'user written': false,
+            };
+            for(let item in items) {
+                if(typeof(item) === 'object'){
+                    inventoryRecord[dateString][iLoc][item] = 0;
+                }
+            }
+
+            database.ref('/inventory record/' + dateString + '/' + iLoc).set(inventoryRecord[dateString][iLoc]);
+            localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
+            console.log("Error reading from inventory record: No data available. New data written.");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastRead !== lastWrite) {
+        await dbRef.child('inventory record').child(dateString).get().then((snapshot) => {
+            if (snapshot.exists()) {
+                let inventoryRecord = {};
+                if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+                    inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
+                }
+                inventoryRecord[dateString] = snapshot.val();
+                localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
+            } else {
+                console.log("Error reading from inventory record: No data available");
             }
         }).catch((error) => {
             console.error(error);
@@ -952,6 +1019,40 @@ function getRevenueDaySum(rowNum) {
     });
     
     return sum;
+}
+
+/*  Function Description
+    Creation Date: 8/12/2021
+    Author: Ian Lubkin
+    Purpose: Generate a prep checklist using the current location inventories and
+    the projected revenues for the next <7 days and 7 days.
+    Last Edit: 8/12/2021
+*/
+async function loadPrepChecklist(offset = 0) {
+    loadingMessageOn('Fetching data for calculations');
+    await updateLocationsLocal();
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    await updateItemLocal();
+    let items = JSON.parse(localStorage.getItem('itemLists'));
+    let uLoc = JSON.parse(localStorage.getItem('userLocation'));
+    let region = locations[uLoc]['region'];
+    /* Get inventory from each location (including kitchen) */
+    for(let loc in locations) {
+        if(typeof(loc) === 'object') {
+            await updateInventoryRecordLocal(-1, loc);
+        }
+    }
+    /* Get revenue for each location (except kitchen) for the next 7 days */
+    for(let i = 0; i < 8; i++) { 
+        await updateRevenuePredictionsLocal(i);
+    }
+    loadingMessageOff();
+    loadingMessageOn('Generating prep checklist');
+    // set date selector to given day and use that date. Add an event listener further down that refires this function with a new date.
+
+    //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and the week
+    //Use the above calculation to generate a checklist 
+    loadingMessageOff();
 }
 
 
