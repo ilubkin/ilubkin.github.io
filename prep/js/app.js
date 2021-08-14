@@ -24,7 +24,12 @@
 
 /* Potential problem discovered 8/13: Date.parse() is not recomended as the implimentation of string parsing
     is variable accross platforms. To resolve this problem, I should create my own date parsing functions at
-    some point and replace all Date.parse calls with them.
+    some point and replace all Date.parse calls with them. */
+
+/* Idea 8/14: The syntax of itterating over an object's members is confusing 
+                (i.e., for(let x in xs) { if(xs[x]...)} seems is correct while for(let x in xs) { if(x...)} feels more natural).
+                to resolve this, it would be helpful to put together a function that conducted these operations somehow...
+*/
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -277,7 +282,7 @@ async function updateRevenuePredictionsLocal(offset = 0) {
                 "last write": dateNumber,
             };
             for(let loc in locations) {
-                if(typeof(loc) === 'object') {
+                if(typeof(locations[loc]) === 'object') {
                     revenuePredictions[dateString][loc] = 0;
                 }
             }
@@ -342,7 +347,7 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
                 'user written': false,
             };
             for(let item in items) {
-                if(typeof(item) === 'object'){
+                if(typeof(items[item]) === 'object'){
                     inventoryRecord[dateString][iLoc][item] = 0;
                 }
             }
@@ -1059,15 +1064,16 @@ async function loadPrepChecklist(daysOut = 0) {
     let region = locations[uLoc]['region'];
     /* Get inventory from each location (including kitchen) */
     for(let loc in locations) {
-        if(typeof(loc) === 'object') {
+        if(typeof(locations[loc]) === 'object') {
             await updateInventoryRecordLocal(-1, loc);
         }
     }
-    let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
+    let inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
     /* Get revenue for each location (except kitchen) for the next 7 days */
     for(let i = 0; i < 8; i++) { 
         await updateRevenuePredictionsLocal(i);
     }
+    let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
     loadingMessageOff();
     loadingMessageOn('Generating prep checklist');
     // set date selector to given day and use that date. Add an event listener further down that refires this function with a new date.
@@ -1084,24 +1090,78 @@ async function loadPrepChecklist(daysOut = 0) {
                 continue;
             }
             for(let item in items[loc]) {
-                if(i === 0) {
-                    minPrepObj[item] = 0;
-                    weekPrepObj[item] = 0;
+                if(typeof(items[loc][item]) !== 'object' || items[loc][item]['prepared-bool'] === false) {
+                    continue;
                 }
-                if(typeof(items[loc][item]) !== 'object' || item['prepared-bool'] === false) {
+                if(minPrepObj[item] === undefined) {
+                    minPrepObj[item] = {};
+                    weekPrepObj[item] = {};
+                    minPrepObj[item]['number'] = 0;
+                    weekPrepObj[item]['number'] = 0;
+                    minPrepObj[item]['unit'] = 'error';
+                    weekPrepObj[item]['unit'] = 'error';
+                    minPrepObj[item]['prep-time'] = NaN;
+                    weekPrepObj[item]['prep-time'] = NaN;
+                }
+                console.log(weekPrepObj[item]['number']);
+                if(locations[loc]['type'] === 'kitchen') {
+                    minPrepObj[item]['unit'] = items[loc][item]['main-unit'];
+                    weekPrepObj[item]['unit'] = items[loc][item]['main-unit'];
+                    minPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
+                    weekPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
+                }
+                if(i === 0) {
+                    minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
+                    weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
+                }
+                if(typeof(items[loc][item]) !== 'object' || items[loc][item]['prepared-bool'] === false) {
                     continue;
                 }
                 if(i <= daysOut) {
-                    minPrepObj[item] += Math.ceil(Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
+                    minPrepObj[item]['number'] += Math.ceil((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc])));
                 }
-                weekPrepObj[item] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
-                //left off 8/13: the above line still produces NaN while line 1095 works fine... unclear why
+                // console.log((item + ': ' + Number(items[loc][item]['use-to-sales-ratio'])) + ' - ' + (Number(revenuePredictions[getDateString(i)][loc])) + ' - ' + ((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]))));
+                weekPrepObj[item]['number'] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
+                
             }
         }
 
     }
     console.log(minPrepObj);
     console.log(weekPrepObj);
+    //edit DOM to reflect prep list
+    for(let item in minPrepObj) {
+        let wrapper = document.querySelector('#prep-checklist-wrapper');
+        let row = document.createElement('div');
+        row.classList.add('prep-checklist-item-row');
+        row.dataset.item = item;
+        let check = document.createElement('input');
+        check.type = 'checkbox';
+        row.appendChild(check);
+        let number = document.createElement('input');
+        number.type = 'number';
+        number.value = minPrepObj[item]['number'];
+        row.appendChild(number);
+        let unit = document.createElement('p');
+        unit.innerHTML = minPrepObj[item]['unit'];
+        row.appendChild(unit);
+        let name = document.createElement('p');
+        name.innerHTML = item;
+        row.appendChild(name);
+        let hours = document.createElement('p');
+        hours.innerHTML = minPrepObj[item]['number']*Number(minPrepObj[item]['prep-time']);
+        row.appendChild(hours);
+        let weekNumber = document.createElement('p');
+        weekNumber.classList.add('prep-checklist-week-info');
+        weekNumber.innerHTML = weekPrepObj[item]['number'];
+        row.appendChild(weekNumber);
+        let weekHours = document.createElement('p');
+        weekHours.classList.add('prep-checklist-week-info');
+        weekHours.innerHTML = weekPrepObj[item]['number']*Number(weekPrepObj[item]['prep-time']);
+        row.appendChild(weekHours);
+        wrapper.appendChild(row);
+    }
+
     loadingMessageOff();
 }
 
