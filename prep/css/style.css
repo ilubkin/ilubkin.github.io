@@ -50,6 +50,10 @@ button:hover {
     background: var(--primary-color-light);
 }
 
+.ghost-text {
+    color: grey;
+}
+
 /* logic for the item input and editing form */
 div#item-boolean-input-wrapper label {
     min-width: 75px;
@@ -211,9 +215,17 @@ div#item-boolean-input-wrapper label {
 
 #prep-checklist-wrapper > div {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 2fr 1fr 1fr 1fr;
     padding: 5px 0px 5px 0px;
     border-bottom: 1px solid lightgrey;
+}
+
+#prep-checklist-collumn-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 2fr 1fr 1fr 1fr;
+    padding: 5px 0px 5px 0px;
+    border-bottom: 1px solid lightgrey;
+    font-weight: bold;
 }
 
 #prep-checklist-wrapper p {
@@ -226,10 +238,14 @@ div#item-boolean-input-wrapper label {
 }
 
 #prep-checklist-wrapper input {
-    margin: 0px;
+    margin: 0px 10px 0px 0px;
     padding: 0px;
-    max-width: 10em;
+    max-width: 5em;
     max-height: 1.5em;
+}
+
+#minimum-prep-date-input {
+    min-width: 8em;
 }
 
 #prep-checklist-revenues {
@@ -241,31 +257,43 @@ div#item-boolean-input-wrapper label {
 }
 
 #prep-checklist-day-revenue {
-    grid-column: 2/5;
+    grid-column: 2/6;
 }
 
 #prep-checklist-week-revenue {
-    grid-column: 5/8;
+    grid-column: 6/8;
 }
 
 #prep-checklist-header {
     display: grid;
+    font-weight: bold;
 }
 
 #minimum-prep-date-wrapper {
-    grid-column: 2/5;
+    grid-column: 2/6;
+    display: flex;
+}
+
+#week-prep-wrapper {
     display: flex;
 }
 
 #preplist-week-header {
-    grid-column: 5/8;
+    grid-column: 6/8;
 }
 
 .left-justify {
     justify-self: left;
 }
 
-
+@media only screen and (max-width: 750px) {
+    #prep-checklist-wrapper > div {
+        grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+    }
+    .prep-checklist-week-info {
+        display: none;
+    }
+}
 
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */

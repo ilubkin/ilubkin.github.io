@@ -317,6 +317,9 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
     let items = JSON.parse(localStorage.getItem('itemLists'))[iLoc];
     let lastRead = 0;
     let lastWrite = 0;
+    console.log(iLoc);
+    
+    let lastItemWrite = Number(items['last write']);
     let dateString = getDateString(offset);
     let dateNumber = Date.parse(new Date(dateString));
     if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
@@ -359,7 +362,7 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
     }).catch((error) => {
         console.error(error);
     });
-    if(lastRead !== lastWrite) {
+    if(lastRead !== lastWrite || lastRead <= lastItemWrite) {
         await dbRef.child('inventory record').child(dateString).get().then((snapshot) => {
             if (snapshot.exists()) {
                 let inventoryRecord = {};
@@ -367,6 +370,7 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
                     inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
                 }
                 inventoryRecord[dateString] = snapshot.val();
+                inventoryRecord['last-write'] = dateNumber;
                 localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
             } else {
                 console.log("Error reading from inventory record: No data available");
@@ -980,7 +984,7 @@ async function loadRevenueInterface(offset = 0) {
     let revenues = JSON.parse(localStorage.getItem('revenuePredictions'));
     let region = locations[JSON.parse(localStorage.getItem('userLocation'))]['region'];
     for(let loc in locations) {
-        if(typeof(locations[loc]) !== 'object') {
+        if(typeof(locations[loc]) !== 'object' || locations[loc]['type'] === 'kitchen') {
             continue;
         }
         if(locations[loc]['region'] === region) {
@@ -1056,6 +1060,9 @@ function getRevenueDaySum(rowNum) {
 */
 async function loadPrepChecklist(daysOut = 0) {
     loadingMessageOn('Fetching data for calculations');
+    document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
+        row.remove();
+    })
     await updateLocationsLocal();
     let locations = JSON.parse(localStorage.getItem('locationList'));
     await updateItemLocal();
@@ -1076,7 +1083,7 @@ async function loadPrepChecklist(daysOut = 0) {
     let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
     loadingMessageOff();
     loadingMessageOn('Generating prep checklist');
-    // set date selector to given day and use that date. Add an event listener further down that refires this function with a new date.
+    // set feilds that determine the predicted revenues and date
     document.querySelector('#minimum-prep-date-input').value = getDateString(daysOut, 2);
     
 
@@ -1084,6 +1091,8 @@ async function loadPrepChecklist(daysOut = 0) {
     //Use the above calculation to generate a checklist 
     let minPrepObj = {};
     let weekPrepObj = {};
+    let minRevenue = 0;
+    let weekRevenue = 0;
     for(let i = 0; i < 8; i++) {
         for(let loc in items) {
             if(typeof(locations[loc]) !== 'object' || locations[loc]['region'] !== region) {
@@ -1111,6 +1120,7 @@ async function loadPrepChecklist(daysOut = 0) {
                     weekPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
                 }
                 if(i === 0) {
+                    console.log(loc +': ' + Number(inventoryRecord[getDateString(-1)][loc][item]));
                     minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
                     weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
                 }
@@ -1119,14 +1129,17 @@ async function loadPrepChecklist(daysOut = 0) {
                 }
                 if(i <= daysOut) {
                     minPrepObj[item]['number'] += Math.ceil((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc])));
+                    minRevenue += Number(revenuePredictions[getDateString(i)][loc]);
                 }
-                // console.log((item + ': ' + Number(items[loc][item]['use-to-sales-ratio'])) + ' - ' + (Number(revenuePredictions[getDateString(i)][loc])) + ' - ' + ((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]))));
                 weekPrepObj[item]['number'] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
-                
+                weekRevenue += Number(revenuePredictions[getDateString(i)][loc]);
             }
         }
-
     }
+    
+    document.querySelector('#prep-checklist-day-revenue').innerHTML = `($${minRevenue})`;
+    document.querySelector('#prep-checklist-week-revenue').innerHTML = `($${weekRevenue})`;
+
     console.log(minPrepObj);
     console.log(weekPrepObj);
     //edit DOM to reflect prep list
@@ -1149,7 +1162,7 @@ async function loadPrepChecklist(daysOut = 0) {
         name.innerHTML = item;
         row.appendChild(name);
         let hours = document.createElement('p');
-        hours.innerHTML = minPrepObj[item]['number']*Number(minPrepObj[item]['prep-time']);
+        hours.innerHTML = String(minPrepObj[item]['number']*Number(minPrepObj[item]['prep-time'])) + ' hrs';
         row.appendChild(hours);
         let weekNumber = document.createElement('p');
         weekNumber.classList.add('prep-checklist-week-info');
@@ -1157,7 +1170,7 @@ async function loadPrepChecklist(daysOut = 0) {
         row.appendChild(weekNumber);
         let weekHours = document.createElement('p');
         weekHours.classList.add('prep-checklist-week-info');
-        weekHours.innerHTML = weekPrepObj[item]['number']*Number(weekPrepObj[item]['prep-time']);
+        weekHours.innerHTML = String(weekPrepObj[item]['number']*Number(weekPrepObj[item]['prep-time'])) + ' hrs';
         row.appendChild(weekHours);
         wrapper.appendChild(row);
     }
@@ -1330,6 +1343,11 @@ document.querySelector('#revenue-predictions-nav').addEventListener('click', () 
     loadRevenueInterface();
     document.querySelector('#revenue-interface-wrapper').style.display = 'grid';
 });
+document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
+    hideAllElements();
+    loadPrepChecklist();
+    document.querySelector('#prep-checklist-wrapper').style.display = 'grid';
+})
 
 /*** Item display ***/
 document.querySelector('#item-add-form-button').addEventListener('click', () => {
