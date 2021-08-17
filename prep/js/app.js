@@ -1056,9 +1056,9 @@ function getRevenueDaySum(rowNum) {
     Author: Ian Lubkin
     Purpose: Generate a prep checklist using the current location inventories and
     the projected revenues for the next <7 days and 7 days.
-    Last Edit: 8/12/2021
+    Last Edit: 8/15/2021
 */
-async function loadPrepChecklist(daysOut = 0) {
+async function loadPrepChecklist(daysOut = 1) {
     loadingMessageOn('Fetching data for calculations');
     document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
         row.remove();
@@ -1083,10 +1083,9 @@ async function loadPrepChecklist(daysOut = 0) {
     let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
     loadingMessageOff();
     loadingMessageOn('Generating prep checklist');
-    // set feilds that determine the predicted revenues and date
+    // set the date field
     document.querySelector('#minimum-prep-date-input').value = getDateString(daysOut, 2);
     
-
     //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and the week
     //Use the above calculation to generate a checklist 
     let minPrepObj = {};
@@ -1111,6 +1110,8 @@ async function loadPrepChecklist(daysOut = 0) {
                     weekPrepObj[item]['unit'] = 'error';
                     minPrepObj[item]['prep-time'] = NaN;
                     weekPrepObj[item]['prep-time'] = NaN;
+                    minPrepObj[item]['batch-size'] = 1;
+                    weekPrepObj[item]['batch-size'] = 1;
                 }
                 console.log(weekPrepObj[item]['number']);
                 if(locations[loc]['type'] === 'kitchen') {
@@ -1118,9 +1119,10 @@ async function loadPrepChecklist(daysOut = 0) {
                     weekPrepObj[item]['unit'] = items[loc][item]['main-unit'];
                     minPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
                     weekPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
+                    minPrepObj[item]['batch-size'] = (Number(items[loc][item]['prep-info']['batch-size']) === 0 ? 1 : items[loc][item]['prep-info']['batch-size']); //ensure batch size is non-zero
+                    weekPrepObj[item]['batch-size'] = (Number(items[loc][item]['prep-info']['batch-size']) === 0 ? 1 : items[loc][item]['prep-info']['batch-size']);
                 }
                 if(i === 0) {
-                    console.log(loc +': ' + Number(inventoryRecord[getDateString(-1)][loc][item]));
                     minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
                     weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
                 }
@@ -1162,19 +1164,19 @@ async function loadPrepChecklist(daysOut = 0) {
         name.innerHTML = item;
         row.appendChild(name);
         let hours = document.createElement('p');
-        hours.innerHTML = String(minPrepObj[item]['number']*Number(minPrepObj[item]['prep-time'])) + ' hrs';
+        hours.innerHTML = String(Math.ceil((minPrepObj[item]['number']*Number(minPrepObj[item]['prep-time']))/Number(minPrepObj[item]['batch-size']))) + ' min';
         row.appendChild(hours);
         let weekNumber = document.createElement('p');
         weekNumber.classList.add('prep-checklist-week-info');
-        weekNumber.innerHTML = weekPrepObj[item]['number'];
+        weekNumber.innerHTML = Math.ceil(weekPrepObj[item]['number']);
         row.appendChild(weekNumber);
         let weekHours = document.createElement('p');
         weekHours.classList.add('prep-checklist-week-info');
-        weekHours.innerHTML = String(weekPrepObj[item]['number']*Number(weekPrepObj[item]['prep-time'])) + ' hrs';
+        weekHours.innerHTML = String(Math.ceil(weekPrepObj[item]['number'])*Math.ceil(Number(weekPrepObj[item]['prep-time'])/Number(minPrepObj[item]['batch-size']))) + ' min';
         row.appendChild(weekHours);
         wrapper.appendChild(row);
     }
-
+    addEventListenersPrepChecklist('prep-checklist-wrapper', 'prep-checklist-item-row');
     loadingMessageOff();
 }
 
@@ -1359,6 +1361,47 @@ document.querySelectorAll('.item-display-row > .item-display-options').forEach( 
 
 /*** Revenue interface ***/
 document.querySelector('#update-revenue-interface-button').addEventListener('click', submitRevenueInterface);
+
+/*** Prep checklist ***/
+function addEventListenersPrepChecklist(wrapperId, rowClass) {
+    document.querySelectorAll('#' + wrapperId + ' div.' + rowClass).forEach( (elt) => {
+        elt.addEventListener('click', (e) => {
+            let row;
+            if(e.target.classList.contains(rowClass)) {
+                row = e.target;
+            }
+            else {
+                row = e.target.parentElement;
+            }
+            if(e.target.type === 'checkbox' && !row.classList.contains('checked')) {
+                row.classList.add('checked');
+                row.children[0].checked = true;
+            }
+            else if(e.target.type === 'checkbox') {
+                row.classList.remove('checked');
+                row.children[0].checked = false;
+            }
+            else if(e.target.type !== 'checkbox' && e.target.type !== 'number' && !row.classList.contains('checked')) {
+                row.classList.add('checked');
+                row.children[0].checked = true;
+            }
+            else if(e.target.type !== 'number') {
+                row.classList.remove('checked');
+                row.children[0].checked = false;
+            }
+        });
+    });
+}
+document.querySelector('#minimum-prep-date-input').addEventListener('change', (e) => {
+    let todayNum = new Date();
+    todayNum.setHours(0,0,0,0);
+    let prepNum = new Date(e.target.value);
+    prepNum.setHours(0,0,0,0);
+    let offset = Math.floor((prepNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
+    
+    loadPrepChecklist(offset);
+});
+
 
 /*  Function Description
     Creation Date: 

@@ -29,9 +29,6 @@ button {
 }
 
 button:hover {
-    /* background:white;
-    color: var(--primary-color); */
-    
     background: var(--primary-color-dark);
     color: black;
 }
@@ -51,6 +48,11 @@ button:hover {
 }
 
 .ghost-text {
+    color: grey;
+}
+
+.checked {
+    background-color: lightgrey;
     color: grey;
 }
 
@@ -245,7 +247,7 @@ div#item-boolean-input-wrapper label {
 }
 
 #minimum-prep-date-input {
-    min-width: 8em;
+    min-width: 10em;
 }
 
 #prep-checklist-revenues {
@@ -278,7 +280,7 @@ div#item-boolean-input-wrapper label {
     display: flex;
 }
 
-#preplist-week-header {
+#prep-week-header {
     grid-column: 6/8;
 }
 
