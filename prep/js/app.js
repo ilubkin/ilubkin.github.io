@@ -35,6 +35,10 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// function sortArr(obj, childStr) {
+//     return Object.keys(obj).sort((a,b) => (obj[a][childStr] >= obj[b][childStr] ? 0 : 1));
+// }
+
 /****** String editing functions ******/
 /*  Function Description
     Creation Date: 8/06/2021
@@ -1081,7 +1085,7 @@ function getRevenueDaySum(rowNum) {
     the projected revenues for the next <7 days and 7 days.
     Last Edit: 8/15/2021
 */
-async function loadPrepChecklist(daysOut = 1) {
+async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
     loadingMessageOn('Fetching data for calculations');
     document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
         row.remove();
@@ -1105,6 +1109,7 @@ async function loadPrepChecklist(daysOut = 1) {
     }
     let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
     loadingMessageOff();
+
     loadingMessageOn('Generating prep checklist');
     // set the date field
     document.querySelector('#minimum-prep-date-input').value = getDateString(daysOut, 2);
@@ -1136,7 +1141,6 @@ async function loadPrepChecklist(daysOut = 1) {
                     minPrepObj[item]['batch-size'] = 1;
                     weekPrepObj[item]['batch-size'] = 1;
                 }
-                console.log(weekPrepObj[item]['number']);
                 if(locations[loc]['type'] === 'kitchen') {
                     minPrepObj[item]['unit'] = items[loc][item]['main-unit'];
                     weekPrepObj[item]['unit'] = items[loc][item]['main-unit'];
@@ -1165,8 +1169,6 @@ async function loadPrepChecklist(daysOut = 1) {
     document.querySelector('#prep-checklist-day-revenue').innerHTML = `($${minRevenue})`;
     document.querySelector('#prep-checklist-week-revenue').innerHTML = `($${weekRevenue})`;
 
-    console.log(minPrepObj);
-    console.log(weekPrepObj);
     //edit DOM to reflect prep list
     for(let item in minPrepObj) {
         let wrapper = document.querySelector('#prep-checklist-wrapper');
