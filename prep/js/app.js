@@ -476,6 +476,26 @@ async function submitRevenueInterface() {
     showSuccessMessage('Revenue updated sucessfully');
 }
 
+async function prepChecklistSubmit() {
+    //it is safe to assume that the location list, item list, and revenue predictions are up to date, as this 
+    //  function will only be called after loadPrepChecklist has run successfully
+    let userLocation = JSON.parse(localStorage.getItem('userLocation'));
+    let curDTstr = getDateString();
+    let curDTInt = Date.parse(new Date()); //current date-time integer, created by parsing a new Date object
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    let region = locations[userLocation]['region'];
+    let itemName;
+    let prepObj = {};
+    document.querySelectorAll('.prep-checklist-item-row').forEach((row) => {
+        itemName = row.dataset.item;
+        prepObj[itemName] = row.querySelector('prep-checklist-item-number-input').value;
+    });
+    loadingMessageOn('Submitting completed prep list');
+    await database.ref('prep record/' + curDTstr + '/' + region + '/' + curDTInt).update(prepObj);
+    loadingMessageOff();
+    showSuccessMessage('Prep record submitted sucessfully');
+}
+
 /*** Blocks to listen to data in firebase and update local data accordingly ***/
 const itemListsRef = firebase.database().ref('item list');
 itemListsRef.on('value', (snapshot) => {
@@ -687,7 +707,8 @@ function checkUserLastName(uLastName){
 */
 firebase.auth().onAuthStateChanged( function(user) {
     if (user) {
-
+        console.log('bello');
+        //here is where to call all the update functions.
         hideAllElements();
         document.querySelector('#sign-out-button').style.display = '';
         let uid = user.uid;
@@ -719,7 +740,9 @@ window.onload = authStateDomHandler; //when the page loads, authStateDomHandler 
 */
 function authStateDomHandler() {
     if(firebase.auth().currentUser) {
+        //it appears that we never get here... login logic is called from authstatechange
         document.querySelector('#sign-out-button').style.display = '';
+        console.log('yello');
         userPageLoader();
     }
     else {
@@ -1156,6 +1179,7 @@ async function loadPrepChecklist(daysOut = 1) {
         let number = document.createElement('input');
         number.type = 'number';
         number.value = minPrepObj[item]['number'];
+        number.classList.add('prep-checklist-item-number-input');
         row.appendChild(number);
         let unit = document.createElement('p');
         unit.innerHTML = minPrepObj[item]['unit'];
