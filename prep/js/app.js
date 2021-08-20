@@ -1117,6 +1117,8 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
                     weekPrepObj[item]['prep-time'] = NaN;
                     minPrepObj[item]['batch-size'] = 1;
                     weekPrepObj[item]['batch-size'] = 1;
+                    minPrepObj[item]['category'] = '';
+                    weekPrepObj[item]['category'] = '';
                 }
                 if(locations[loc]['type'] === 'kitchen') {
                     minPrepObj[item]['unit'] = items[loc][item]['main-unit'];
@@ -1125,6 +1127,8 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
                     weekPrepObj[item]['prep-time'] = items[loc][item]['prep-info']['prep-time'];
                     minPrepObj[item]['batch-size'] = (Number(items[loc][item]['prep-info']['batch-size']) === 0 ? 1 : items[loc][item]['prep-info']['batch-size']); //ensure batch size is non-zero
                     weekPrepObj[item]['batch-size'] = (Number(items[loc][item]['prep-info']['batch-size']) === 0 ? 1 : items[loc][item]['prep-info']['batch-size']);
+                    minPrepObj[item]['category'] = items[loc][item]['special-category'];
+                    weekPrepObj[item]['category'] = items[loc][item]['special-category'];
                 }
                 if(i === 0) {
                     minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
@@ -1149,6 +1153,9 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
     //edit DOM to reflect prep list
     for(let item in minPrepObj) {
         let wrapper = document.querySelector('#prep-checklist-wrapper');
+        let button = document.querySelector('#submit-prep-checklist-button');
+        let sandwichDiv = document.querySelector('#prep-checklist-sandwich-label');
+        let otherDiv = document.querySelector('#prep-checklist-other-label');
         let row = document.createElement('div');
         row.classList.add('prep-checklist-item-row');
         row.dataset.item = item;
@@ -1176,7 +1183,12 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
         weekHours.classList.add('prep-checklist-week-info');
         weekHours.innerHTML = String(Math.ceil(weekPrepObj[item]['number'])*Math.ceil(Number(weekPrepObj[item]['prep-time'])/Number(minPrepObj[item]['batch-size']))) + ' min';
         row.appendChild(weekHours);
-        wrapper.appendChild(row);
+        if(minPrepObj[item]['category'] === 'sandwich') {
+            wrapper.insertBefore(row, sandwichDiv.nextSibling);
+        }
+        else {
+            wrapper.insertBefore(row, otherDiv.nextSibling);
+        }
     }
     addEventListenersPrepChecklist('prep-checklist-wrapper', 'prep-checklist-item-row');
     loadingMessageOff();
