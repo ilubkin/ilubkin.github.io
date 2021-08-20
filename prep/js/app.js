@@ -480,7 +480,7 @@ async function submitRevenueInterface() {
     showSuccessMessage('Revenue updated sucessfully');
 }
 
-async function prepChecklistSubmit() {
+async function submitPrepChecklist() {
     //it is safe to assume that the location list, item list, and revenue predictions are up to date, as this 
     //  function will only be called after loadPrepChecklist has run successfully
     let userLocation = JSON.parse(localStorage.getItem('userLocation'));
@@ -492,7 +492,7 @@ async function prepChecklistSubmit() {
     let prepObj = {};
     document.querySelectorAll('.prep-checklist-item-row').forEach((row) => {
         itemName = row.dataset.item;
-        prepObj[itemName] = row.querySelector('prep-checklist-item-number-input').value;
+        prepObj[itemName] = row.querySelector('.prep-checklist-item-number-input').value;
     });
     loadingMessageOn('Submitting completed prep list');
     await database.ref('prep record/' + curDTstr + '/' + region + '/' + curDTInt).update(prepObj);
@@ -1085,7 +1085,8 @@ function getRevenueDaySum(rowNum) {
     the projected revenues for the next <7 days and 7 days.
     Last Edit: 8/15/2021
 */
-async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
+async function loadPrepChecklist(daysOut = 1) {
+    //8/20 idea: it would be nice to add the ability to load a completed prep checklist, although this is a backburner feature
     loadingMessageOn('Fetching data for calculations');
     document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
         row.remove();
@@ -1103,7 +1104,7 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
         }
     }
     let inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
-    /* Get revenue for each location (except kitchen) for the next 7 days */
+    /* Get revenue for each location for the next 7 days */
     for(let i = 0; i < 8; i++) { 
         await updateRevenuePredictionsLocal(i);
     }
@@ -1111,10 +1112,10 @@ async function loadPrepChecklist(daysOut = 1, sortedKeys = undefined) {
     loadingMessageOff();
 
     loadingMessageOn('Generating prep checklist');
-    // set the date field
+    // set the date field 
     document.querySelector('#minimum-prep-date-input').value = getDateString(daysOut, 2);
     
-    //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and the week
+    //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and a week out
     //Use the above calculation to generate a checklist 
     let minPrepObj = {};
     let weekPrepObj = {};
@@ -1439,7 +1440,9 @@ document.querySelector('#minimum-prep-date-input').addEventListener('change', (e
     
     loadPrepChecklist(offset);
 });
-
+document.querySelector('#submit-prep-checklist-button').addEventListener('click', () => {
+    submitPrepChecklist();
+});
 
 /*  Function Description
     Creation Date: 
