@@ -316,7 +316,14 @@ async function updateRevenuePredictionsLocal(offset = 0) {
     }
 }
 
-async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localStorage.getItem('userLocation'))) {
+/*  Function Description
+    Creation Date: 8/15/2021
+    Author: Ian Lubkin
+    Purpose: Update local storage object inventoryRecord to reflect firebase data.
+    This function updates inventories one at a time which makes it slow when reading many inventories.
+    Last Edit:8/21/2021
+*/
+async function updateSingleInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localStorage.getItem('userLocation'))) {
     await updateItemLocal();
     let items = JSON.parse(localStorage.getItem('itemLists'))[iLoc];
     let lastRead = 0;
@@ -325,7 +332,7 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
     
     let lastItemWrite = Number(items['last write']);
     let dateString = getDateString(offset);
-    let dateNumber = Date.parse(new Date(dateString));
+    let dateNumber = Date.parse(new Date());
     if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
         if(JSON.parse(localStorage.getItem('inventoryRecord'))[dateString] !== null) {
             if(JSON.parse(localStorage.getItem('inventoryRecord'))['D8H9NmFStHEksFQZ'] === null) {
@@ -353,13 +360,95 @@ async function updateInventoryRecordLocal(offset = 0, iLoc = JSON.parse(localSto
                 "last write": dateNumber,
                 'user written': false,
             };
+            inventoryRecord[dateString][iLoc][dateNumber] = {};
             for(let item in items) {
                 if(typeof(items[item]) === 'object'){
-                    inventoryRecord[dateString][iLoc][item] = 0;
+                    inventoryRecord[dateString][iLoc][dateNumber][item] = 0;
                 }
             }
 
             database.ref('/inventory record/' + dateString + '/' + iLoc).set(inventoryRecord[dateString][iLoc]);
+            localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
+            console.log("Error reading from inventory record: No data available. New data written.");
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+    if(lastRead !== lastWrite || lastRead <= lastItemWrite) {
+        await dbRef.child('inventory record').child(dateString).get().then((snapshot) => {
+            if (snapshot.exists()) {
+                let inventoryRecord = {};
+                if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+                    inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
+                }
+                inventoryRecord[dateString] = snapshot.val();
+                inventoryRecord['last-write'] = dateNumber;
+                localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
+            } else {
+                console.log("Error reading from inventory record: No data available");
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+}
+
+/*  Function Description
+    Creation Date: 8/21/2021
+    Author: Ian Lubkin
+    Purpose: Update local storage object inventoryRecord to reflect firebase data.
+    This function updates all inventory records to reduce the time required to query firebase.
+    Last Edit:8/21/2021
+*/
+async function updateAllInventoryRecordsLocal(offset = 0) {
+    await updateItemLocal();
+    let itemLists = JSON.parse(localStorage.getItem('itemLists'));
+    await updateLocationsLocal();
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    let lastRead = 0;
+    let lastWrite = 0;
+    
+    let lastItemWrite = Number(itemLists['last write']);
+    let dateString = getDateString(offset);
+    let dateNumber = Date.parse(new Date());
+    if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+        if(JSON.parse(localStorage.getItem('inventoryRecord'))[dateString] !== null) {
+            if(JSON.parse(localStorage.getItem('inventoryRecord'))['D8H9NmFStHEksFQZ'] === null) {
+                localStorage.removeItem('inventoryRecord');
+            }
+            else {
+                lastRead = Number(JSON.parse(localStorage.getItem('inventoryRecord'))['last write']);
+            }
+        }
+    }
+    const dbRef = firebase.database().ref();
+    await dbRef.child('inventory record').child(dateString).child('last write').get().then((snapshot) => {
+        if (snapshot.exists()) {
+            lastWrite = Number(snapshot.val());
+        } else {
+            lastWrite = 0;
+            let inventoryRecord = {};
+            if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
+                inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
+            }
+            inventoryRecord[dateString] = {
+                "last write": dateNumber,
+            };
+            for(let loc in locations) {
+                inventoryRecord[dateString][loc] = {
+                    "last write": dateNumber,
+                    'user written': false,
+                };
+                inventoryRecord[dateString][loc][dateNumber] = {};
+                for(let item in itemLists[loc]) {
+                    if(typeof(itemLists[loc][item]) === 'object'){
+                        inventoryRecord[dateString][loc][dateNumber][item] = 0;
+                    }
+                }
+            }
+            
+
+            database.ref('/inventory record/' + dateString).set(inventoryRecord[dateString]);
             localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
             console.log("Error reading from inventory record: No data available. New data written.");
         }
@@ -1083,7 +1172,7 @@ function getRevenueDaySum(rowNum) {
     Author: Ian Lubkin
     Purpose: Generate a prep checklist using the current location inventories and
     the projected revenues for the next <7 days and 7 days.
-    Last Edit: 8/15/2021
+    Last Edit: 8/20/2021
 */
 async function loadPrepChecklist(daysOut = 1) {
     //8/20 idea: it would be nice to add the ability to load a completed prep checklist, although this is a backburner feature
@@ -1097,12 +1186,17 @@ async function loadPrepChecklist(daysOut = 1) {
     let items = JSON.parse(localStorage.getItem('itemLists'));
     let uLoc = JSON.parse(localStorage.getItem('userLocation'));
     let region = locations[uLoc]['region'];
+    let kitchen = '';
     /* Get inventory from each location (including kitchen) */
     for(let loc in locations) {
-        if(typeof(locations[loc]) === 'object') {
-            await updateInventoryRecordLocal(-1, loc);
+        // if(typeof(locations[loc]) === 'object') {
+        //     await updateSingleInventoryRecordLocal(-1, loc);
+        // }
+        if(locations[loc]['region'] === region && locations[loc]['type'] === 'kitchen') {
+            kitchen = loc;
         }
     }
+    await updateAllInventoryRecordsLocal(-1);
     let inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
     /* Get revenue for each location for the next 7 days */
     for(let i = 0; i < 8; i++) { 
@@ -1126,6 +1220,10 @@ async function loadPrepChecklist(daysOut = 1) {
             if(typeof(locations[loc]) !== 'object' || locations[loc]['region'] !== region) {
                 continue;
             }
+            if(i <= daysOut) {
+                minRevenue += Number(revenuePredictions[getDateString(i)][loc]);
+            }
+            weekRevenue += Number(revenuePredictions[getDateString(i)][loc]);
             for(let item in items[loc]) {
                 if(typeof(items[loc][item]) !== 'object' || items[loc][item]['prepared-bool'] === false) {
                     continue;
@@ -1155,18 +1253,48 @@ async function loadPrepChecklist(daysOut = 1) {
                     weekPrepObj[item]['category'] = items[loc][item]['special-category'];
                 }
                 if(i === 0) {
-                    minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
-                    weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][item]);
+                    minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][inventoryRecord[getDateString(-1)][loc]['last write']][item]); //get latest write index as a key in the inventory record
+                    weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][inventoryRecord[getDateString(-1)][loc]['last write']][item]);
                 }
                 if(typeof(items[loc][item]) !== 'object' || items[loc][item]['prepared-bool'] === false) {
                     continue;
                 }
-                if(i <= daysOut) {
+                if(i <= daysOut && items[loc][item]['special-category'] !== 'sandwich') {
                     minPrepObj[item]['number'] += Math.ceil((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc])));
-                    minRevenue += Number(revenuePredictions[getDateString(i)][loc]);
                 }
                 weekPrepObj[item]['number'] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
-                weekRevenue += Number(revenuePredictions[getDateString(i)][loc]);
+                // //check if the ingredient is in the current list. If it is not, use the master list (kitchen) to generate it's need from this location.
+                // for(let ing in items[loc][item]['ingredients']) {
+                //     if(ing === 'none') {
+                //         continue;
+                //     }
+                //     if(items[loc][ing] === undefined) {
+                //         if(items[kitchen][ing] === undefined) {
+                //             console.log("Ingredient not recorded in master item list");
+                //             continue;
+                //         }
+                //         if(minPrepObj[ing] === undefined) {
+                //             minPrepObj[ing] = {};
+                //             weekPrepObj[ing] = {};
+                //             minPrepObj[ing]['number'] = 0;
+                //             weekPrepObj[ing]['number'] = 0;
+                //             minPrepObj[ing]['unit'] = 'error';
+                //             weekPrepObj[ing]['unit'] = 'error';
+                //             minPrepObj[ing]['prep-time'] = NaN;
+                //             weekPrepObj[ing]['prep-time'] = NaN;
+                //             minPrepObj[ing]['batch-size'] = 1;
+                //             weekPrepObj[ing]['batch-size'] = 1;
+                //             minPrepObj[ing]['category'] = '';
+                //             weekPrepObj[ing]['category'] = '';
+                //         }
+                //         if(items[kitchen][ing]['prepared-bool'] === false) {
+                //             continue;
+                //         }
+                //         console.log(Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']));
+                //         minPrepObj[ing] += Number(minPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
+                //         weekPrepObj[ing] += Number(weekPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
+                //     }
+                // }
             }
         }
     }
@@ -1217,6 +1345,46 @@ async function loadPrepChecklist(daysOut = 1) {
     }
     addEventListenersPrepChecklist('prep-checklist-wrapper', 'prep-checklist-item-row');
     loadingMessageOff();
+}
+
+/*  Function Description
+    Creation Date: 8/21/2021
+    Author: Ian Lubkin
+    Purpose: Load the interface for inventory submission.
+    Last Edit: 8/21/2021
+*/
+async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLocation'))) {
+    loadingMessageOn('Fetching data for form');
+    // await updateLocationsLocal();
+    // let locationList = JSON.parse(localStorage.getItem('locationList'));
+    await updateItemLocal();
+    let itemLists = JSON.parse(localStorage.getItem('itemLists'));
+    let wrapper = document.querySelector('#inventory-form-wrapper');
+    let button = document.querySelector('#submit-inventory-form-button');
+    let sandwichNode = document.querySelector('#inventory-form-sandwich-label');
+    let otherNode = document.querySelector('#inventory-form-other-label');
+    loadingMessageOff();
+    for(let item in itemLists[uLoc]) {
+        let row = document.createElement('div');
+        let number = document.createElement('input');
+        number.type = 'number';
+        number.step = 0.1;
+        number.min = 0;
+        number.max = 999;
+        row.appendChild(number);
+        let unit  = document.createElement('p');
+        unit.innerHTML = itemLists[uLoc][item]['main-unit'];
+        row.appendChild(unit);
+        let name  = document.createElement('p');
+        name.innerHTML = itemLists[uLoc][item]['name'];
+        row.appendChild(name);
+        if(itemLists[uLoc][item]['special-category'] === 'sandwich') {
+            wrapper.insertBefore(row, sandwichNode.nextSibling);
+        }
+        else {
+            wrapper.insertBefore(row, otherNode.nextSibling);
+        }
+    }
 }
 
 
@@ -1388,7 +1556,12 @@ document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
     hideAllElements();
     loadPrepChecklist();
     document.querySelector('#prep-checklist-wrapper').style.display = 'grid';
-})
+});
+document.querySelector('#inventory-form-nav').addEventListener('click', () => {
+    hideAllElements();
+    loadInventoryForm();
+    document.querySelector('#inventory-form-wrapper').style.display = 'grid';
+});
 
 /*** Item display ***/
 document.querySelector('#item-add-form-button').addEventListener('click', () => {

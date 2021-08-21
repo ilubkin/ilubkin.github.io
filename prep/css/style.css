@@ -235,6 +235,7 @@ div#item-boolean-input-wrapper label {
     padding: 0px;
     user-select: none;
 }
+
 #prep-checklist-wrapper h3 {
     margin: 0px;
     padding: 0px;
@@ -298,6 +299,29 @@ div#item-boolean-input-wrapper label {
     }
 }
 
+/* Logic for inventory form */
+#inventory-form-wrapper {
+    max-width: 350px;
+}
+
+#inventory-form-wrapper > div {
+    display: grid;
+    grid-template-columns: 0.3fr 1fr 1fr;
+    border-bottom: 1px solid lightgrey;
+}
+
+#inventory-form-wrapper input {
+    margin: 0px 10px 0px 0px;
+    padding: 0px;
+    max-width: 3em;
+    max-height: 1.5em;
+}
+
+#prep-checklist-wrapper p {
+    margin: 0px 5px 0px 0px;
+    padding: 0px;
+    user-select: none;
+}
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */
 .switch-field {

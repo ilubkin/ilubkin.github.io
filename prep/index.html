@@ -23,7 +23,8 @@
               <div class="dropdown-content">
                 <p id='revenue-predictions-nav' >Revenue Predictions</p>
                 <p id='prep-checklist-nav' >Prep Checklist</p>
-                <p id='link-3-nav' >Link 3</p>
+                <p id='inventory-form-nav' >End of Day Inventory</p>
+                <p id='link-x-nav' >Link x</p>
               </div>
             </div> 
             <div class="dropdown">
@@ -300,12 +301,18 @@
          Purpose: Framework for order lists.
          Last Edit: 8/20/2021
      -->
-     <div id='inventory-form-wrapper'>
+     <div id='inventory-form-wrapper' style='display: none;' class='spa-element'>
         <h2 id='inventory-form-title'>{location error} Inventory Checklist</h2>
         <div id='inventory-form-header'>
             <p>#</p>
             <p>Unit</p>
             <p>Name</p>
+        </div>
+        <div id='inventory-form-sandwich-label'>
+            <p>Sandwiches</p>
+        </div>
+        <div id='inventory-form-other-label' style='display:none;'>
+            <p></p>
         </div>
         <button id='submit-inventory-form-button'>Submit Inventory</button>
      </div>
