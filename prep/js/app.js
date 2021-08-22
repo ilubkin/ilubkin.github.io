@@ -344,7 +344,7 @@ async function updateSingleInventoryRecordLocal(offset = 0, iLoc = JSON.parse(lo
         }
     }
     const dbRef = firebase.database().ref();
-    await dbRef.child('inventory record').child(dateString).child(iLoc).child('last write').get().then((snapshot) => {
+    await dbRef.child('eod inventory record').child(dateString).child(iLoc).child('last write').get().then((snapshot) => {
         if (snapshot.exists()) {
             lastWrite = Number(snapshot.val());
         } else {
@@ -367,15 +367,15 @@ async function updateSingleInventoryRecordLocal(offset = 0, iLoc = JSON.parse(lo
                 }
             }
 
-            database.ref('/inventory record/' + dateString + '/' + iLoc).set(inventoryRecord[dateString][iLoc]);
+            database.ref('/eod inventory record/' + dateString + '/' + iLoc).set(inventoryRecord[dateString][iLoc]);
             localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
-            console.log("Error reading from inventory record: No data available. New data written.");
+            console.log("Error reading from eod inventory record: No data available. New data written.");
         }
     }).catch((error) => {
         console.error(error);
     });
     if(lastRead !== lastWrite || lastRead <= lastItemWrite) {
-        await dbRef.child('inventory record').child(dateString).get().then((snapshot) => {
+        await dbRef.child('eod inventory record').child(dateString).get().then((snapshot) => {
             if (snapshot.exists()) {
                 let inventoryRecord = {};
                 if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
@@ -385,7 +385,7 @@ async function updateSingleInventoryRecordLocal(offset = 0, iLoc = JSON.parse(lo
                 inventoryRecord['last-write'] = dateNumber;
                 localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
             } else {
-                console.log("Error reading from inventory record: No data available");
+                console.log("Error reading from eod inventory record: No data available");
             }
         }).catch((error) => {
             console.error(error);
@@ -397,7 +397,7 @@ async function updateSingleInventoryRecordLocal(offset = 0, iLoc = JSON.parse(lo
     Creation Date: 8/21/2021
     Author: Ian Lubkin
     Purpose: Update local storage object inventoryRecord to reflect firebase data.
-    This function updates all inventory records to reduce the time required to query firebase.
+    This function updates all eod inventory records to reduce the time required to query firebase.
     Last Edit:8/21/2021
 */
 async function updateAllInventoryRecordsLocal(offset = 0) {
@@ -422,7 +422,7 @@ async function updateAllInventoryRecordsLocal(offset = 0) {
         }
     }
     const dbRef = firebase.database().ref();
-    await dbRef.child('inventory record').child(dateString).child('last write').get().then((snapshot) => {
+    await dbRef.child('eod inventory record').child(dateString).child('last write').get().then((snapshot) => {
         if (snapshot.exists()) {
             lastWrite = Number(snapshot.val());
         } else {
@@ -448,15 +448,15 @@ async function updateAllInventoryRecordsLocal(offset = 0) {
             }
             
 
-            database.ref('/inventory record/' + dateString).set(inventoryRecord[dateString]);
+            database.ref('/eod inventory record/' + dateString).set(inventoryRecord[dateString]);
             localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
-            console.log("Error reading from inventory record: No data available. New data written.");
+            console.log("Error reading from eod inventory record: No data available. New data written.");
         }
     }).catch((error) => {
         console.error(error);
     });
     if(lastRead !== lastWrite || lastRead <= lastItemWrite) {
-        await dbRef.child('inventory record').child(dateString).get().then((snapshot) => {
+        await dbRef.child('eod inventory record').child(dateString).get().then((snapshot) => {
             if (snapshot.exists()) {
                 let inventoryRecord = {};
                 if(JSON.parse(localStorage.getItem('inventoryRecord')) !== null) {
@@ -466,7 +466,7 @@ async function updateAllInventoryRecordsLocal(offset = 0) {
                 inventoryRecord['last-write'] = dateNumber;
                 localStorage.setItem('inventoryRecord', JSON.stringify(inventoryRecord));
             } else {
-                console.log("Error reading from inventory record: No data available");
+                console.log("Error reading from eod inventory record: No data available");
             }
         }).catch((error) => {
             console.error(error);
@@ -587,6 +587,24 @@ async function submitPrepChecklist() {
     await database.ref('prep record/' + curDTstr + '/' + region + '/' + curDTInt).update(prepObj);
     loadingMessageOff();
     showSuccessMessage('Prep record submitted sucessfully');
+}
+
+async function submitInventoryForm(offset = 0, uLoc = JSON.parse(localStorage.getItem('userLocation'))) {
+    let curDTInt = Date.parse(new Date());
+    let invObj = {};
+    let uName = '';
+    let uUnit = '';
+    document.querySelectorAll('#inventory-form-wrapper > .inventory-item-row > input').forEach( (input) => {
+        uName = input.parentElement.dataset.name;
+        uUnit = input.parentElement.dataset.unit;
+        invObj[uName] = Number(input.value);
+    });
+    loadingMessageOn('Submitting inventory');
+    await database.ref('eod inventory record/' + getDateString(offset) + '/' + uLoc + '/' + curDTInt).set(invObj);
+    await database.ref('eod inventory record/' + getDateString(offset) + '/' + uLoc + '/user wrirten').set(true);
+    loadingMessageOff();
+    showSuccessMessage('Inventory submitted sucessfully');
+    console.log(invObj);
 }
 
 /*** Blocks to listen to data in firebase and update local data accordingly ***/
@@ -1126,6 +1144,7 @@ async function loadRevenueInterface(offset = 0) {
     //Add sum row
     let row = document.createElement('div');
     row.classList.add('revenue-interface-sum-row');
+    row.classList.add('revenue-interface-location-row');
     let label = document.createElement('p');
     label.innerHTML = "Sum: ";
     row.appendChild(label);
@@ -1253,7 +1272,7 @@ async function loadPrepChecklist(daysOut = 1) {
                     weekPrepObj[item]['category'] = items[loc][item]['special-category'];
                 }
                 if(i === 0) {
-                    minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][inventoryRecord[getDateString(-1)][loc]['last write']][item]); //get latest write index as a key in the inventory record
+                    minPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][inventoryRecord[getDateString(-1)][loc]['last write']][item]); //get latest write index as a key in the eod inventory record
                     weekPrepObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][loc][inventoryRecord[getDateString(-1)][loc]['last write']][item]);
                 }
                 if(typeof(items[loc][item]) !== 'object' || items[loc][item]['prepared-bool'] === false) {
@@ -1354,6 +1373,7 @@ async function loadPrepChecklist(daysOut = 1) {
     Last Edit: 8/21/2021
 */
 async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLocation'))) {
+    document.querySelector('#inventory-form-title').innerHTML = `${uLoc} Inventory`;
     loadingMessageOn('Fetching data for form');
     // await updateLocationsLocal();
     // let locationList = JSON.parse(localStorage.getItem('locationList'));
@@ -1366,18 +1386,21 @@ async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLoc
     loadingMessageOff();
     for(let item in itemLists[uLoc]) {
         let row = document.createElement('div');
+        row.dataset.name = itemLists[uLoc][item]['name'];
+        row.dataset.unit = itemLists[uLoc][item]['main-unit'];
+        row.classList.add('inventory-item-row');
+        let name  = document.createElement('p');
+        name.innerHTML = itemLists[uLoc][item]['name'] + ':';
+        row.appendChild(name);
+        let unit  = document.createElement('p');
+        unit.innerHTML = itemLists[uLoc][item]['main-unit'];
+        row.appendChild(unit);
         let number = document.createElement('input');
         number.type = 'number';
         number.step = 0.1;
         number.min = 0;
         number.max = 999;
         row.appendChild(number);
-        let unit  = document.createElement('p');
-        unit.innerHTML = itemLists[uLoc][item]['main-unit'];
-        row.appendChild(unit);
-        let name  = document.createElement('p');
-        name.innerHTML = itemLists[uLoc][item]['name'];
-        row.appendChild(name);
         if(itemLists[uLoc][item]['special-category'] === 'sandwich') {
             wrapper.insertBefore(row, sandwichNode.nextSibling);
         }
@@ -1541,6 +1564,17 @@ document.getElementById('user-sign-in').addEventListener('click',  () => {
 });
 
 /*** Navigation Bar ***/ 
+// document.querySelectorAll('.dropdown-content > p').forEach( (nav) => {
+//     nav.addEventListener('click', (e) => {
+//         console.log(e.target);
+//         if(e.target.parentElement.style.display === 'none') {
+//             e.target.parentElement.style.display = 'block';
+//         }
+//         else {
+//             e.target.parentElement.style.display = 'none';
+//         }
+//     });
+// });
 //next block is to be moved to item view/edit page when it is created, and replaced by nav to that page
 document.querySelector('#item-display-loader-button').addEventListener('click', () => {
     hideAllElements();
@@ -1615,6 +1649,10 @@ document.querySelector('#minimum-prep-date-input').addEventListener('change', (e
 });
 document.querySelector('#submit-prep-checklist-button').addEventListener('click', () => {
     submitPrepChecklist();
+});
+/* Inventory form */
+document.querySelector('#submit-inventory-form-button').addEventListener('click', () => {
+    submitInventoryForm();
 });
 
 /*  Function Description

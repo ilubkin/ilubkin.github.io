@@ -121,7 +121,7 @@
     <div id='item-edit-overlay-wrapper' style='display: none;' class='spa-element'>
         <div id='item-edit-overlay' class='form-overlay'></div>
         <div id='item-edit-wrapper' class='overlay-form'>
-            <h2 id='item-form-title'>Add Item - {location error}</h2>
+            <h2 id='item-form-title' class='capitalize-text'>Add Item - {location error}</h2>
             <div id='item-name-input-wrapper' class='single-field-wrapper'>
                 <label for='item-name-input'>Name: </label>
                 <input type='text' id='item-name-input'>
@@ -210,7 +210,7 @@
          Last Edit: 8/07/2021
      -->
     <div id='item-display-wrapper' style='display: none;' class='spa-element' >
-        <h2 id='item-display-title'>Items - {location error}</h2>
+        <h2 id='item-display-title' class='capitalize-text'>Items - {location error}</h2>
         <div id='item-display-header'> 
             <p class='item-display-name'>Name</p>
             <p class='item-display-unit'>Unit</p>
@@ -229,7 +229,7 @@
          Last Edit: 8/07/2021
      -->
      <div id='revenue-interface-wrapper' style='display: none;' class='spa-element'>
-        <h2 id='revenue-interface-title'>Revenue predictions</h2>
+        <h2 id='revenue-interface-title' class='capitalize-text'>Revenue predictions</h2>
         <div id='revenue-interface-header'>
             <h3 id='revenue-interface-header-label'></h3>
             <p id='revenue-interface-0-header' data-offset='-1' class='revenue-interface-0'></p>
@@ -252,7 +252,7 @@
          Last Edit: 8/14/2021
      -->
      <div id='prep-checklist-wrapper' style='display: none;' class='spa-element'>
-        <h2 id='prep-checklist-title'>Prep checklist</h2>
+        <h2 id='prep-checklist-title' class='capitalize-text'>Prep checklist</h2>
         <div id='prep-checklist-header'>
             <h3 id='preplist-checkmark-gap'></h3>
             <div id='minimum-prep-date-wrapper'>
@@ -277,7 +277,7 @@
         <div id='prep-checklist-other-label' style='display:none;'>
             <p></p>
         </div>
-        <div id='prep-checklist-sandwich-label'>
+        <div id='prep-checklist-sandwich-label' class='section-header'>
             <p>Sandwiches</p>
         </div>
         <button id='submit-prep-checklist-button'>Complete Prep</button>
@@ -302,17 +302,17 @@
          Last Edit: 8/20/2021
      -->
      <div id='inventory-form-wrapper' style='display: none;' class='spa-element'>
-        <h2 id='inventory-form-title'>{location error} Inventory Checklist</h2>
+        <h2 id='inventory-form-title' class='capitalize-text'>{location error} Inventory</h2>
         <div id='inventory-form-header'>
-            <p>#</p>
-            <p>Unit</p>
             <p>Name</p>
+            <p>Unit</p>
+            <p>Number</p>
         </div>
-        <div id='inventory-form-sandwich-label'>
+        <div id='inventory-form-sandwich-label' class='section-header'>
             <p>Sandwiches</p>
         </div>
         <div id='inventory-form-other-label' style='display:none;'>
-            <p></p>
+            <p>Other</p>
         </div>
         <button id='submit-inventory-form-button'>Submit Inventory</button>
      </div>

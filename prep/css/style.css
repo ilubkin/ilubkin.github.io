@@ -1,5 +1,9 @@
 /* I need to go through and create a better commenting system */
 
+/* idea 8/22: go through and replace all (or most) :hover selectors with 
+    JS event listeners, because :hover is sticky on touchscreen devices
+    and media hover queries do not appear to be working */
+
 /* Global variables and styles */
 :root {
     --primary-color: #ffa820;
@@ -28,7 +32,14 @@ button {
     transition: all .3s ease-in-out; /*to create hover animation*/
 }
 
-button:hover {
+@media not all and (hover: none) {}
+    button:hover {
+        background: var(--primary-color-dark);
+        color: black;
+    }
+}
+
+button:active {
     background: var(--primary-color-dark);
     color: black;
 }
@@ -43,7 +54,14 @@ button:hover {
     color: black;
 }
 
-.ghost-button:hover {
+@media (hover: hover) {
+    .ghost-button:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+
+.ghost-button:active {
     background: var(--primary-color-light);
 }
 
@@ -54,6 +72,15 @@ button:hover {
 .checked {
     background-color: lightgrey;
     color: grey;
+}
+
+.capitalize-text {
+    text-transform: capitalize;
+}
+
+.section-header {
+    text-transform: capitalize;
+    font-weight: bold;
 }
 
 /* logic for the item input and editing form */
@@ -81,10 +108,10 @@ div#item-boolean-input-wrapper label {
 #item-boolean-input-wrapper {
     padding: 25px 0px 0px 15px;
 }
-
+/* 
 #item-form-title {
     text-transform: capitalize;
-}
+} */
 
 #item-display-wrapper {
     display: grid;
@@ -299,14 +326,36 @@ div#item-boolean-input-wrapper label {
     }
 }
 
+@media (hover: hover) {
+    .prep-checklist-item-row:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+
+.prep-checklist-item-row:active {
+    background: var(--primary-color-light);
+}
+
+@media (hover: hover) {
+    .prep-checklist-item-row.checked:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+.prep-checklist-item-row.checked:active {
+    background: var(--primary-color-light);
+}
+
 /* Logic for inventory form */
 #inventory-form-wrapper {
-    max-width: 350px;
+    max-width: 360px;
 }
 
 #inventory-form-wrapper > div {
     display: grid;
-    grid-template-columns: 0.3fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 0.3fr;
+    padding: 5px 0px 5px 0px;
     border-bottom: 1px solid lightgrey;
 }
 
@@ -317,10 +366,14 @@ div#item-boolean-input-wrapper label {
     max-height: 1.5em;
 }
 
-#prep-checklist-wrapper p {
+#inventory-form-wrapper p {
     margin: 0px 5px 0px 0px;
     padding: 0px;
     user-select: none;
+}
+
+#inventory-form-header {
+    font-weight: bold;
 }
 
 /*radio button toggle switch from codepen https://codepen.io/JiveDig/pen/jbdJXR */
@@ -352,8 +405,15 @@ div#item-boolean-input-wrapper label {
 	transition: all 0.1s ease-in-out;
 }
 
-.switch-field label:hover {
-	cursor: pointer;
+@media (hover: hover) {
+    .switch-field label:hover {
+        cursor: pointer;
+    }
+}
+
+
+.switch-field label:active {
+    cursor: pointer;
 }
 
 .switch-field input:checked + label {
@@ -525,10 +585,13 @@ div#item-boolean-input-wrapper label {
     user-select: none;
 }
 
+
 .top-nav p:hover, .dropdown:hover .drop-btn {
     background-color: #555;
     color: white;
 }
+
+
 
 .dropdown-content p:hover {
     background-color: #ddd;
