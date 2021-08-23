@@ -349,6 +349,116 @@ div#item-boolean-input-wrapper label {
     background: var(--primary-color-light);
 }
 
+/* Logic for order checklist */
+#order-checklist-wrapper {
+    display: grid;
+}
+
+#order-checklist-wrapper > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 2fr;
+    padding: 5px 0px 5px 0px;
+    border-bottom: 1px solid lightgrey;
+}
+
+#order-checklist-collumn-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 2fr;
+    padding: 5px 0px 5px 0px;
+    border-bottom: 1px solid lightgrey;
+    font-weight: bold;
+}
+
+#order-checklist-wrapper p {
+    margin: 0px 5px 0px 0px;
+    padding: 0px;
+    user-select: none;
+}
+/* 
+#order-checklist-wrapper h3 {
+    margin: 0px;
+    padding: 0px;
+} */
+
+#prep-checklist-wrapper input {
+    margin: 0px 10px 0px 0px;
+    padding: 0px;
+    max-width: 5em;
+    max-height: 1.5em;
+}
+
+#start-order-date-input {
+    min-width: 10em;
+}
+
+#end-order-date-input {
+    min-width: 10em;
+}
+
+#orderlist-checkmark-gap {
+    grid-column: 1/2;
+}
+
+#prep-checklist-day-revenue {
+    grid-column: 2/6;
+}
+
+#prep-checklist-week-revenue {
+    grid-column: 6/8;
+}
+
+#prep-checklist-header {
+    display: grid;
+    font-weight: bold;
+}
+
+#minimum-prep-date-wrapper {
+    grid-column: 2/6;
+    display: flex;
+}
+
+#week-prep-wrapper {
+    display: flex;
+}
+
+#prep-week-header {
+    grid-column: 6/8;
+}
+
+.left-justify {
+    justify-self: left;
+}
+
+@media only screen and (max-width: 750px) {
+    #prep-checklist-wrapper > div {
+        grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+    }
+    .prep-checklist-week-info {
+        display: none;
+    }
+}
+
+@media (hover: hover) {
+    .prep-checklist-item-row:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+
+.prep-checklist-item-row:active {
+    background: var(--primary-color-light);
+}
+
+@media (hover: hover) {
+    .prep-checklist-item-row.checked:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+.prep-checklist-item-row.checked:active {
+    background: var(--primary-color-light);
+}
+
 /* Logic for inventory form */
 #inventory-form-wrapper {
     max-width: 360px;
