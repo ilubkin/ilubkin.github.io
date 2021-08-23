@@ -435,6 +435,9 @@ async function updateAllInventoryRecordsLocal(offset = 0) {
                 "last write": dateNumber,
             };
             for(let loc in locations) {
+                if(typeof(locations[loc]) !== 'object') {
+                    continue;
+                }
                 inventoryRecord[dateString][loc] = {
                     "last write": dateNumber,
                     'user written': false,
@@ -601,6 +604,8 @@ async function submitInventoryForm(offset = 0, uLoc = JSON.parse(localStorage.ge
     });
     loadingMessageOn('Submitting inventory');
     await database.ref('eod inventory record/' + getDateString(offset) + '/' + uLoc + '/' + curDTInt).set(invObj);
+    await database.ref('eod inventory record/' + getDateString(offset) + '/' + uLoc + '/last write').set(curDTInt);
+    await database.ref('eod inventory record/' + getDateString(offset) + '/last write').set(curDTInt);
     await database.ref('eod inventory record/' + getDateString(offset) + '/' + uLoc + '/user wrirten').set(true);
     loadingMessageOff();
     showSuccessMessage('Inventory submitted sucessfully');
@@ -1282,38 +1287,38 @@ async function loadPrepChecklist(daysOut = 1) {
                     minPrepObj[item]['number'] += Math.ceil((Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc])));
                 }
                 weekPrepObj[item]['number'] += (Number(items[loc][item]['use-to-sales-ratio']) * Number(revenuePredictions[getDateString(i)][loc]));
-                // //check if the ingredient is in the current list. If it is not, use the master list (kitchen) to generate it's need from this location.
-                // for(let ing in items[loc][item]['ingredients']) {
-                //     if(ing === 'none') {
-                //         continue;
-                //     }
-                //     if(items[loc][ing] === undefined) {
-                //         if(items[kitchen][ing] === undefined) {
-                //             console.log("Ingredient not recorded in master item list");
-                //             continue;
-                //         }
-                //         if(minPrepObj[ing] === undefined) {
-                //             minPrepObj[ing] = {};
-                //             weekPrepObj[ing] = {};
-                //             minPrepObj[ing]['number'] = 0;
-                //             weekPrepObj[ing]['number'] = 0;
-                //             minPrepObj[ing]['unit'] = 'error';
-                //             weekPrepObj[ing]['unit'] = 'error';
-                //             minPrepObj[ing]['prep-time'] = NaN;
-                //             weekPrepObj[ing]['prep-time'] = NaN;
-                //             minPrepObj[ing]['batch-size'] = 1;
-                //             weekPrepObj[ing]['batch-size'] = 1;
-                //             minPrepObj[ing]['category'] = '';
-                //             weekPrepObj[ing]['category'] = '';
-                //         }
-                //         if(items[kitchen][ing]['prepared-bool'] === false) {
-                //             continue;
-                //         }
-                //         console.log(Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']));
-                //         minPrepObj[ing] += Number(minPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
-                //         weekPrepObj[ing] += Number(weekPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
-                //     }
-                // }
+                //check if the ingredient is in the current list. If it is not, use the master list (kitchen) to generate it's need from this location.
+                for(let ing in items[loc][item]['ingredients']) {
+                    if(ing === 'none') {
+                        continue;
+                    }
+                    if(items[loc][ing] === undefined) {
+                        if(items[kitchen][ing] === undefined) {
+                            console.log("Ingredient not recorded in master item list");
+                            continue;
+                        }
+                        if(minPrepObj[ing] === undefined) {
+                            minPrepObj[ing] = {};
+                            weekPrepObj[ing] = {};
+                            minPrepObj[ing]['number'] = 0;
+                            weekPrepObj[ing]['number'] = 0;
+                            minPrepObj[ing]['unit'] = 'error';
+                            weekPrepObj[ing]['unit'] = 'error';
+                            minPrepObj[ing]['prep-time'] = NaN;
+                            weekPrepObj[ing]['prep-time'] = NaN;
+                            minPrepObj[ing]['batch-size'] = 1;
+                            weekPrepObj[ing]['batch-size'] = 1;
+                            minPrepObj[ing]['category'] = '';
+                            weekPrepObj[ing]['category'] = '';
+                        }
+                        if(items[kitchen][ing]['prepared-bool'] === false) {
+                            continue;
+                        }
+                        console.log(Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']));
+                        minPrepObj[ing] += Number(minPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
+                        weekPrepObj[ing] += Number(weekPrepObj[item]['number']) * Number(items[kitchen][item]['ingredients'][ing]['ratio-to-product']);
+                    }
+                }
             }
         }
     }
@@ -1366,6 +1371,10 @@ async function loadPrepChecklist(daysOut = 1) {
     loadingMessageOff();
 }
 
+async function loadOrderForm() {
+    
+}
+
 /*  Function Description
     Creation Date: 8/21/2021
     Author: Ian Lubkin
@@ -1375,6 +1384,9 @@ async function loadPrepChecklist(daysOut = 1) {
 async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLocation'))) {
     document.querySelector('#inventory-form-title').innerHTML = `${uLoc} Inventory`;
     loadingMessageOn('Fetching data for form');
+    await updateSingleInventoryRecordLocal(0, uLoc);
+    let lastInv = JSON.parse(localStorage.getItem('inventoryRecord'))[getDateString(0)][uLoc][JSON.parse(localStorage.getItem('inventoryRecord'))[getDateString(0)][uLoc]['last write']];
+    console.log(lastInv);
     // await updateLocationsLocal();
     // let locationList = JSON.parse(localStorage.getItem('locationList'));
     await updateItemLocal();
@@ -1385,21 +1397,25 @@ async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLoc
     let otherNode = document.querySelector('#inventory-form-other-label');
     loadingMessageOff();
     for(let item in itemLists[uLoc]) {
+        if(typeof(itemLists[uLoc][item]) !== 'object') {
+            continue;
+        } 
         let row = document.createElement('div');
         row.dataset.name = itemLists[uLoc][item]['name'];
         row.dataset.unit = itemLists[uLoc][item]['main-unit'];
         row.classList.add('inventory-item-row');
         let name  = document.createElement('p');
-        name.innerHTML = itemLists[uLoc][item]['name'] + ':';
+        name.innerHTML = itemLists[uLoc][item]['name'];
         row.appendChild(name);
         let unit  = document.createElement('p');
-        unit.innerHTML = itemLists[uLoc][item]['main-unit'];
+        unit.innerHTML = itemLists[uLoc][item]['main-unit'] + ':';
         row.appendChild(unit);
         let number = document.createElement('input');
         number.type = 'number';
         number.step = 0.1;
         number.min = 0;
         number.max = 999;
+        number.value = lastInv[itemLists[uLoc][item]['name']];
         row.appendChild(number);
         if(itemLists[uLoc][item]['special-category'] === 'sandwich') {
             wrapper.insertBefore(row, sandwichNode.nextSibling);
@@ -1409,6 +1425,7 @@ async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLoc
         }
     }
 }
+
 
 
 /*** Loading display handlers ***/

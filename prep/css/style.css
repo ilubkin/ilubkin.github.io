@@ -32,12 +32,12 @@ button {
     transition: all .3s ease-in-out; /*to create hover animation*/
 }
 
-@media not all and (hover: none) {}
+/* @media not all and (hover: none) { */
     button:hover {
         background: var(--primary-color-dark);
         color: black;
     }
-}
+/* } */
 
 button:active {
     background: var(--primary-color-dark);
@@ -115,6 +115,8 @@ div#item-boolean-input-wrapper label {
 
 #item-display-wrapper {
     display: grid;
+    margin: 0px auto;
+    max-width: 1000px;
 }
 
 #item-display-wrapper > div{
@@ -350,11 +352,12 @@ div#item-boolean-input-wrapper label {
 /* Logic for inventory form */
 #inventory-form-wrapper {
     max-width: 360px;
+    margin: 0px auto;
 }
 
 #inventory-form-wrapper > div {
     display: grid;
-    grid-template-columns: 1fr 1fr 0.3fr;
+    grid-template-columns: 1fr 0.7fr 0.3fr;
     padding: 5px 0px 5px 0px;
     border-bottom: 1px solid lightgrey;
 }
