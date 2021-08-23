@@ -1201,6 +1201,9 @@ function getRevenueDaySum(rowNum) {
 async function loadPrepChecklist(daysOut = 1) {
     //8/20 idea: it would be nice to add the ability to load a completed prep checklist, although this is a backburner feature
     loadingMessageOn('Fetching data for calculations');
+    /* Remove all old rows to avoid creating duplicates. This is done instead of skipping duplicate
+        creation or updating duplicates because replacing all the rows has a similar speed to updating them
+        and is the simplest implimentation*/
     document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
         row.remove();
     })
@@ -1211,11 +1214,8 @@ async function loadPrepChecklist(daysOut = 1) {
     let uLoc = JSON.parse(localStorage.getItem('userLocation'));
     let region = locations[uLoc]['region'];
     let kitchen = '';
-    /* Get inventory from each location (including kitchen) */
+    /* Get the region's kitchen name (as a master list) */
     for(let loc in locations) {
-        // if(typeof(locations[loc]) === 'object') {
-        //     await updateSingleInventoryRecordLocal(-1, loc);
-        // }
         if(locations[loc]['region'] === region && locations[loc]['type'] === 'kitchen') {
             kitchen = loc;
         }
@@ -1371,15 +1371,154 @@ async function loadPrepChecklist(daysOut = 1) {
     loadingMessageOff();
 }
 
-async function loadOrderForm() {
+/*  Function Description
+    Creation Date: 8/23/2021
+    Author: Ian Lubkin
+    Purpose: Load a food/goods order checklist.
+    Last Edit: 8/23/2021
+*/
+async function loadOrderForm(startDay = null, endDay = null) {
+    loadingMessageOn('Fetching data for calculations');
+    /* Remove all old rows to avoid creating duplicates. This is done instead of skipping duplicate
+        creation or updating duplicates because replacing all the rows has a similar speed to updating them
+        and is the simplest implimentation*/
+    document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
+        row.remove();
+    })
+    await updateLocationsLocal();
+    let locations = JSON.parse(localStorage.getItem('locationList'));
+    await updateItemLocal();
+    let itemLists = JSON.parse(localStorage.getItem('itemLists'));
+    let uLoc = JSON.parse(localStorage.getItem('userLocation'));
+    let region = locations[uLoc]['region'];
+    let kitchen = '';
+    /* Get the region's kitchen name (as a master list) */
+    for(let loc in locations) {
+        if(typeof(locations[loc]) !== 'object') {
+            continue;
+        }
+        if(locations[loc]['region'] === region && locations[loc]['type'] === 'kitchen') {
+            kitchen = loc;
+        }
+    }
+    await updateAllInventoryRecordsLocal(-1);
+    let inventoryRecord = JSON.parse(localStorage.getItem('inventoryRecord'));
+    /* Get revenue for each location for the next 7 days */
+    for(let i = 0; i < 8; i++) { 
+        await updateRevenuePredictionsLocal(i);
+    }
+    let revenuePredictions = JSON.parse(localStorage.getItem('revenuePredictions'));
+    loadingMessageOff();
+
+    loadingMessageOn('Generating order checklist');
+    // set the date field according to next order day
+    if(startDay === null && endDay === null) {
+        let today = new Date();
+        switch (today.getDay()) {
+            case 0: //Sunday
+                startDay = 1; //Order used for Monday through
+                endDay = 3; //Wednesday
+                break;
+            case 1: //Monday
+                startDay = 2; //Order used for Wednesday through
+                endDay = 4; //Friday
+                break;
+            case 2: //Tuesday
+                startDay = 1; //Order used for Wednesday through
+                endDay = 3; //Friday
+                break;
+            case 3: //Wednesday
+                startDay = 2; //Order used for Friday through
+                endDay = 5; //Monday
+                break;
+            case 4: //Thursday
+                startDay = 1; //Order used for Friday through
+                endDay = 4; //Monday
+                break;
+            case 5: //Friday
+                startDay = 3; //Order used for Monday through
+                endDay = 5; //Wednesday
+                break;
+            case 6: //Saturday
+                startDay = 2; //Order used for Monday through
+                endDay = 4; //Wednesday
+                break;
+        }
+    }
+    document.querySelector('#start-order-date-input').value = getDateString(startDay, 2);
+    document.querySelector('#end-order-date-input').value = getDateString(endDay, 2);
     
+    //Calculate the needed amount of each item for each location in the user's region, both for tomorrow and a week out
+    //Use the above calculation to generate a checklist 
+    //*Currently does not remove inventories stored at sattelites, i.e., chip boxes at settlers, which will give some overage
+    let orderObj = {};
+    let orderRevenue = 0;
+    for(let i = startDay; i < endDay; i++) {
+        for(let loc in itemLists) {
+            if(typeof(locations[loc]) !== 'object' || locations[loc]['region'] !== region) {
+                continue;
+            }
+            orderRevenue += Number(revenuePredictions[getDateString(i)][loc]);
+        }
+        for(let item in itemLists[kitchen]) {
+            if(typeof(itemLists[kitchen][item]) !== 'object' || itemLists[kitchen][item]['prepared-bool'] === true) {
+                continue;
+            }
+            if(orderObj[item] === undefined) {
+                orderObj[item] = {};
+                orderObj[item]['number'] = 0;
+                orderObj[item]['unit'] = itemLists[kitchen][item]['main-unit'];
+                orderObj[item]['category'] = itemLists[kitchen][item]['special-category'];
+            }
+            if(i === 0) { //this is the only inventory adjustment, resulting in some overage (as e.g., settlers will not be accounted for)
+                orderObj[item]['number'] -= Number(inventoryRecord[getDateString(-1)][kitchen][inventoryRecord[getDateString(-1)][kitchen]['last write']][item]); //get latest write index as a key in the eod inventory record
+            }
+            orderObj[item]['number'] += Math.ceil((Number(itemLists[kitchen][item]['use-to-sales-ratio']) * Number(orderRevenue)));
+            
+        }
+        
+    }
+    
+    document.querySelector('#order-checklist-period-revenue').innerHTML = `($${orderRevenue})`;
+
+    //edit DOM to reflect prep list
+    for(let item in orderObj) {
+        let wrapper = document.querySelector('#order-checklist-wrapper');
+        let USFoodsDiv = document.querySelector('#order-checklist-US-Foods-label');
+        let otherDiv = document.querySelector('#order-checklist-other-label');
+        let row = document.createElement('div');
+        row.classList.add('order-checklist-item-row');
+        row.dataset.item = item;
+        let check = document.createElement('input');
+        check.type = 'checkbox';
+        row.appendChild(check);
+        let number = document.createElement('input');
+        number.type = 'number';
+        number.value = orderObj[item]['number'];
+        number.classList.add('order-checklist-item-number-input');
+        row.appendChild(number);
+        let unit = document.createElement('p');
+        unit.innerHTML = orderObj[item]['unit'];
+        row.appendChild(unit);
+        let name = document.createElement('p');
+        name.innerHTML = item;
+        row.appendChild(name);
+        if(orderObj[item]['category'] === 'US Foods') {
+            wrapper.insertBefore(row, USFoodsDiv.nextSibling);
+        }
+        else {
+            wrapper.insertBefore(row, otherDiv.nextSibling);
+        }
+    }
+    addEventListenersOrderChecklist('order-checklist-wrapper', 'order-checklist-item-row');
+    loadingMessageOff();
 }
 
 /*  Function Description
     Creation Date: 8/21/2021
     Author: Ian Lubkin
     Purpose: Load the interface for inventory submission.
-    Last Edit: 8/21/2021
+    Last Edit: 8/23/2021
 */
 async function loadInventoryForm(uLoc = JSON.parse(localStorage.getItem('userLocation'))) {
     document.querySelector('#inventory-form-title').innerHTML = `${uLoc} Inventory`;
@@ -1667,6 +1806,37 @@ document.querySelector('#minimum-prep-date-input').addEventListener('change', (e
 document.querySelector('#submit-prep-checklist-button').addEventListener('click', () => {
     submitPrepChecklist();
 });
+/*Order form*/
+function addEventListenersOrderChecklist(wrapperId, rowClass) {
+    document.querySelectorAll('#' + wrapperId + ' div.' + rowClass).forEach( (elt) => {
+        elt.addEventListener('click', (e) => {
+            let row;
+            if(e.target.classList.contains(rowClass)) {
+                row = e.target;
+            }
+            else {
+                row = e.target.parentElement;
+            }
+            if(e.target.type === 'checkbox' && !row.classList.contains('checked')) {
+                row.classList.add('checked');
+                row.children[0].checked = true;
+            }
+            else if(e.target.type === 'checkbox') {
+                row.classList.remove('checked');
+                row.children[0].checked = false;
+            }
+            else if(e.target.type !== 'checkbox' && e.target.type !== 'number' && !row.classList.contains('checked')) {
+                row.classList.add('checked');
+                row.children[0].checked = true;
+            }
+            else if(e.target.type !== 'number') {
+                row.classList.remove('checked');
+                row.children[0].checked = false;
+            }
+        });
+    });
+}
+
 /* Inventory form */
 document.querySelector('#submit-inventory-form-button').addEventListener('click', () => {
     submitInventoryForm();

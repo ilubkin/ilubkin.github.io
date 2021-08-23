@@ -255,7 +255,7 @@
      <div id='prep-checklist-wrapper' style='display: none;' class='spa-element'>
         <h2 id='prep-checklist-title' class='capitalize-text'>Prep checklist</h2>
         <div id='prep-checklist-header'>
-            <h3 id='preplist-checkmark-gap'></h3>
+            <p id='preplist-checkmark-gap'></p>
             <div id='minimum-prep-date-wrapper'>
                 <p class='left-jusify column-header'>Needed by</p>
                 <input type='date' id='minimum-prep-date-input'>
@@ -268,11 +268,11 @@
         </div>
         <div id='prep-checklist-collumn-labels'>
             <p></p>
-            <p>#</p>
+            <p>Number</p>
             <p></p>
             <p>Item</p>
             <p>Prep time</p>
-            <p class='prep-checklist-week-info'>#</p>
+            <p class='prep-checklist-week-info'>Number</p>
             <p class='prep-checklist-week-info'>Prep time</p>
         </div>
         <div id='prep-checklist-other-label' style='display:none;'>
@@ -291,9 +291,32 @@
          Purpose: Framework for order lists.
          Last Edit: 8/12/2021
      -->
-     <div id='order-checklist-wrapper'>
-
-     </div>
+    <div id='order-checklist-wrapper' style='display: none;' class='spa-element'>
+        <h2 id='order-checklist-title' class='capitalize-text'>Order Checklist</h2>
+        <div id='order-checklist-header'>
+            <p id='orderlist-checkmark-gap'></p>
+            <div id='minimum-order-date-wrapper'>
+                <p class='left-jusify column-header'>Order arriving</p>
+                <input type='date' id='start-order-date-input'>
+                <p class='left-jusify column-header'>Next order arriving</p>
+                <input type='date' id='end-order-date-input'>
+                <p id='order-checklist-period-revenue' class='ghost-text'>($?)</p>
+            </div>
+        </div>
+        <div id='order-checklist-collumn-labels'>
+            <p></p>
+            <p>Number</p>
+            <p></p>
+            <p>Item</p>
+        </div>
+        <div id='order-checklist-US-Foods-label'>
+            <p>US Foods</p>
+        </div>
+        <div id='order-checklist-other-label' style='display:none;'>
+            <p>Other</p>
+        </div>
+        <button id='submit-order-checklist-button'>Complete Prep</button>
+    </div>
 
 
     <!-- Markup Description
