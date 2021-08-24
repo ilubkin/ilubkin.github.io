@@ -1747,6 +1747,11 @@ document.querySelector('#prep-checklist-nav').addEventListener('click', () => {
     loadPrepChecklist();
     document.querySelector('#prep-checklist-wrapper').style.display = 'grid';
 });
+document.querySelector('#order-checklist-nav').addEventListener('click', () => {
+    hideAllElements();
+    loadOrderForm();
+    document.querySelector('#order-checklist-wrapper').style.display = 'grid';
+});
 document.querySelector('#inventory-form-nav').addEventListener('click', () => {
     hideAllElements();
     loadInventoryForm();
