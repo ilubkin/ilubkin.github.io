@@ -35,9 +35,20 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// function sortArr(obj, childStr) {
-//     return Object.keys(obj).sort((a,b) => (obj[a][childStr] >= obj[b][childStr] ? 0 : 1));
-// }
+const getDeviceType = () => {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return "tablet";
+    }
+    if (
+      /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(
+        ua
+      )
+    ) {
+      return "mobile";
+    }
+    return "desktop";
+  };
 
 /****** String editing functions ******/
 /*  Function Description
@@ -1331,6 +1342,8 @@ async function loadPrepChecklist(daysOut = 1) {
         let wrapper = document.querySelector('#prep-checklist-wrapper');
         let button = document.querySelector('#submit-prep-checklist-button');
         let sandwichDiv = document.querySelector('#prep-checklist-sandwich-label');
+        let drinkDiv = document.querySelector('#prep-checklist-drink-label');
+        let dryDiv = document.querySelector('#prep-checklist-dry-good-label');
         let otherDiv = document.querySelector('#prep-checklist-other-label');
         let row = document.createElement('div');
         row.classList.add('prep-checklist-item-row');
@@ -1363,6 +1376,12 @@ async function loadPrepChecklist(daysOut = 1) {
         if(minPrepObj[item]['category'] === 'sandwich') {
             wrapper.insertBefore(row, sandwichDiv.nextSibling);
         }
+        if(minPrepObj[item]['category'] === 'drink') {
+            wrapper.insertBefore(row, drinkDiv.nextSibling);
+        }
+        if(minPrepObj[item]['category'] === 'dry good') {
+            wrapper.insertBefore(row, dryDiv.nextSibling);
+        }
         else {
             wrapper.insertBefore(row, otherDiv.nextSibling);
         }
@@ -1382,7 +1401,7 @@ async function loadOrderForm(startDay = null, endDay = null) {
     /* Remove all old rows to avoid creating duplicates. This is done instead of skipping duplicate
         creation or updating duplicates because replacing all the rows has a similar speed to updating them
         and is the simplest implimentation*/
-    document.querySelectorAll('.prep-checklist-item-row').forEach( (row) => {
+    document.querySelectorAll('.order-checklist-item-row').forEach( (row) => {
         row.remove();
     })
     await updateLocationsLocal();
@@ -1720,6 +1739,7 @@ document.getElementById('user-sign-in').addEventListener('click',  () => {
 });
 
 /*** Navigation Bar ***/ 
+//the block below was an attempt to fix the mobile experience of nav bar use.
 // document.querySelectorAll('.dropdown-content > p').forEach( (nav) => {
 //     nav.addEventListener('click', (e) => {
 //         console.log(e.target);
@@ -1806,7 +1826,7 @@ document.querySelector('#minimum-prep-date-input').addEventListener('change', (e
     prepNum.setHours(0,0,0,0);
     let offset = Math.floor((prepNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
     
-    loadPrepChecklist(offset);
+    loadPrepChecklist(offset+1);
 });
 document.querySelector('#submit-prep-checklist-button').addEventListener('click', () => {
     submitPrepChecklist();
@@ -1841,6 +1861,33 @@ function addEventListenersOrderChecklist(wrapperId, rowClass) {
         });
     });
 }
+document.querySelector('#start-order-date-input').addEventListener('change', (e) => {
+    let todayNum = new Date();
+    todayNum.setHours(0,0,0,0);
+    let startNum = new Date(e.target.value);
+    let endNum = new Date(document.querySelector('#end-order-date-input').value);
+    startNum.setHours(0,0,0,0);
+    endNum.setHours(0,0,0,0);
+    let sOffset = Math.floor((startNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
+    let eOffset = Math.floor((endNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
+    
+    loadOrderForm(sOffset+1, eOffset+1);
+});
+document.querySelector('#end-order-date-input').addEventListener('change', (e) => {
+    let todayNum = new Date();
+    todayNum.setHours(0,0,0,0);
+    let endNum = new Date(e.target.value);
+    let startNum = new Date(document.querySelector('#start-order-date-input').value);
+    startNum.setHours(0,0,0,0);
+    endNum.setHours(0,0,0,0);
+    let sOffset = Math.floor((startNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
+    let eOffset = Math.floor((endNum.getTime() - todayNum.getTime())/ (1000 * 3600 * 24)*1)/1;
+    
+    loadOrderForm(sOffset+1, eOffset+1);
+});
+document.querySelector('#submit-order-checklist-button').addEventListener('click', () => {
+    submitOrderChecklist();
+});
 
 /* Inventory form */
 document.querySelector('#submit-inventory-form-button').addEventListener('click', () => {

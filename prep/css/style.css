@@ -54,7 +54,7 @@ button:active {
     color: black;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .ghost-button:hover {
         background: var(--primary-color-light);
     }
@@ -328,7 +328,7 @@ div#item-boolean-input-wrapper label {
     }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .prep-checklist-item-row:hover {
         background: var(--primary-color-light);
     }
@@ -339,7 +339,7 @@ div#item-boolean-input-wrapper label {
     background: var(--primary-color-light);
 }
 
-@media (hover: hover) {
+@media (any-pointer: fine) {
     .prep-checklist-item-row.checked:hover {
         background: var(--primary-color-light);
     }
@@ -380,7 +380,7 @@ div#item-boolean-input-wrapper label {
     padding: 0px;
 } */
 
-#prep-checklist-wrapper input {
+#order-checklist-wrapper input {
     margin: 0px 10px 0px 0px;
     padding: 0px;
     max-width: 5em;
@@ -416,11 +416,22 @@ div#item-boolean-input-wrapper label {
     grid-column: 2/6;
     display: flex;
 }
-.prep-checklist-item-row:hover {
+/* .prep-checklist-item-row:hover {
     background: var(--primary-color-light);
 }
 
 .prep-checklist-item-row:active {
+    background: var(--primary-color-light);
+} */
+
+@media (any-pointer: fine) {
+    .order-checklist-item-row:hover {
+        background: var(--primary-color-light);
+    }
+}
+
+
+.order-checklist-item-row:active {
     background: var(--primary-color-light);
 }
 
@@ -483,7 +494,7 @@ div#item-boolean-input-wrapper label {
 	transition: all 0.1s ease-in-out;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .switch-field label:hover {
         cursor: pointer;
     }
