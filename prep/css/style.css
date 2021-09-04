@@ -399,7 +399,7 @@ div#item-boolean-input-wrapper label {
     grid-column: 1/2;
 }
 
-#prep-checklist-day-revenue {
+/* #prep-checklist-day-revenue {
     grid-column: 2/6;
 }
 
@@ -457,7 +457,7 @@ div#item-boolean-input-wrapper label {
 
 .prep-checklist-item-row.checked:active {
     background: var(--primary-color-light);
-}
+} */
 
 /* Logic for inventory form */
 #inventory-form-wrapper {
