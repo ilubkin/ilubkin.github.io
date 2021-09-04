@@ -54,7 +54,7 @@ button:active {
     color: black;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .ghost-button:hover {
         background: var(--primary-color-light);
     }
@@ -328,7 +328,7 @@ div#item-boolean-input-wrapper label {
     }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .prep-checklist-item-row:hover {
         background: var(--primary-color-light);
     }
@@ -339,7 +339,7 @@ div#item-boolean-input-wrapper label {
     background: var(--primary-color-light);
 }
 
-@media (hover: hover) {
+@media (any-pointer: fine) {
     .prep-checklist-item-row.checked:hover {
         background: var(--primary-color-light);
     }
@@ -380,7 +380,7 @@ div#item-boolean-input-wrapper label {
     padding: 0px;
 } */
 
-#prep-checklist-wrapper input {
+#order-checklist-wrapper input {
     margin: 0px 10px 0px 0px;
     padding: 0px;
     max-width: 5em;
@@ -399,63 +399,39 @@ div#item-boolean-input-wrapper label {
     grid-column: 1/2;
 }
 
-/* #prep-checklist-day-revenue {
+#order-checklist-day-revenue {
     grid-column: 2/6;
 }
 
-#prep-checklist-week-revenue {
+#order-checklist-week-revenue {
     grid-column: 6/8;
 }
 
-#prep-checklist-header {
+#order-checklist-header {
     display: grid;
     font-weight: bold;
 }
 
-#minimum-prep-date-wrapper {
+#order-date-wrapper {
     grid-column: 2/6;
     display: flex;
 }
-
-#week-prep-wrapper {
-    display: flex;
-}
-
-#prep-week-header {
-    grid-column: 6/8;
-}
-
-.left-justify {
-    justify-self: left;
-}
-
-@media only screen and (max-width: 750px) {
-    #prep-checklist-wrapper > div {
-        grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
-    }
-    .prep-checklist-week-info {
-        display: none;
-    }
-}
-
-@media (hover: hover) {
-    .prep-checklist-item-row:hover {
-        background: var(--primary-color-light);
-    }
-}
-
-
-.prep-checklist-item-row:active {
+/* .prep-checklist-item-row:hover {
     background: var(--primary-color-light);
 }
 
-@media (hover: hover) {
-    .prep-checklist-item-row.checked:hover {
+.prep-checklist-item-row:active {
+    background: var(--primary-color-light);
+} */
+
+@media (any-pointer: fine) {
+    .order-checklist-item-row:hover {
         background: var(--primary-color-light);
     }
 }
 
-.prep-checklist-item-row.checked:active {
+
+.order-checklist-item-row:active {
     background: var(--primary-color-light);
 } */
 
@@ -518,7 +494,7 @@ div#item-boolean-input-wrapper label {
 	transition: all 0.1s ease-in-out;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
     .switch-field label:hover {
         cursor: pointer;
     }

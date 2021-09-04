@@ -25,7 +25,7 @@
                 <p id='prep-checklist-nav' >Prep Checklist</p>
                 <p id='order-checklist-nav' >Order Checklist</p>
                 <p id='inventory-form-nav' >End of Day Inventory</p>
-                <p id='link-x-nav' >Link x</p>
+                <!-- <p id='link-x-nav' >Link x</p> -->
               </div>
             </div> 
             <div class="dropdown">
@@ -295,7 +295,7 @@
         <h2 id='order-checklist-title' class='capitalize-text'>Order Checklist</h2>
         <div id='order-checklist-header'>
             <p id='orderlist-checkmark-gap'></p>
-            <div id='minimum-order-date-wrapper'>
+            <div id='order-date-wrapper'>
                 <p class='left-jusify column-header'>Order arriving</p>
                 <input type='date' id='start-order-date-input'>
                 <p class='left-jusify column-header'>Next order arriving</p>
@@ -309,21 +309,50 @@
             <p></p>
             <p>Item</p>
         </div>
-        <div id='order-checklist-US-Foods-label'>
-            <p>US Foods</p>
-        </div>
         <div id='order-checklist-other-label' style='display:none;'>
             <p>Other</p>
         </div>
-        <button id='submit-order-checklist-button'>Complete Prep</button>
+        <div id='order-checklist-US-Foods-label'>
+            <p>US Foods</p>
+        </div>
+        <button id='submit-order-checklist-button'>Complete Order</button>
     </div>
+
+    <!-- Markup Description
+         Creation Date: 8/24/2021
+         Author: Ian Lubkin
+         Purpose: Framework for transport lists.
+         Last Edit: 8/24/2021
+     -->
+     <div id='transport-form-wrapper' style='display: none;' class='spa-element'>
+        <h2 id='tranport-form-title' class='capitalize-text'>{location error} Checklist</h2>
+        <div id='transport-form-header'>
+            <p></p>
+            <p>Name</p>
+            <p>Unit</p>
+            <p>Number</p>
+        </div>
+        <div id='trasport-form-sandwich-label' class='section-header'>
+            <p>Sandwiches</p>
+        </div>
+        <div id='transport-form-drink-label' class='section-header'>
+            <p>Drinks</p>
+        </div>
+        <div id='transport-form-dry-good-label' class='section-header'>
+            <p>Dry Goods</p>
+        </div>
+        <div id='transport-form-other-label' class='section-header'>
+            <p>Other</p>
+        </div>
+        <button id='submit-transport-form-button'>Submit Inventory</button>
+     </div>
 
 
     <!-- Markup Description
          Creation Date: 8/20/2021
          Author: Ian Lubkin
-         Purpose: Framework for order lists.
-         Last Edit: 8/20/2021
+         Purpose: Framework for inventory.
+         Last Edit: 8/24/2021
      -->
      <div id='inventory-form-wrapper' style='display: none;' class='spa-element'>
         <h2 id='inventory-form-title' class='capitalize-text'>{location error} Inventory</h2>
@@ -335,7 +364,13 @@
         <div id='inventory-form-sandwich-label' class='section-header'>
             <p>Sandwiches</p>
         </div>
-        <div id='inventory-form-other-label' style='display:none;'>
+        <div id='inventory-form-drink-label' class='section-header'>
+            <p>Drinks</p>
+        </div>
+        <div id='inventory-form-dry-good-label' class='section-header'>
+            <p>Dry Goods</p>
+        </div>
+        <div id='inventory-form-other-label' class='section-header'>
             <p>Other</p>
         </div>
         <button id='submit-inventory-form-button'>Submit Inventory</button>
